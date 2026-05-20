@@ -15,6 +15,8 @@
 
 	import './layout.css';
 
+	import LinkRail from '$lib/components/LinkRail.svelte';
+
 	import { onMount } from 'svelte';
 
 	type Theme = 'day' | 'night';
@@ -81,3 +83,5 @@
 </button>
 
 {@render children()}
+
+<LinkRail />

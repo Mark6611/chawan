@@ -14,7 +14,7 @@
 	import ChipGroup from '$lib/components/ChipGroup.svelte';
 	import PrimaryButton from '$lib/components/PrimaryButton.svelte';
 	import ConsumptionRail from '$lib/components/ConsumptionRail.svelte';
-	import LinkRail from '$lib/components/LinkRail.svelte';
+	// LinkRail is now mounted globally in +layout.svelte; no need to import here.
 
 	import { REGION_LABELS, STYLE_LABELS, MILK_LABELS, WHISK_LABELS } from '$lib/db/types';
 
@@ -238,11 +238,9 @@
 
 	<Hairline class="my-7" />
 
-	<!-- LinkRail (mounted as fixed at the bottom of the viewport) -->
+	<!-- LinkRail is rendered globally via +layout.svelte. -->
 	<section class="space-y-3">
 		<Eyebrow>LinkRail</Eyebrow>
-		<Mono size="meta" tone="muted">Pinned at the bottom of the screen ↓</Mono>
+		<Mono size="meta" tone="muted">Mounted in +layout.svelte. Pinned at the bottom ↓</Mono>
 	</section>
 </main>
-
-<LinkRail />
