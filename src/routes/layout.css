@@ -1,0 +1,146 @@
+/* ─────────────────────────────────────────────────────────────
+   Chawan · design tokens
+   Source of truth for color / type / radius.
+   Night is the default theme. Day is opt-in via [data-theme="day"].
+   ───────────────────────────────────────────────────────────── */
+
+@import 'tailwindcss';
+@plugin '@tailwindcss/forms';
+
+@theme {
+	/* — Surfaces (night defaults) — */
+	--color-paper: oklch(0.175 0.006 145); /* deep earth-dark with a barely-perceptible green undertone */
+	--color-surface: oklch(0.205 0.008 145); /* raised content */
+	--color-card: oklch(0.235 0.008 145); /* cards / tiles */
+
+	/* — Ink (warm off-white scale) — */
+	--color-ink: oklch(0.94 0.01 95); /* primary */
+	--color-ink-70: oklch(0.74 0.01 95); /* secondary */
+	--color-muted: oklch(0.55 0.01 95); /* labels, eyebrows */
+	--color-faint: oklch(0.38 0.01 95); /* very low emphasis */
+
+	/* — Structure — */
+	--color-hairline: rgba(225, 230, 220, 0.09); /* 0.5px lines as the structural element */
+	--color-rule: rgba(225, 230, 220, 0.18); /* heavier rule for sections */
+
+	/* — Accent (single tea green) — */
+	--color-tea: oklch(0.62 0.09 152);
+	--color-tea-soft: oklch(0.45 0.06 152);
+	--color-tea-wash: oklch(0.62 0.09 152 / 0.1);
+	--color-on-tea: #0e1310; /* text colour on filled --color-tea buttons */
+
+	/* --color-data is the numeric / consumption-rail / accent-text colour.
+	   Night = tea green (same as --color-tea).
+	   Day   = ink black (see [data-theme="day"] override below) so green
+	           stays minimal in day mode. */
+	--color-data: oklch(0.62 0.09 152);
+
+	/* — Semantic — */
+	--color-warn: oklch(0.7 0.1 60);
+	--color-danger: oklch(0.6 0.15 25);
+
+	/* — Type — */
+	--font-display: 'Cormorant Garamond', 'EB Garamond', Georgia, serif;
+	--font-body: 'EB Garamond', Georgia, serif;
+	--font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+	/* — Radii — */
+	--radius-card: 0.875rem; /* 14px — flatter than the coffee app's 18 */
+	--radius-input: 0.5rem;
+	--radius-pill: 999px;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Day theme — wood + white + black + minimal green.
+   Override the same custom properties that @theme declared above.
+   ───────────────────────────────────────────────────────────── */
+[data-theme='day'] {
+	/* — Surfaces — */
+	--color-paper: oklch(0.905 0.022 78); /* warm pale-oak wood */
+	--color-surface: oklch(0.945 0.018 78); /* lighter wood */
+	--color-card: #ffffff; /* pure white for raised content */
+
+	/* — Ink — */
+	--color-ink: oklch(0.18 0.01 70); /* near-black warm */
+	--color-ink-70: oklch(0.42 0.012 75);
+	--color-muted: oklch(0.58 0.01 75);
+	--color-faint: oklch(0.74 0.008 75);
+
+	/* — Structure — */
+	--color-hairline: rgba(60, 40, 15, 0.13);
+	--color-rule: rgba(60, 40, 15, 0.22);
+
+	/* — Accent — */
+	--color-tea: oklch(0.45 0.1 152);
+	--color-tea-soft: oklch(0.55 0.08 152);
+	--color-tea-wash: oklch(0.45 0.1 152 / 0.08);
+	--color-on-tea: #ffffff;
+
+	/* In day mode --color-data drops to ink, so numerics + rails read as black-on-wood. */
+	--color-data: oklch(0.18 0.01 70);
+
+	/* — Semantic — */
+	--color-warn: oklch(0.55 0.13 50);
+	--color-danger: oklch(0.5 0.18 25);
+}
+
+@custom-variant day (&:where([data-theme='day'], [data-theme='day'] *));
+
+@layer base {
+	html,
+	body {
+		background-color: var(--color-paper);
+		color: var(--color-ink);
+		font-family: var(--font-body);
+	}
+
+	/* Headings — Cormorant; oldstyle italic is the Chawan voice. */
+	h1,
+	h2,
+	h3,
+	h4 {
+		font-family: var(--font-display);
+		font-style: italic;
+		font-weight: 400;
+		letter-spacing: -0.015em;
+	}
+
+	/* Numerals everywhere are tabular by default. */
+	* {
+		font-variant-numeric: tabular-nums;
+	}
+
+	/* Inputs inside a .field-wrapper inherit the wrapper's styling. */
+	.field-wrapper input,
+	.field-wrapper input:focus,
+	.field-wrapper input:focus-visible {
+		background-color: transparent;
+		border: none;
+		padding: 0;
+		box-shadow: none;
+		outline: none;
+	}
+
+	/* Hide number-input spinners — we render mono visuals instead. */
+	input[type='number']::-webkit-inner-spin-button,
+	input[type='number']::-webkit-outer-spin-button {
+		-webkit-appearance: none;
+		margin: 0;
+	}
+	input[type='number'] {
+		-moz-appearance: textfield;
+		appearance: textfield;
+	}
+}
+
+@layer components {
+	/* Eyebrow pattern — used as the structural metadata label everywhere. */
+	.eyebrow {
+		font-family: var(--font-mono);
+		font-size: 10.5px;
+		font-weight: 500;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--color-muted);
+	}
+}
