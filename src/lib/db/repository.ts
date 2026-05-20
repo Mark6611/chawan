@@ -44,7 +44,7 @@ class DexieRepository implements Repository {
 
 	async listSessionsByTin(tinId: string): Promise<PersonalSession[]> {
 		// `tinId` is only set on PersonalSession; the IndexedDB index naturally
-		// excludes StoreSessions. We still narrow via isPersonal() for type safety.
+		// excludes CafeSessions. We still narrow via isPersonal() for type safety.
 		const matched = await db.sessions.where('tinId').equals(tinId).toArray();
 		return matched.filter(isPersonal);
 	}

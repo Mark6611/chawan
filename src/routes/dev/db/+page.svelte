@@ -75,15 +75,16 @@
 		busy = false;
 	}
 
-	async function addStoreSession() {
+	async function addCafeSession() {
 		busy = true;
 		const s: Session = {
 			id: newId(),
-			kind: 'store',
+			kind: 'cafe',
 			brewedAt: nowIso(),
 			style: 'latte',
 			milk: 'oat',
-			storeName: 'Stonemill',
+			cafeName: 'Stonemill',
+			maker: 'Marukyu Kōyamaen',
 			region: 'uji',
 			priceCents: 750,
 			priceCurrency: 'USD',
@@ -92,7 +93,7 @@
 			updatedAt: nowIso()
 		};
 		await repository.saveSession(s);
-		status = `Saved store session ${s.id.slice(0, 8)}…`;
+		status = `Saved cafe session ${s.id.slice(0, 8)}…`;
 		await refresh();
 		busy = false;
 	}
@@ -139,10 +140,10 @@
 		<button
 			type="button"
 			disabled={busy}
-			onclick={addStoreSession}
+			onclick={addCafeSession}
 			class="border-rule text-ink rounded-full border px-3 py-1.5 font-mono text-[11px] tracking-[0.10em] uppercase disabled:opacity-50"
 		>
-			+ store
+			+ cafe
 		</button>
 		<button
 			type="button"
@@ -189,7 +190,7 @@
 					</div>
 				{:else}
 					<div class="text-ink mt-1 font-mono text-[13px]">
-						{s.storeName} · {s.region}{s.priceCents
+						{s.cafeName}{s.maker ? ' · ' + s.maker : ''} · {s.region}{s.priceCents
 							? ' · $' + (s.priceCents / 100).toFixed(2)
 							: ''}
 					</div>

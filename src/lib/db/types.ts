@@ -9,7 +9,7 @@
 //   - All persistence flows through src/lib/db/repository.ts
 //
 // Phase 2 will reuse these schemas to validate payloads coming back from
-// Supabase; the discriminated union keeps Personal vs Store narrowable.
+// Supabase; the discriminated union keeps Personal vs Cafe narrowable.
 
 import { z } from 'zod';
 
@@ -127,19 +127,22 @@ export const PersonalSessionSchema = z.object({
 });
 export type PersonalSession = z.infer<typeof PersonalSessionSchema>;
 
-export const StoreSessionSchema = z.object({
-	kind: z.literal('store'),
+export const CafeSessionSchema = z.object({
+	kind: z.literal('cafe'),
 	...sessionBaseShape,
-	storeName: z.string().min(1),
+	cafeName: z.string().min(1),
+	// Matcha brand behind the cup, if the cafe is upfront about sourcing
+	// ("Marukyu Kōyamaen", "Ippodo", etc.). Optional — most cafe logs won't have it.
+	maker: z.string().optional(),
 	region: RegionSchema,
 	priceCents: z.number().int().nonnegative().optional(),
 	priceCurrency: z.string().length(3).optional() // ISO 4217 (USD, JPY, …)
 });
-export type StoreSession = z.infer<typeof StoreSessionSchema>;
+export type CafeSession = z.infer<typeof CafeSessionSchema>;
 
 export const SessionSchema = z.discriminatedUnion('kind', [
 	PersonalSessionSchema,
-	StoreSessionSchema
+	CafeSessionSchema
 ]);
 export type Session = z.infer<typeof SessionSchema>;
 
@@ -168,7 +171,7 @@ export const DEFAULT_DEFAULTS: UserDefaults = {
 // ─────────────────────────────────────────────────────────────
 
 export const isPersonal = (s: Session): s is PersonalSession => s.kind === 'personal';
-export const isStore = (s: Session): s is StoreSession => s.kind === 'store';
+export const isCafe = (s: Session): s is CafeSession => s.kind === 'cafe';
 
 // ─────────────────────────────────────────────────────────────
 // Small factory helpers — used by forms and tests to construct

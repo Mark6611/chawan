@@ -8,7 +8,8 @@
 
 ## Data model
 
-- Sessions are a **discriminated union** on `kind: 'personal' | 'store'`. Narrow via `isPersonal` / `isStore` from `db/types.ts` before reading kind-specific fields.
+- Sessions are a **discriminated union** on `kind: 'personal' | 'cafe'`. Narrow via `isPersonal` / `isCafe` from `db/types.ts` before reading kind-specific fields.
+- `CafeSession.maker` is optional — set when the cafe is upfront about which matcha brand they source from. Most cafe logs won't have it.
 - `cultivar` is a free-form string with curated chip suggestions (not an enum) — tea varieties vary widely.
 - All timestamps (`brewedAt`, `openedAt`, `harvestDate`, `createdAt`, `updatedAt`) are ISO strings, not `Date` objects.
 - Money is stored as integer cents (`priceCents`), never floats.

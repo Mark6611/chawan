@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
+	CafeSessionSchema,
+	isCafe,
 	isPersonal,
-	isStore,
 	PersonalSessionSchema,
 	SessionSchema,
-	StoreSessionSchema,
 	TinSchema,
 	UserDefaultsSchema,
+	type CafeSession,
 	type PersonalSession,
 	type Session,
-	type StoreSession,
 	type Tin
 } from './types';
 
@@ -41,13 +41,14 @@ const validPersonal: PersonalSession = {
 	updatedAt: '2026-05-10T07:55:00.000Z'
 };
 
-const validStore: StoreSession = {
+const validCafe: CafeSession = {
 	id: 's2',
-	kind: 'store',
+	kind: 'cafe',
 	brewedAt: '2026-05-11T14:00:00.000Z',
 	style: 'latte',
 	milk: 'oat',
-	storeName: 'Stonemill',
+	cafeName: 'Stonemill',
+	maker: 'Marukyu Kōyamaen',
 	region: 'uji',
 	priceCents: 750,
 	priceCurrency: 'USD',
@@ -86,8 +87,14 @@ describe('Session schemas', () => {
 		expect(PersonalSessionSchema.parse(validPersonal)).toEqual(validPersonal);
 	});
 
-	it('StoreSessionSchema parses a valid store session', () => {
-		expect(StoreSessionSchema.parse(validStore)).toEqual(validStore);
+	it('CafeSessionSchema parses a valid cafe session', () => {
+		expect(CafeSessionSchema.parse(validCafe)).toEqual(validCafe);
+	});
+
+	it('CafeSessionSchema accepts a cafe session without maker', () => {
+		const { maker: _m, ...withoutMaker } = validCafe;
+		void _m;
+		expect(CafeSessionSchema.parse(withoutMaker)).toMatchObject({ cafeName: 'Stonemill' });
 	});
 
 	it('rejects personal session without tinId', () => {
@@ -106,14 +113,14 @@ describe('Session schemas', () => {
 	});
 
 	it('rejects bad currency code length', () => {
-		expect(() => StoreSessionSchema.parse({ ...validStore, priceCurrency: 'JP' })).toThrow();
+		expect(() => CafeSessionSchema.parse({ ...validCafe, priceCurrency: 'JP' })).toThrow();
 	});
 
 	it('SessionSchema discriminates on `kind`', () => {
 		const personal: Session = SessionSchema.parse(validPersonal);
-		const store: Session = SessionSchema.parse(validStore);
+		const cafe: Session = SessionSchema.parse(validCafe);
 		expect(personal.kind).toBe('personal');
-		expect(store.kind).toBe('store');
+		expect(cafe.kind).toBe('cafe');
 	});
 
 	it('SessionSchema rejects unknown kind', () => {
@@ -124,18 +131,19 @@ describe('Session schemas', () => {
 describe('type guards', () => {
 	it('isPersonal narrows correctly', () => {
 		expect(isPersonal(validPersonal)).toBe(true);
-		expect(isPersonal(validStore)).toBe(false);
+		expect(isPersonal(validCafe)).toBe(false);
 		if (isPersonal(validPersonal)) {
 			// Compile-time proof: `tinId` is accessible only after narrowing.
 			expect(validPersonal.tinId).toBe('t1');
 		}
 	});
 
-	it('isStore narrows correctly', () => {
-		expect(isStore(validStore)).toBe(true);
-		expect(isStore(validPersonal)).toBe(false);
-		if (isStore(validStore)) {
-			expect(validStore.storeName).toBe('Stonemill');
+	it('isCafe narrows correctly', () => {
+		expect(isCafe(validCafe)).toBe(true);
+		expect(isCafe(validPersonal)).toBe(false);
+		if (isCafe(validCafe)) {
+			expect(validCafe.cafeName).toBe('Stonemill');
+			expect(validCafe.maker).toBe('Marukyu Kōyamaen');
 		}
 	});
 });
