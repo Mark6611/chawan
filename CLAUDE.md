@@ -22,7 +22,7 @@
 
 ## Visual identity
 
-- Two themes: `night` (default) and `day`. No `system` mode in v1.
+- Two themes: `day` (default) and `night`. No `system` mode in v1.
 - Theme persists in `localStorage` under key `chawan:theme`.
 - Fonts self-hosted via Fontsource: Cormorant Garamond (display, italic primary), EB Garamond (body), IBM Plex Mono (mono). Deliberate divergence from the design handoff's Google Fonts link — keeps the PWA offline-first.
 - Tea green (`--color-tea`) is for primary CTA fills, selection outlines, selection dots. Numerics + rails use `--color-data`, which drops to ink in day mode.

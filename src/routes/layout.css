@@ -1,7 +1,10 @@
 /* ─────────────────────────────────────────────────────────────
    Chawan · design tokens
    Source of truth for color / type / radius.
-   Night is the default theme. Day is opt-in via [data-theme="day"].
+   Day is the default theme (boot script sets data-theme="day" before paint);
+   night is the deep-earth alternative applied via [data-theme="night"].
+   The @theme block carries night tokens as the no-JS fallback —
+   any visitor with JS gets the day override on first paint.
    ───────────────────────────────────────────────────────────── */
 
 @import 'tailwindcss';
@@ -51,8 +54,9 @@
 }
 
 /* ─────────────────────────────────────────────────────────────
-   Day theme — wood + white + black + minimal green.
-   Override the same custom properties that @theme declared above.
+   Day theme (default) — wood + white + black + minimal green.
+   Overrides the @theme custom properties above. Boot script in app.html
+   sets data-theme="day" on first paint, so these values win immediately.
    ───────────────────────────────────────────────────────────── */
 [data-theme='day'] {
 	/* — Surfaces — */
@@ -85,6 +89,7 @@
 }
 
 @custom-variant day (&:where([data-theme='day'], [data-theme='day'] *));
+@custom-variant night (&:where([data-theme='night'], [data-theme='night'] *));
 
 @layer base {
 	html,

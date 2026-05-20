@@ -4,18 +4,18 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 		<meta name="text-scale" content="scale" />
-		<meta name="theme-color" content="#181d19" />
+		<meta name="theme-color" content="#ece3d0" />
 		<meta name="apple-mobile-web-app-capable" content="yes" />
-		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="default" />
 		<link rel="icon" href="/icon.svg" type="image/svg+xml" />
 		<link rel="apple-touch-icon" href="/icon.svg" />
 		<link rel="manifest" href="/manifest.webmanifest" />
 		<script>
 			// Read the saved theme before paint so first paint is correct.
-			// Night is the default per the design brief; no `system` mode in v1.
+			// Day is the default theme; night is opt-in via the toggle. No `system` mode in v1.
 			(() => {
 				try {
-					const t = localStorage.getItem('chawan:theme') ?? 'night';
+					const t = localStorage.getItem('chawan:theme') ?? 'day';
 					document.documentElement.setAttribute('data-theme', t);
 				} catch {}
 			})();

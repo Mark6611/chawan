@@ -17,21 +17,21 @@
 
 	import { onMount } from 'svelte';
 
-	type Theme = 'night' | 'day';
-	let theme = $state<Theme>('night');
+	type Theme = 'day' | 'night';
+	let theme = $state<Theme>('day');
 
 	function apply(t: Theme) {
 		document.documentElement.setAttribute('data-theme', t);
 	}
 
 	function toggle() {
-		theme = theme === 'night' ? 'day' : 'night';
+		theme = theme === 'day' ? 'night' : 'day';
 		localStorage.setItem('chawan:theme', theme);
 		apply(theme);
 	}
 
 	onMount(() => {
-		const saved = (localStorage.getItem('chawan:theme') as Theme | null) ?? 'night';
+		const saved = (localStorage.getItem('chawan:theme') as Theme | null) ?? 'day';
 		theme = saved;
 		apply(saved);
 	});
