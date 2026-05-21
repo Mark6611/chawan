@@ -192,18 +192,23 @@
 			{:else}
 				<ul class="border-hairline mt-2 border-t">
 					{#each sessions as s (s.id)}
-						<li class="border-hairline -mx-6 border-b px-6 py-3">
-							<div class="flex items-baseline justify-between gap-3">
-								<Mono size="meta" tone="muted"
-									>{STYLE_LABELS[s.style]} · {formatTimeAgo(s.brewedAt)}</Mono
-								>
-								{#if s.rating}<Rating value={s.rating} size={6} />{/if}
-							</div>
-							<div class="mt-1">
-								<Mono size="m" tone="ink">
-									{s.powderGrams}g · {s.waterGrams}g · {s.waterTempC}°C
-								</Mono>
-							</div>
+						<li>
+							<a
+								href="/sessions/{s.id}"
+								class="hover:bg-surface border-hairline -mx-6 block border-b px-6 py-3 transition-colors"
+							>
+								<div class="flex items-baseline justify-between gap-3">
+									<Mono size="meta" tone="muted"
+										>{STYLE_LABELS[s.style]} · {formatTimeAgo(s.brewedAt)}</Mono
+									>
+									{#if s.rating}<Rating value={s.rating} size={6} />{/if}
+								</div>
+								<div class="mt-1">
+									<Mono size="m" tone="ink">
+										{s.powderGrams}g · {s.waterGrams}g · {s.waterTempC}°C
+									</Mono>
+								</div>
+							</a>
 						</li>
 					{/each}
 				</ul>
