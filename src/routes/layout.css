@@ -115,15 +115,25 @@
 		font-variant-numeric: tabular-nums;
 	}
 
-	/* Inputs inside a .field-wrapper inherit the wrapper's styling. */
+	/* Inputs, textareas, and selects inside a .field-wrapper inherit the wrapper's styling. */
 	.field-wrapper input,
+	.field-wrapper textarea,
+	.field-wrapper select,
 	.field-wrapper input:focus,
-	.field-wrapper input:focus-visible {
+	.field-wrapper input:focus-visible,
+	.field-wrapper textarea:focus,
+	.field-wrapper textarea:focus-visible,
+	.field-wrapper select:focus,
+	.field-wrapper select:focus-visible {
 		background-color: transparent;
 		border: none;
 		padding: 0;
 		box-shadow: none;
 		outline: none;
+	}
+
+	.field-wrapper textarea {
+		resize: none;
 	}
 
 	/* Hide number-input spinners — we render mono visuals instead. */
