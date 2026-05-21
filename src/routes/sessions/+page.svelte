@@ -3,8 +3,8 @@
 	// Sticky day headers pin while scrolling so you always know which date
 	// you're inside.
 
-	import { onMount } from 'svelte';
 	import { repository } from '$lib/db/repository';
+	import { syncState } from '$lib/sync.svelte';
 	import { type Session, type Tin } from '$lib/db/types';
 
 	import Eyebrow from '$lib/components/Eyebrow.svelte';
@@ -28,7 +28,10 @@
 		tins = t;
 		loaded = true;
 	}
-	onMount(load);
+	$effect(() => {
+		void syncState.tick;
+		load();
+	});
 
 	const tinsById = $derived.by(() => {
 		const m: Record<string, Tin> = {};

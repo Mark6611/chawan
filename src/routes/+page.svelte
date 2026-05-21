@@ -7,8 +7,8 @@
 	// screen stays, so the primary CTA goes to /sessions/new (the fork) —
 	// not directly to /sessions/new/personal.
 
-	import { onMount } from 'svelte';
 	import { repository } from '$lib/db/repository';
+	import { syncState } from '$lib/sync.svelte';
 	import { isPersonal, newId, nowIso, type Session, type Tin } from '$lib/db/types';
 	import { bowlsThisWeek, formatTimeAgo } from '$lib/sessions/compute';
 	import { detectUsual } from '$lib/sessions/again';
@@ -32,7 +32,11 @@
 		loaded = true;
 	}
 
-	onMount(load);
+	// Initial load + re-fetch after a sync pull (syncState.tick increments).
+	$effect(() => {
+		void syncState.tick;
+		load();
+	});
 
 	const lastSession = $derived(sessions[0]);
 	const lastPersonal = $derived(sessions.find(isPersonal));

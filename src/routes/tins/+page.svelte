@@ -1,8 +1,8 @@
 <script lang="ts">
 	// Inventory — active + archived tins.
 
-	import { onMount } from 'svelte';
 	import { repository } from '$lib/db/repository';
+	import { syncState } from '$lib/sync.svelte';
 	import { isPersonal, type PersonalSession, type Tin } from '$lib/db/types';
 
 	import Eyebrow from '$lib/components/Eyebrow.svelte';
@@ -26,7 +26,10 @@
 		sessions = allSessions.filter(isPersonal);
 		loaded = true;
 	}
-	onMount(load);
+	$effect(() => {
+		void syncState.tick;
+		load();
+	});
 
 	const active = $derived(tins.filter((t) => !t.archived));
 	const archived = $derived(tins.filter((t) => t.archived));

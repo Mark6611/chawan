@@ -8,6 +8,8 @@
 	import { preferences } from '$lib/preferences.svelte';
 	import { repository } from '$lib/db/repository';
 	import { auth, signOut } from '$lib/auth.svelte';
+	import { fullSync, syncState } from '$lib/sync.svelte';
+	import { formatTimeAgo } from '$lib/sessions/compute';
 	import {
 		SessionSchema,
 		STYLE_LABELS,
@@ -50,6 +52,14 @@
 			signingOut = false;
 		}
 	}
+
+	async function handleSyncNow() {
+		await fullSync();
+	}
+
+	const syncedAgoLabel = $derived(
+		syncState.lastSyncAt ? `Last synced ${formatTimeAgo(syncState.lastSyncAt)}` : null
+	);
 
 	async function exportData() {
 		const [tins, sessions] = await Promise.all([
@@ -258,15 +268,27 @@
 			</div>
 		{:else if auth.user}
 			<div class="mt-3 flex items-baseline gap-3">
-				<span class="bg-data h-2 w-2 rounded-full"></span>
-				<Mono size="m" tone="ink">Signed in</Mono>
+				<span
+					class="{syncState.syncing ? 'bg-warn animate-pulse' : 'bg-data'} h-2 w-2 rounded-full"
+				></span>
+				<Mono size="m" tone="ink">
+					{syncState.syncing ? 'Syncing…' : 'Signed in'}
+				</Mono>
 			</div>
 			<p class="text-muted mt-3 text-[14px] italic break-all">{auth.user.email}</p>
-			<p class="text-muted mt-3 text-[14px] italic">
-				Cross-device sync arrives in the next update. For now, sign-in unlocks the door — your
-				data still lives locally.
-			</p>
-			<div class="mt-4 text-center">
+			{#if syncState.lastError}
+				<div class="border-danger mt-3 rounded-[14px] border-[0.5px] px-4 py-3">
+					<Mono size="meta" tone="ink">{syncState.lastError}</Mono>
+				</div>
+			{:else if syncedAgoLabel}
+				<p class="text-muted mt-3 text-[14px] italic">{syncedAgoLabel}.</p>
+			{/if}
+			<div class="mt-4">
+				<PrimaryButton kind="line" onclick={handleSyncNow} disabled={syncState.syncing}>
+					{syncState.syncing ? 'Syncing…' : 'Sync now'}
+				</PrimaryButton>
+			</div>
+			<div class="mt-6 text-center">
 				<button
 					type="button"
 					onclick={handleSignOut}

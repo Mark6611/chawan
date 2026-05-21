@@ -95,7 +95,10 @@ export const TinSchema = z.object({
 	openedAt: z.string().optional(), // ISO timestamp; undefined = unopened
 	archived: z.boolean(),
 	createdAt: z.string(),
-	updatedAt: z.string()
+	updatedAt: z.string(),
+	// Soft-delete tombstone — Phase 2 sync uses this so deletions propagate
+	// across devices. Reads filter out rows with deletedAt set.
+	deletedAt: z.string().optional()
 });
 export type Tin = z.infer<typeof TinSchema>;
 
@@ -113,7 +116,9 @@ const sessionBaseShape = {
 	rating: z.number().int().min(0).max(5).optional(),
 	notes: z.string().optional(),
 	createdAt: z.string(),
-	updatedAt: z.string()
+	updatedAt: z.string(),
+	// Soft-delete tombstone for Phase 2 sync (see TinSchema comment).
+	deletedAt: z.string().optional()
 };
 
 export const PersonalSessionSchema = z.object({

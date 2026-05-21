@@ -7,8 +7,8 @@
 	// Then: archive / unarchive toggle.
 
 	import { page } from '$app/state';
-	import { onMount } from 'svelte';
 	import { repository } from '$lib/db/repository';
+	import { syncState } from '$lib/sync.svelte';
 	import {
 		GRADE_LABELS,
 		REGION_LABELS,
@@ -43,7 +43,10 @@
 		// Newest first for the history list.
 		sessions = s.slice().sort((a, b) => b.brewedAt.localeCompare(a.brewedAt));
 	}
-	onMount(load);
+	$effect(() => {
+		void syncState.tick;
+		if (id) load();
+	});
 
 	const remaining = $derived(tin ? tinRemaining(tin, sessions) : 0);
 	const pct = $derived(tin ? 1 - remaining / tin.weightGrams : 0);
