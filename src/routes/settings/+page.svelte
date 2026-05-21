@@ -7,6 +7,7 @@
 	import { readDefaults, writeDefaults } from '$lib/sessions/defaults';
 	import { preferences } from '$lib/preferences.svelte';
 	import { repository } from '$lib/db/repository';
+	import { auth, signOut } from '$lib/auth.svelte';
 	import {
 		SessionSchema,
 		STYLE_LABELS,
@@ -25,6 +26,7 @@
 	import Segmented from '$lib/components/Segmented.svelte';
 	import ChipGroup from '$lib/components/ChipGroup.svelte';
 	import Stepper from '$lib/components/Stepper.svelte';
+	import PrimaryButton from '$lib/components/PrimaryButton.svelte';
 
 	// Defaults state — populated on mount.
 	let style = $state<string>('usucha');
@@ -36,6 +38,18 @@
 	// Backup / restore state
 	let importing = $state(false);
 	let importStatus = $state<{ text: string; ok: boolean } | null>(null);
+
+	// Sign-out state
+	let signingOut = $state(false);
+
+	async function handleSignOut() {
+		signingOut = true;
+		try {
+			await signOut();
+		} finally {
+			signingOut = false;
+		}
+	}
 
 	async function exportData() {
 		const [tins, sessions] = await Promise.all([
@@ -224,17 +238,57 @@
 
 	<Hairline class="my-7" />
 
-	<!-- ─── Sync (stub for Phase 2) ───────────────────────── -->
+	<!-- ─── Sync / account ─────────────────────────────────── -->
 	<section>
 		<Eyebrow>Sync</Eyebrow>
-		<div class="mt-3 flex items-baseline gap-3">
-			<span class="bg-data h-2 w-2 rounded-full"></span>
-			<Mono size="m" tone="ink">Local only</Mono>
-		</div>
-		<p class="text-muted mt-3 text-[14px] italic">
-			Phase 2 will add magic-link sign-in and cross-device sync via Supabase. Your data stays in
-			this browser until then.
-		</p>
+
+		{#if !auth.enabled}
+			<div class="mt-3 flex items-baseline gap-3">
+				<span class="bg-muted h-2 w-2 rounded-full"></span>
+				<Mono size="m" tone="muted">Not configured</Mono>
+			</div>
+			<p class="text-muted mt-3 text-[14px] italic">
+				Add VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY to .env.local (see
+				.env.example) and restart the dev server to enable sign-in.
+			</p>
+		{:else if !auth.ready}
+			<div class="mt-3 flex items-baseline gap-3">
+				<span class="bg-muted h-2 w-2 rounded-full"></span>
+				<Mono size="m" tone="muted">Checking…</Mono>
+			</div>
+		{:else if auth.user}
+			<div class="mt-3 flex items-baseline gap-3">
+				<span class="bg-data h-2 w-2 rounded-full"></span>
+				<Mono size="m" tone="ink">Signed in</Mono>
+			</div>
+			<p class="text-muted mt-3 text-[14px] italic break-all">{auth.user.email}</p>
+			<p class="text-muted mt-3 text-[14px] italic">
+				Cross-device sync arrives in the next update. For now, sign-in unlocks the door — your
+				data still lives locally.
+			</p>
+			<div class="mt-4 text-center">
+				<button
+					type="button"
+					onclick={handleSignOut}
+					disabled={signingOut}
+					class="text-danger hover:opacity-80 font-mono text-[11px] tracking-[0.10em] uppercase disabled:opacity-40"
+				>
+					{signingOut ? 'Signing out…' : 'Sign out'}
+				</button>
+			</div>
+		{:else}
+			<div class="mt-3 flex items-baseline gap-3">
+				<span class="bg-data h-2 w-2 rounded-full"></span>
+				<Mono size="m" tone="ink">Local only</Mono>
+			</div>
+			<p class="text-muted mt-3 text-[14px] italic">
+				Sign in to enable cross-device sync (coming next). Your local data stays put — it'll
+				migrate to your account on first sign-in.
+			</p>
+			<div class="mt-4">
+				<PrimaryButton kind="line" href="/auth">Sign in</PrimaryButton>
+			</div>
+		{/if}
 	</section>
 
 	<Hairline class="my-7" />
