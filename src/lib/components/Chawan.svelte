@@ -3,7 +3,9 @@
 	// Reference radii at size=24: outer 11, middle 8, inner 4.5 (per design system).
 	// Filled: inner ring is solid --color-data at 0.85 alpha.
 	// Ring: inner ring is stroked, not filled.
-	// Disable globally with html.no-chawan .chawan-glyph { display: none } if the user opts out.
+	// Globally hidden when preferences.hideChawan is true (toggle in /settings).
+
+	import { preferences } from '$lib/preferences.svelte';
 
 	let {
 		size = 48,
@@ -24,20 +26,22 @@
 	const c = $derived(size / 2);
 </script>
 
-<svg
-	class="chawan-glyph"
-	width={size}
-	height={size}
-	viewBox="0 0 {size} {size}"
-	role={title ? 'img' : 'presentation'}
-	aria-hidden={!title}
->
-	{#if title}<title>{title}</title>{/if}
-	<circle cx={c} cy={c} r={r1} fill="none" stroke="var(--color-hairline)" stroke-width={sw} />
-	<circle cx={c} cy={c} r={r2} fill="none" stroke="var(--color-hairline)" stroke-width={sw} />
-	{#if filled}
-		<circle cx={c} cy={c} r={r3} fill="var(--color-data)" opacity="0.85" />
-	{:else}
-		<circle cx={c} cy={c} r={r3} fill="none" stroke="var(--color-data)" stroke-width={sw} />
-	{/if}
-</svg>
+{#if !preferences.hideChawan}
+	<svg
+		class="chawan-glyph"
+		width={size}
+		height={size}
+		viewBox="0 0 {size} {size}"
+		role={title ? 'img' : 'presentation'}
+		aria-hidden={!title}
+	>
+		{#if title}<title>{title}</title>{/if}
+		<circle cx={c} cy={c} r={r1} fill="none" stroke="var(--color-hairline)" stroke-width={sw} />
+		<circle cx={c} cy={c} r={r2} fill="none" stroke="var(--color-hairline)" stroke-width={sw} />
+		{#if filled}
+			<circle cx={c} cy={c} r={r3} fill="var(--color-data)" opacity="0.85" />
+		{:else}
+			<circle cx={c} cy={c} r={r3} fill="none" stroke="var(--color-data)" stroke-width={sw} />
+		{/if}
+	</svg>
+{/if}

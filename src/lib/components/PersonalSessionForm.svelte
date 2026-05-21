@@ -30,7 +30,7 @@
 		type Tin,
 		type Whisk
 	} from '$lib/db/types';
-	import { readDefaults } from '$lib/sessions/defaults';
+	import { hasCustomDefaults, readDefaults } from '$lib/sessions/defaults';
 	import { tinRemaining } from '$lib/tins/compute';
 
 	import Eyebrow from './Eyebrow.svelte';
@@ -66,6 +66,7 @@
 	let brewedAt = $state(initial?.brewedAt ?? nowIso());
 	let editingTime = $state(false);
 	let picking = $state(false);
+	let showDefaultsBanner = $state(false);
 
 	// ─── data ────────────────────────────────────────────────────────────
 	let tins = $state<Tin[]>([]);
@@ -121,6 +122,9 @@
 			whisk = d.whisk;
 			if (d.powderGrams) powderGrams = d.powderGrams;
 			if (d.waterGrams) waterGrams = d.waterGrams;
+			// Only surface the banner when the user has actually saved
+			// custom defaults — otherwise it's noise about hard-coded values.
+			showDefaultsBanner = hasCustomDefaults();
 		}
 
 		const [allTins, allSessions] = await Promise.all([
@@ -292,6 +296,26 @@
 			</div>
 		</div>
 	{:else}
+		{#if showDefaultsBanner}
+			<div
+				class="border-tea bg-tea-wash mb-4 flex items-center justify-between rounded-full border-[0.5px] py-2 pl-4 pr-2"
+			>
+				<span
+					class="text-tea font-mono text-[10.5px] font-medium tracking-[0.14em] uppercase"
+				>
+					Defaults applied · tap any field to change
+				</span>
+				<button
+					type="button"
+					onclick={() => (showDefaultsBanner = false)}
+					aria-label="Dismiss"
+					class="text-muted hover:text-ink grid h-6 w-6 place-items-center font-mono text-[16px] leading-none"
+				>
+					×
+				</button>
+			</div>
+		{/if}
+
 		<!-- Tin picker -->
 		<Field label="Tin">
 			{#snippet action()}

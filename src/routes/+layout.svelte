@@ -16,26 +16,16 @@
 	import './layout.css';
 
 	import LinkRail from '$lib/components/LinkRail.svelte';
+	import { preferences } from '$lib/preferences.svelte';
 
 	import { onMount } from 'svelte';
 
-	type Theme = 'day' | 'night';
-	let theme = $state<Theme>('day');
-
-	function apply(t: Theme) {
-		document.documentElement.setAttribute('data-theme', t);
-	}
-
-	function toggle() {
-		theme = theme === 'day' ? 'night' : 'day';
-		localStorage.setItem('chawan:theme', theme);
-		apply(theme);
-	}
-
 	onMount(() => {
-		const saved = (localStorage.getItem('chawan:theme') as Theme | null) ?? 'day';
-		theme = saved;
-		apply(saved);
+		// Re-read in case SSR gave us the day fallback before localStorage
+		// was available. Also applies the theme attribute (boot script in
+		// app.html already did this synchronously before paint, but this
+		// guarantees consistency after preferences.setTheme() calls).
+		preferences.init();
 	});
 
 	let { children } = $props();
@@ -43,12 +33,12 @@
 
 <button
 	type="button"
-	onclick={toggle}
+	onclick={() => preferences.toggleTheme()}
 	class="border-rule text-ink hover:bg-surface fixed top-3 right-3 z-50 grid h-9 w-9 place-items-center rounded-full border bg-transparent transition-colors"
-	aria-label="Toggle theme (current: {theme})"
-	title="Theme: {theme}"
+	aria-label="Toggle theme (current: {preferences.theme})"
+	title="Theme: {preferences.theme}"
 >
-	{#if theme === 'night'}
+	{#if preferences.theme === 'night'}
 		<!-- moon -->
 		<svg
 			width="14"
