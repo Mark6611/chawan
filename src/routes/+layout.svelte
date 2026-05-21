@@ -17,6 +17,8 @@
 
 	import LinkRail from '$lib/components/LinkRail.svelte';
 	import { preferences } from '$lib/preferences.svelte';
+	import { auth } from '$lib/auth.svelte';
+	import { syncState } from '$lib/sync.svelte';
 
 	import { onMount } from 'svelte';
 
@@ -71,6 +73,23 @@
 		</svg>
 	{/if}
 </button>
+
+<!-- Sync indicator — only surfaces when actively syncing OR an error
+     is current. Subtle by design: silence when everything's fine. -->
+{#if auth.user && (syncState.syncing || syncState.lastError)}
+	<a
+		href="/settings"
+		class="border-rule bg-paper hover:bg-surface fixed top-3 right-14 z-50 grid h-9 w-9 place-items-center rounded-full border transition-colors"
+		aria-label={syncState.syncing ? 'Syncing in progress' : 'Sync error — tap for details'}
+		title={syncState.syncing ? 'Syncing…' : 'Sync error'}
+	>
+		<span
+			class="h-2 w-2 rounded-full {syncState.syncing
+				? 'bg-warn animate-pulse'
+				: 'bg-danger'}"
+		></span>
+	</a>
+{/if}
 
 {@render children()}
 

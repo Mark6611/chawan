@@ -366,7 +366,7 @@
 		</div>
 		<p class="text-muted mt-2 text-[14px] italic">A personal log for matcha sessions.</p>
 		<div class="mt-3">
-			<Mono size="meta" tone="muted">v0.1.0 · local-only · Phase 1</Mono>
+			<Mono size="meta" tone="muted">v0.2.0 · synced · Phase 2</Mono>
 		</div>
 	</section>
 </main>

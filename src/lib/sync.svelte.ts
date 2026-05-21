@@ -1,19 +1,26 @@
 // Sync layer — keeps IndexedDB (local cache) in line with Supabase (cloud).
 // Local is always read-first. Writes hit Dexie immediately, then fire a
 // background push to Supabase. fullSync() does push-all + pull-all + merge,
-// fired on sign-in and on the "Sync now" button in Settings.
+// fired on sign-in, on reconnect, and on the "Sync now" button in Settings.
 //
 // Tombstones (deletedAt) carry soft deletes across devices: the row stays
 // in both DBs with deletedAt set; reads filter it out everywhere.
 //
+// Offline behavior: pushes that happen while navigator.onLine is false are
+// silently skipped (no spurious "failed" errors). The 'online' event fires
+// fullSync(), which pushes every local row and so catches up any writes
+// that happened while disconnected. Last-write-wins via updatedAt keeps
+// this safe.
+//
 // Conflict resolution: last-write-wins via updatedAt on upsert. The
-// matcha_*  Postgres tables use the same primary key (id) as Dexie, so
+// matcha_* Postgres tables use the same primary key (id) as Dexie, so
 // upsert handles "new on server" and "newer on server" both as a put.
 
 import { supabase, supabaseEnabled } from './supabase';
 import { auth } from './auth.svelte';
 import { db } from './db/dexie';
-import { SessionSchema, TinSchema, type Session, type Tin } from './db/types';
+import { type Session, type Tin } from './db/types';
+import { parseSessionFromServer, parseTinFromServer } from './sync-normalize';
 
 // ─── Reactive sync state ──────────────────────────────────────────────
 // Pages read `syncState.tick` inside a $effect to re-fetch after a pull.
@@ -22,8 +29,8 @@ class SyncState {
 	syncing = $state(false);
 	lastError = $state<string | null>(null);
 	lastSyncAt = $state<string | null>(null);
-	/** Bumped by the sync layer after a successful pull. Pages depend on
-	 *  this inside $effect to re-run their load() on remote changes. */
+	/** Bumped after a successful pull. Pages depend on this inside $effect
+	 *  to re-run their load() on remote changes. */
 	tick = $state(0);
 
 	signal() {
@@ -33,79 +40,13 @@ class SyncState {
 
 export const syncState = new SyncState();
 
-// ─── Normalization (PostgREST → app shapes) ───────────────────────────
-// PostgREST returns numeric columns as strings and timestamps with offset
-// (e.g. "2026-05-21T14:32:00+00:00"). Coerce numbers and normalize
-// timestamps to "Z"-suffix UTC so Zod's z.string() shapes accept them.
+// ─── Online detection ────────────────────────────────────────────────
 
-const TIN_NUMERIC_KEYS = new Set(['weightGrams']);
-const TIN_TIMESTAMP_KEYS = new Set(['openedAt', 'createdAt', 'updatedAt', 'deletedAt']);
-const SESSION_NUMERIC_KEYS = new Set([
-	'powderGrams',
-	'waterGrams',
-	'waterTempC',
-	'priceCents',
-	'rating'
-]);
-const SESSION_TIMESTAMP_KEYS = new Set(['brewedAt', 'createdAt', 'updatedAt', 'deletedAt']);
-
-function normalizeFromServer(
-	row: Record<string, unknown>,
-	numericKeys: Set<string>,
-	timestampKeys: Set<string>
-): Record<string, unknown> {
-	const cleaned: Record<string, unknown> = {};
-	for (const [key, value] of Object.entries(row)) {
-		// Strip userId before validation — it's a Supabase-internal field
-		// the app doesn't carry on its records.
-		if (key === 'userId') continue;
-		// Drop nulls so optional fields stay undefined (Zod's preferred shape).
-		if (value === null) continue;
-		if (numericKeys.has(key) && typeof value === 'string') {
-			const n = Number(value);
-			if (!Number.isNaN(n)) {
-				cleaned[key] = n;
-				continue;
-			}
-		}
-		if (timestampKeys.has(key) && typeof value === 'string') {
-			const d = new Date(value);
-			if (!Number.isNaN(d.getTime())) {
-				cleaned[key] = d.toISOString();
-				continue;
-			}
-		}
-		cleaned[key] = value;
-	}
-	return cleaned;
-}
-
-function parseTinFromServer(row: Record<string, unknown>): Tin | null {
-	const cleaned = normalizeFromServer(row, TIN_NUMERIC_KEYS, TIN_TIMESTAMP_KEYS);
-	const result = TinSchema.safeParse(cleaned);
-	if (!result.success) {
-		const issue = result.error.issues[0];
-		console.warn(
-			`[sync] Tin from server rejected at "${issue?.path.join('.')}": ${issue?.message}`,
-			cleaned
-		);
-		return null;
-	}
-	return result.data;
-}
-
-function parseSessionFromServer(row: Record<string, unknown>): Session | null {
-	const cleaned = normalizeFromServer(row, SESSION_NUMERIC_KEYS, SESSION_TIMESTAMP_KEYS);
-	const result = SessionSchema.safeParse(cleaned);
-	if (!result.success) {
-		const issue = result.error.issues[0];
-		console.warn(
-			`[sync] Session from server rejected at "${issue?.path.join('.')}": ${issue?.message}`,
-			cleaned
-		);
-		return null;
-	}
-	return result.data;
+function isOnline(): boolean {
+	// In SSR or non-browser contexts, assume "online" (push won't actually
+	// run there anyway because auth.user is null).
+	if (typeof navigator === 'undefined') return true;
+	return navigator.onLine !== false;
 }
 
 function withUserId<T>(row: T, userId: string): T & { userId: string } {
@@ -114,12 +55,14 @@ function withUserId<T>(row: T, userId: string): T & { userId: string } {
 
 // ─── Push helpers — called by repository on each write ────────────────
 // Fire-and-forget; failures only log + set lastError. The next fullSync
-// re-uploads any rows that failed (updatedAt makes last-write-wins safe).
+// re-uploads any rows that failed.
 
 export function pushTin(tin: Tin): void {
 	if (!supabase) return;
 	const user = auth.user;
 	if (!user) return;
+	// Offline → defer. The 'online' listener will fire fullSync to catch up.
+	if (!isOnline()) return;
 	void supabase
 		.from('matcha_tins')
 		.upsert(withUserId(tin, user.id))
@@ -135,6 +78,7 @@ export function pushSession(session: Session): void {
 	if (!supabase) return;
 	const user = auth.user;
 	if (!user) return;
+	if (!isOnline()) return;
 	void supabase
 		.from('matcha_sessions')
 		.upsert(withUserId(session, user.id) as never)
@@ -153,6 +97,10 @@ export async function fullSync(): Promise<void> {
 	const user = auth.user;
 	if (!user) return;
 	if (syncState.syncing) return;
+	if (!isOnline()) {
+		syncState.lastError = 'Offline — waiting to reconnect.';
+		return;
+	}
 
 	syncState.syncing = true;
 	syncState.lastError = null;
@@ -230,7 +178,7 @@ export async function fullSync(): Promise<void> {
 	}
 }
 
-// ─── Auth listener — sync on sign-in / initial session ───────────────
+// ─── Auth + online listeners ─────────────────────────────────────────
 
 if (typeof window !== 'undefined' && supabase) {
 	supabase.auth.onAuthStateChange((event, session) => {
@@ -238,7 +186,11 @@ if (typeof window !== 'undefined' && supabase) {
 			void fullSync();
 		}
 	});
+
+	// Reconnect: catch up any writes that were deferred while offline.
+	window.addEventListener('online', () => {
+		if (auth.user) void fullSync();
+	});
 }
 
-// Re-export so callers (Settings) don't need to know the module shape.
 export { supabaseEnabled };
