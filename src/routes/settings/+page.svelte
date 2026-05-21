@@ -6,7 +6,16 @@
 	import { onMount } from 'svelte';
 	import { readDefaults, writeDefaults } from '$lib/sessions/defaults';
 	import { preferences } from '$lib/preferences.svelte';
-	import { STYLE_LABELS, WHISK_LABELS, type Style, type Whisk } from '$lib/db/types';
+	import { repository } from '$lib/db/repository';
+	import {
+		SessionSchema,
+		STYLE_LABELS,
+		TinSchema,
+		WHISK_LABELS,
+		nowIso,
+		type Style,
+		type Whisk
+	} from '$lib/db/types';
 
 	import Eyebrow from '$lib/components/Eyebrow.svelte';
 	import Display from '$lib/components/Display.svelte';
@@ -23,6 +32,84 @@
 	let whisk = $state<string>('chasen-100');
 	let loaded = $state(false);
 	let lastSaved = $state<string | null>(null);
+
+	// Backup / restore state
+	let importing = $state(false);
+	let importStatus = $state<{ text: string; ok: boolean } | null>(null);
+
+	async function exportData() {
+		const [tins, sessions] = await Promise.all([
+			repository.listTins(),
+			repository.listSessions()
+		]);
+		const payload = {
+			app: 'chawan',
+			version: 'v0.1.0',
+			exportedAt: nowIso(),
+			tinsCount: tins.length,
+			sessionsCount: sessions.length,
+			tins,
+			sessions
+		};
+		const blob = new Blob([JSON.stringify(payload, null, 2)], {
+			type: 'application/json'
+		});
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		const stamp = new Date().toISOString().slice(0, 10);
+		a.download = `chawan-backup-${stamp}.json`;
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+		URL.revokeObjectURL(url);
+	}
+
+	async function importData(e: Event) {
+		const target = e.currentTarget as HTMLInputElement;
+		const file = target.files?.[0];
+		if (!file) return;
+		importStatus = null;
+		importing = true;
+		try {
+			const text = await file.text();
+			const data = JSON.parse(text);
+			if (data?.app !== 'chawan') {
+				importStatus = { text: 'Not a Chawan backup file.', ok: false };
+				return;
+			}
+			const tinList: unknown[] = Array.isArray(data.tins) ? data.tins : [];
+			const sessionList: unknown[] = Array.isArray(data.sessions) ? data.sessions : [];
+			let tinsOk = 0;
+			let sessionsOk = 0;
+			for (const t of tinList) {
+				const parsed = TinSchema.safeParse(t);
+				if (parsed.success) {
+					await repository.saveTin(parsed.data);
+					tinsOk++;
+				}
+			}
+			for (const s of sessionList) {
+				const parsed = SessionSchema.safeParse(s);
+				if (parsed.success) {
+					await repository.saveSession(parsed.data);
+					sessionsOk++;
+				}
+			}
+			importStatus = {
+				text: `Restored ${tinsOk}/${tinList.length} tins · ${sessionsOk}/${sessionList.length} sessions.`,
+				ok: true
+			};
+		} catch {
+			importStatus = {
+				text: 'Could not parse the file — is it a valid Chawan backup?',
+				ok: false
+			};
+		} finally {
+			importing = false;
+			target.value = ''; // allow re-picking the same file
+		}
+	}
 
 	const styleOpts = Object.entries(STYLE_LABELS).map(([value, label]) => ({ value, label }));
 	const whiskOpts = Object.entries(WHISK_LABELS).map(([value, label]) => ({ value, label }));
@@ -148,6 +235,49 @@
 			Phase 2 will add magic-link sign-in and cross-device sync via Supabase. Your data stays in
 			this browser until then.
 		</p>
+	</section>
+
+	<Hairline class="my-7" />
+
+	<!-- ─── Backup ────────────────────────────────────────── -->
+	<section>
+		<Eyebrow>Backup</Eyebrow>
+		<p class="text-muted mt-2 text-[14px] italic">
+			Download a JSON snapshot of every tin and session, or restore from a previous export.
+			Items with matching IDs are replaced; others are added.
+		</p>
+		<div class="mt-4 flex flex-col gap-3">
+			<button
+				type="button"
+				onclick={exportData}
+				class="border-rule text-ink hover:bg-surface w-full rounded-full border-[0.5px] py-3 font-mono text-[11px] tracking-[0.10em] uppercase transition-colors"
+			>
+				Download backup
+			</button>
+			<label
+				class="border-rule text-ink hover:bg-surface w-full cursor-pointer rounded-full border-[0.5px] py-3 text-center font-mono text-[11px] tracking-[0.10em] uppercase transition-colors {importing
+					? 'opacity-50'
+					: ''}"
+			>
+				{importing ? 'Restoring…' : 'Restore from file'}
+				<input
+					type="file"
+					accept="application/json,.json"
+					onchange={importData}
+					disabled={importing}
+					class="hidden"
+				/>
+			</label>
+		</div>
+		{#if importStatus}
+			<div
+				class="mt-3 rounded-[14px] border-[0.5px] px-4 py-3 {importStatus.ok
+					? 'border-tea bg-tea-wash'
+					: 'border-danger'}"
+			>
+				<Mono size="meta" tone="ink">{importStatus.text}</Mono>
+			</div>
+		{/if}
 	</section>
 
 	<Hairline class="my-7" />
