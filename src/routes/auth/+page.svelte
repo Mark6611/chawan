@@ -146,6 +146,9 @@
 
 		<form onsubmit={verifyCode}>
 			<Field label="Code from email">
+				{#snippet action()}
+					<Mono size="meta" tone="faint">6–8 digits</Mono>
+				{/snippet}
 				<input
 					type="text"
 					bind:value={otpCode}
@@ -154,7 +157,7 @@
 					autocomplete="one-time-code"
 					pattern="[0-9]*"
 					maxlength="10"
-					placeholder="000000"
+					placeholder="00000000"
 					class="text-ink placeholder:text-faint w-full text-center font-mono text-[24px] tracking-[0.25em] tabular-nums"
 				/>
 			</Field>

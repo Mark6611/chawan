@@ -19,7 +19,7 @@
 import { supabase, supabaseEnabled } from './supabase';
 import { auth } from './auth.svelte';
 import { db } from './db/dexie';
-import { type Session, type Tin } from './db/types';
+import { SessionSchema, TinSchema, type Session, type Tin } from './db/types';
 import { parseSessionFromServer, parseTinFromServer } from './sync-normalize';
 
 // ─── Reactive sync state ──────────────────────────────────────────────
@@ -63,9 +63,19 @@ export function pushTin(tin: Tin): void {
 	if (!user) return;
 	// Offline → defer. The 'online' listener will fire fullSync to catch up.
 	if (!isOnline()) return;
+	// Defensive: validate before pushing. A stale Dexie row from before a
+	// schema rename (e.g. legacy `storeName` on session records) would
+	// otherwise reach Postgres and get rejected with an opaque "column not
+	// found" error. Strip the row from the push silently; the user can
+	// clear IndexedDB to drop the leftover entirely.
+	const parsed = TinSchema.safeParse(tin);
+	if (!parsed.success) {
+		console.warn('[sync] pushTin skipping legacy row:', tin.id, parsed.error.issues[0]?.message);
+		return;
+	}
 	void supabase
 		.from('matcha_tins')
-		.upsert(withUserId(tin, user.id))
+		.upsert(withUserId(parsed.data, user.id))
 		.then(({ error }) => {
 			if (error) {
 				console.warn('[sync] pushTin failed:', error.message);
@@ -79,9 +89,18 @@ export function pushSession(session: Session): void {
 	const user = auth.user;
 	if (!user) return;
 	if (!isOnline()) return;
+	const parsed = SessionSchema.safeParse(session);
+	if (!parsed.success) {
+		console.warn(
+			'[sync] pushSession skipping legacy row:',
+			session.id,
+			parsed.error.issues[0]?.message
+		);
+		return;
+	}
 	void supabase
 		.from('matcha_sessions')
-		.upsert(withUserId(session, user.id) as never)
+		.upsert(withUserId(parsed.data, user.id) as never)
 		.then(({ error }) => {
 			if (error) {
 				console.warn('[sync] pushSession failed:', error.message);
@@ -113,8 +132,21 @@ export async function fullSync(): Promise<void> {
 			db.sessions.toArray()
 		]);
 
-		if (localTins.length > 0) {
-			const payload = localTins.map((t) => withUserId(t, user.id));
+		// Filter out any legacy rows that no longer parse against the current
+		// schema (e.g. pre-rename `kind: 'store'` sessions). They stay local
+		// but don't pollute the server with bad payloads.
+		const validTins = localTins.filter((t) => TinSchema.safeParse(t).success);
+		const validSessions = localSessions.filter((s) => SessionSchema.safeParse(s).success);
+		const skippedTins = localTins.length - validTins.length;
+		const skippedSessions = localSessions.length - validSessions.length;
+		if (skippedTins > 0 || skippedSessions > 0) {
+			console.warn(
+				`[sync] skipping ${skippedTins} tin(s) + ${skippedSessions} session(s) that don't match the current schema (likely legacy rows from before a rename — clear IndexedDB to drop them)`
+			);
+		}
+
+		if (validTins.length > 0) {
+			const payload = validTins.map((t) => withUserId(t, user.id));
 			const { error } = await supabase.from('matcha_tins').upsert(payload);
 			if (error) {
 				console.warn('[sync] push tins failed:', error.message);
@@ -122,8 +154,8 @@ export async function fullSync(): Promise<void> {
 			}
 		}
 
-		if (localSessions.length > 0) {
-			const payload = localSessions.map((s) => withUserId(s, user.id)) as never;
+		if (validSessions.length > 0) {
+			const payload = validSessions.map((s) => withUserId(s, user.id)) as never;
 			const { error } = await supabase.from('matcha_sessions').upsert(payload);
 			if (error) {
 				console.warn('[sync] push sessions failed:', error.message);

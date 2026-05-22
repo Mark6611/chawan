@@ -16,6 +16,7 @@
 
 	import { onMount, untrack } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { repository } from '$lib/db/repository';
 	import {
 		MILK_LABELS,
@@ -43,6 +44,7 @@
 	import Stepper from './Stepper.svelte';
 	import Rating from './Rating.svelte';
 	import PrimaryButton from './PrimaryButton.svelte';
+	import TinPicker from './TinPicker.svelte';
 
 	let {
 		session
@@ -65,8 +67,11 @@
 	let selectedTinId = $state<string>(initial?.tinId ?? '');
 	let brewedAt = $state(initial?.brewedAt ?? nowIso());
 	let editingTime = $state(false);
-	let picking = $state(false);
 	let showDefaultsBanner = $state(false);
+
+	// Session-storage draft key. Lets us survive a round-trip to /tins/new
+	// when the user picks "Create new tin" from the TinPicker.
+	const DRAFT_KEY = 'chawan:personal-draft';
 
 	// ─── data ────────────────────────────────────────────────────────────
 	let tins = $state<Tin[]>([]);
@@ -143,10 +148,63 @@
 				const used = lastPersonal && active.find((t) => t.id === lastPersonal.tinId);
 				selectedTinId = used ? used.id : active[0].id;
 			}
+
+			// Restore form state from sessionStorage (set if we bounced through
+			// /tins/new). Then clear the draft so a future fresh mount doesn't
+			// re-apply stale state.
+			if (typeof sessionStorage !== 'undefined') {
+				try {
+					const raw = sessionStorage.getItem(DRAFT_KEY);
+					if (raw) {
+						const d = JSON.parse(raw);
+						if (typeof d.style === 'string') style = d.style;
+						if (typeof d.powderGrams === 'number') powderGrams = d.powderGrams;
+						if (typeof d.waterGrams === 'number') waterGrams = d.waterGrams;
+						if (typeof d.waterTempC === 'number') waterTempC = d.waterTempC;
+						if (typeof d.whisk === 'string') whisk = d.whisk;
+						if (typeof d.milk === 'string') milk = d.milk;
+						if (typeof d.rating === 'number') rating = d.rating;
+						if (typeof d.notes === 'string') notes = d.notes;
+						if (typeof d.brewedAt === 'string') brewedAt = d.brewedAt;
+					}
+					sessionStorage.removeItem(DRAFT_KEY);
+				} catch {
+					// ignore malformed draft
+				}
+			}
+
+			// URL ?tinId= overrides (after returning from /tins/new). It wins
+			// over the auto-pick + the draft's selectedTinId.
+			const urlTinId = page.url.searchParams.get('tinId');
+			if (urlTinId) selectedTinId = urlTinId;
 		}
 
 		loaded = true;
 	});
+
+	function handleCreateNewTin(name: string) {
+		// Persist the form state so the user doesn't lose what they've typed.
+		const draft = {
+			style,
+			powderGrams,
+			waterGrams,
+			waterTempC,
+			whisk,
+			milk,
+			rating,
+			notes,
+			brewedAt
+		};
+		try {
+			sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+		} catch {
+			// storage full / disabled — proceed anyway; user just loses form state
+		}
+		const params = new URLSearchParams();
+		if (name) params.set('name', name);
+		params.set('returnTo', '/sessions/new/personal');
+		void goto(`/tins/new?${params.toString()}`);
+	}
 
 	// ─── time-of-brew ─────────────────────────────────────────────────────
 	const brewedAtLocal = $derived(isoToLocal(brewedAt));
@@ -225,11 +283,6 @@
 			error = e instanceof Error ? e.message : 'Could not delete the session.';
 			saving = false;
 		}
-	}
-
-	function chooseTin(id: string) {
-		selectedTinId = id;
-		picking = false;
 	}
 
 	const backHref = $derived(isEdit ? `/sessions/${initial?.id}` : '/sessions/new');
@@ -316,79 +369,17 @@
 			</div>
 		{/if}
 
-		<!-- Tin picker -->
+		<!-- Tin picker (typeahead + Create new) -->
 		<Field label="Tin">
-			{#snippet action()}
-				{#if !picking && activeTins.length > 1}
-					<button
-						type="button"
-						onclick={() => (picking = true)}
-						class="text-tea hover:text-ink font-mono text-[10.5px] tracking-[0.14em] uppercase"
-					>
-						change
-					</button>
-				{:else if picking}
-					<button
-						type="button"
-						onclick={() => (picking = false)}
-						class="text-muted hover:text-ink font-mono text-[10.5px] tracking-[0.14em] uppercase"
-					>
-						cancel
-					</button>
-				{/if}
-			{/snippet}
-
-			{#if !picking && selectedTin}
-				<button
-					type="button"
-					onclick={() => activeTins.length > 1 && (picking = true)}
-					class="flex w-full items-baseline justify-between gap-3 text-left"
-					aria-label="Selected tin"
-				>
-					<span class="min-w-0 flex-1">
-						<span class="text-ink block font-display text-[22px] italic">{selectedTin.name}</span>
-						<span class="text-muted mt-0.5 block font-mono text-[11px]"
-							>{selectedTin.maker} · {currentRem.toFixed(0)}g left{selectedTin.archived
-								? ' · archived'
-								: ''}</span
-						>
-					</span>
-					{#if activeTins.length > 1}
-						<span class="text-faint font-mono text-[14px]">›</span>
-					{/if}
-				</button>
-			{:else if picking}
-				<ul class="border-hairline border-t">
-					{#each activeTins as t (t.id)}
-						{@const r = tinRemaining(
-							t,
-							personalSessions
-								.filter((s) => s.tinId === t.id)
-								.filter((s) => !isEdit || s.id !== initial!.id)
-						)}
-						<li class="border-hairline border-b">
-							<button
-								type="button"
-								onclick={() => chooseTin(t.id)}
-								class="flex w-full items-baseline justify-between gap-3 py-3 text-left"
-								aria-pressed={t.id === selectedTinId}
-							>
-								<span class="min-w-0 flex-1">
-									<span
-										class="block font-display text-[18px] italic {t.id === selectedTinId
-											? 'text-tea'
-											: 'text-ink'}"
-									>
-										{t.name}
-									</span>
-									<span class="text-muted mt-0.5 block font-mono text-[11px]">{t.maker}</span>
-								</span>
-								<span class="text-muted font-mono text-[11px] tabular-nums">{r.toFixed(0)}g</span>
-							</button>
-						</li>
-					{/each}
-				</ul>
-			{/if}
+			<div class="mt-2">
+				<TinPicker
+					bind:tinId={selectedTinId}
+					{tins}
+					{personalSessions}
+					excludeSessionId={isEdit ? initial?.id : undefined}
+					oncreatenew={handleCreateNewTin}
+				/>
+			</div>
 		</Field>
 
 		<Field label="Style">

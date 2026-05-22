@@ -8,6 +8,7 @@
 
 	import { untrack } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { repository } from '$lib/db/repository';
 	import {
 		GRADE_LABELS,
@@ -42,7 +43,12 @@
 	const initial = untrack(() => tin);
 	const isEdit = initial !== undefined;
 
-	let name = $state(initial?.name ?? '');
+	// URL params let the personal-session form bounce the user here to
+	// create a tin and then return: ?name=Eiju&returnTo=/sessions/new/personal.
+	const urlName = untrack(() => page.url.searchParams.get('name') ?? '');
+	const urlReturnTo = untrack(() => page.url.searchParams.get('returnTo'));
+
+	let name = $state(initial?.name ?? urlName);
 	let maker = $state(initial?.maker ?? '');
 	let grade = $state<string>(initial?.grade ?? 'ceremonial');
 	let region = $state<string>(initial?.region ?? 'uji');
@@ -107,6 +113,15 @@
 			};
 
 			await repository.saveTin(next);
+
+			// If we arrived here from a session form's "Create new tin" flow,
+			// return there with ?tinId= so the form can auto-select the new
+			// tin and restore the draft.
+			if (!isEdit && urlReturnTo) {
+				const sep = urlReturnTo.includes('?') ? '&' : '?';
+				await goto(`${urlReturnTo}${sep}tinId=${encodeURIComponent(next.id)}`);
+				return;
+			}
 			await goto(isEdit ? `/tins/${next.id}` : '/tins');
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Could not save the tin.';
@@ -135,7 +150,7 @@
 
 <main class="mx-auto max-w-md px-6 py-12 pb-28">
 	<a
-		href={isEdit ? `/tins/${initial?.id}` : '/tins'}
+		href={!isEdit && urlReturnTo ? urlReturnTo : isEdit ? `/tins/${initial?.id}` : '/tins'}
 		class="text-muted hover:text-ink font-mono text-[11px] tracking-[0.10em] uppercase"
 	>
 		← back
