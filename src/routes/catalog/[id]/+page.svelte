@@ -20,6 +20,7 @@
 	import Hairline from '$lib/components/Hairline.svelte';
 	import Chawan from '$lib/components/Chawan.svelte';
 	import FlavorChart from '$lib/components/FlavorChart.svelte';
+	import JapanMap from '$lib/components/JapanMap.svelte';
 	import PrimaryButton from '$lib/components/PrimaryButton.svelte';
 
 	const id = $derived(page.params.id);
@@ -127,6 +128,20 @@
 			<p class="text-ink mt-5 font-body text-[15px] italic leading-relaxed">
 				{entry.description}
 			</p>
+		{/if}
+
+		<!-- Origin map — pin on the prefecture, skipped for "other" -->
+		{#if entry.region !== 'other'}
+			<Hairline class="my-7" />
+			<section>
+				<div class="flex items-baseline justify-between">
+					<Eyebrow>Origin</Eyebrow>
+					<Mono size="meta" tone="muted">{REGION_LABELS[entry.region]}</Mono>
+				</div>
+				<div class="mt-3 flex justify-center">
+					<JapanMap region={entry.region} size={180} showLabel />
+				</div>
+			</section>
 		{/if}
 
 		<Hairline class="my-7" />
