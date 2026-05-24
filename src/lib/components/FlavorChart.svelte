@@ -22,6 +22,7 @@
 		highlightId,
 		labelFor,
 		brandFilter,
+		ownedIds = [],
 		onSelect
 	}: {
 		products: readonly CatalogEntry[];
@@ -29,6 +30,9 @@
 		highlightId?: string;
 		labelFor?: string;
 		brandFilter?: BrandId;
+		/** Catalog ids the user owns (`Tin.catalogId`). Renders a tiny chawan-
+		 *  glyph overlay top-right of each owned dot. Hero/inline only. */
+		ownedIds?: readonly string[];
 		onSelect?: (entry: CatalogEntry) => void;
 	} = $props();
 
@@ -306,6 +310,17 @@
 					stroke="var(--color-tea)"
 					stroke-width="1"
 				/>
+			{/if}
+
+			<!-- "I've tried" overlay: tiny chawan-glyph at top-right of dot.
+			     Skipped on thumb size (too small to read). -->
+			{#if size !== 'thumb' && ownedIds.includes(p.id)}
+				<g transform="translate({cx + r + 3} {cy - r - 3})" opacity={dimmed ? 0.4 : 1}>
+					<title>You have a tin of this</title>
+					<circle r="2.8" fill="none" stroke="var(--color-data)" stroke-width="0.5" opacity="0.55" />
+					<circle r="2" fill="none" stroke="var(--color-data)" stroke-width="0.5" opacity="0.55" />
+					<circle r="1" fill="var(--color-data)" />
+				</g>
 			{/if}
 		</g>
 	{/each}

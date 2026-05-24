@@ -20,6 +20,8 @@
 		type Region,
 		type Tin
 	} from '$lib/db/types';
+	import { getCatalogEntry } from '$lib/catalog/matcha-catalog';
+	import { snapshotForTin } from '$lib/catalog/snapshot';
 
 	import Eyebrow from './Eyebrow.svelte';
 	import Display from './Display.svelte';
@@ -43,16 +45,23 @@
 	const initial = untrack(() => tin);
 	const isEdit = initial !== undefined;
 
-	// URL params let the personal-session form bounce the user here to
-	// create a tin and then return: ?name=Eiju&returnTo=/sessions/new/personal.
+	// URL params:
+	//   ?name=...&returnTo=...   — from PersonalSessionForm's "Create new tin" flow
+	//   ?catalogId=...           — from /catalog/[id]'s "Add to inventory" CTA
+	// The catalog path prefills name/maker/grade/region/cultivar via
+	// snapshotForTin and stamps the soft-link `catalogId` onto the new Tin.
 	const urlName = untrack(() => page.url.searchParams.get('name') ?? '');
 	const urlReturnTo = untrack(() => page.url.searchParams.get('returnTo'));
+	const urlCatalogId = untrack(() => page.url.searchParams.get('catalogId') ?? undefined);
+	const catalogSnapshot = untrack(() =>
+		!initial && urlCatalogId ? (getCatalogEntry(urlCatalogId) ? snapshotForTin(getCatalogEntry(urlCatalogId)!) : null) : null
+	);
 
-	let name = $state(initial?.name ?? urlName);
-	let maker = $state(initial?.maker ?? '');
-	let grade = $state<string>(initial?.grade ?? 'ceremonial');
-	let region = $state<string>(initial?.region ?? 'uji');
-	let cultivar = $state(initial?.cultivar ?? '');
+	let name = $state(initial?.name ?? catalogSnapshot?.name ?? urlName);
+	let maker = $state(initial?.maker ?? catalogSnapshot?.maker ?? '');
+	let grade = $state<string>(initial?.grade ?? catalogSnapshot?.grade ?? 'ceremonial');
+	let region = $state<string>(initial?.region ?? catalogSnapshot?.region ?? 'uji');
+	let cultivar = $state(initial?.cultivar ?? catalogSnapshot?.cultivar ?? '');
 	let weightGrams = $state(initial?.weightGrams ?? 30);
 	let openedAt = $state(initial?.openedAt ?? '');
 	let harvestMonth = $state(initial?.harvestDate?.slice(5, 7) ?? '');
@@ -97,6 +106,10 @@
 			const finalHarvest =
 				harvestMonth && harvestYear ? `${harvestYear}-${harvestMonth}-01` : undefined;
 
+			// Catalog soft link: carry through on edit (don't drop it),
+			// stamp on first save when the user came from the catalog.
+			const finalCatalogId = initial?.catalogId ?? catalogSnapshot?.catalogId ?? undefined;
+
 			const next: Tin = {
 				id: initial?.id ?? newId(),
 				name: name.trim(),
@@ -109,7 +122,8 @@
 				openedAt: openedAt || undefined,
 				archived: initial?.archived ?? false,
 				createdAt: initial?.createdAt ?? now,
-				updatedAt: now
+				updatedAt: now,
+				catalogId: finalCatalogId
 			};
 
 			await repository.saveTin(next);
