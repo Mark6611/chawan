@@ -98,7 +98,11 @@ export const TinSchema = z.object({
 	updatedAt: z.string(),
 	// Soft-delete tombstone — Phase 2 sync uses this so deletions propagate
 	// across devices. Reads filter out rows with deletedAt set.
-	deletedAt: z.string().optional()
+	deletedAt: z.string().optional(),
+	// Phase 3: soft link back to the catalog entry the tin was created from.
+	// Drives the "I've tried" indicator on catalog screens. Optional —
+	// tins created manually (without the catalog picker) leave this null.
+	catalogId: z.string().optional()
 });
 export type Tin = z.infer<typeof TinSchema>;
 
