@@ -10,8 +10,8 @@
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 
-	import { MATCHA_CATALOG } from '$lib/catalog/matcha-catalog';
-	import { listBrands } from '$lib/catalog/brands';
+	import { MATCHA_CATALOG, CATALOG_BY_ID } from '$lib/catalog/matcha-catalog';
+	import { BRANDS, listBrands } from '$lib/catalog/brands';
 	import { searchCatalog } from '$lib/catalog/search';
 	import { hasTaste, type BrandId } from '$lib/catalog/types';
 	import {
@@ -32,6 +32,8 @@
 	import FlavorChart from '$lib/components/FlavorChart.svelte';
 	import ChartLegend from '$lib/components/ChartLegend.svelte';
 	import NotPlottedRail from '$lib/components/NotPlottedRail.svelte';
+	import BrandGlyph from '$lib/components/BrandGlyph.svelte';
+	import Chawan from '$lib/components/Chawan.svelte';
 
 	type View = 'list' | 'chart';
 
@@ -75,6 +77,22 @@
 		params.set('returnTo', returnUrl);
 		void goto(`/tins/new?${params.toString()}`);
 	}
+
+	// Chart-view in-place selection. Tapping a dot in browse mode previews
+	// the product below the chart instead of navigating; tap again (or tap
+	// another dot) to swap focus; tap × to clear. Lets you compare multiple
+	// products without leaving the chart.
+	let selectedId = $state<string | undefined>(undefined);
+
+	// If the active filter set hides the selected product, clear the
+	// selection so the inline card doesn't reference an off-chart entry.
+	$effect(() => {
+		if (selectedId && !filtered.find((e) => e.id === selectedId)) {
+			selectedId = undefined;
+		}
+	});
+
+	const selectedEntry = $derived(selectedId ? CATALOG_BY_ID[selectedId] : undefined);
 
 	function setView(v: View) {
 		setParam('view', v === 'list' ? null : 'chart');
@@ -260,11 +278,71 @@
 			<FlavorChart
 				products={filtered}
 				size="hero"
+				highlightId={pickerMode ? undefined : selectedId}
+				labelFor={pickerMode ? undefined : selectedId}
 				{brandFilter}
 				ownedIds={Array.from(ownedSet)}
-				onSelect={(p) => (pickerMode ? handlePick(p.id) : goto(`/catalog/${p.id}`))}
+				onSelect={(p) => {
+					if (pickerMode) handlePick(p.id);
+					else selectedId = selectedId === p.id ? undefined : p.id;
+				}}
 			/>
 		</div>
+
+		<!-- In-place selection card (browse mode only) -->
+		{#if !pickerMode && selectedEntry}
+			{@const sel = selectedEntry}
+			{@const brand = BRANDS[sel.brand]}
+			<div
+				class="border-hairline relative mt-5 rounded-[14px] border-[0.5px] px-4 py-4"
+			>
+				<button
+					type="button"
+					onclick={() => (selectedId = undefined)}
+					class="text-muted hover:text-ink absolute top-2 right-3 grid h-6 w-6 place-items-center font-mono text-[16px] leading-none"
+					aria-label="Clear selection"
+				>
+					×
+				</button>
+
+				<div class="flex items-baseline gap-3">
+					<BrandGlyph brand={sel.brand} size={14} />
+					<div class="min-w-0 flex-1">
+						<div class="flex items-baseline gap-2">
+							<span class="text-ink truncate font-display text-[20px] italic">{sel.name}</span>
+							{#if sel.kanji}
+								<span class="text-muted shrink-0 font-display text-[14px]">{sel.kanji}</span>
+							{/if}
+							{#if ownedSet.has(sel.id)}
+								<span class="ml-1 shrink-0"><Chawan size={12} filled /></span>
+							{/if}
+						</div>
+						<div class="text-muted mt-0.5 font-mono text-[11px]">
+							{brand.shortName} · {GRADE_LABELS[sel.grade]} · {REGION_LABELS[sel.region]}
+							{#if sel.cultivars && sel.cultivars.length > 0}
+								· {sel.cultivars.join(' · ')}
+							{/if}
+						</div>
+					</div>
+				</div>
+
+				{#if sel.description}
+					<p class="text-muted mt-3 font-body text-[14px] italic leading-relaxed">
+						{sel.description}
+					</p>
+				{/if}
+
+				<div class="mt-3 flex items-center justify-end">
+					<a
+						href="/catalog/{sel.id}"
+						class="text-tea hover:text-ink font-mono text-[11px] font-medium tracking-[0.10em] uppercase"
+					>
+						Open detail →
+					</a>
+				</div>
+			</div>
+		{/if}
+
 		<div class="mt-5 flex justify-center">
 			<ChartLegend
 				active={brandFilter}
