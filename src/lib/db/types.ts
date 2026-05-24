@@ -113,7 +113,8 @@ const sessionBaseShape = {
 	// Milk is required if style === 'latte'; enforcement is at the form layer
 	// (the storage shape stays optional so we can save drafts mid-edit).
 	milk: MilkSchema.optional(),
-	rating: z.number().int().min(0).max(5).optional(),
+	// Half-point scale: 0, 0.5, 1, 1.5, … 5. Form layer enforces the .5 step.
+	rating: z.number().min(0).max(5).optional(),
 	notes: z.string().optional(),
 	createdAt: z.string(),
 	updatedAt: z.string(),
