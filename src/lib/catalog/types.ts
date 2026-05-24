@@ -84,6 +84,11 @@ export interface CatalogEntry {
 	/** One-paragraph description. Renders as italic body in the detail view. */
 	description?: string;
 
+	/** Quick-scan taste descriptors, e.g. ["mellow", "umami", "creamy"]. Freeform
+	 *  strings — no enum. Rendered as small hairline-bordered mono chips below
+	 *  the meta line in detail + the inline preview card. */
+	tasteNotes?: string[];
+
 	/** Maker's product page URL. Optional; rendered as the "Source" link. */
 	productUrl?: string;
 }

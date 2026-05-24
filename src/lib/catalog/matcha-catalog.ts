@@ -13,6 +13,11 @@
 // suitability. Everything else is optional. taste is omitted when the
 // maker doesn't publish a profile.
 //
+// Taste notes (`tasteNotes`) are short flavor descriptors curated as
+// best-effort from each brand's public materials + the position on
+// Marukyu's chart. Refine these in PRs when you've tasted a product
+// and disagree with the published vocabulary.
+//
 // Note: Marukyu and Kanbayashi BOTH have a product called "Chigi no
 // Shiro" — distinguish by brand-prefix in the id (mk-chigi-no-shiro vs
 // kb-chigi-no-shiro). Different blends, same romaji name.
@@ -31,7 +36,9 @@ export const MATCHA_CATALOG: readonly CatalogEntry[] = [
 		taste: { x: -0.85, y: -0.7 },
 		usuchaSuitable: true,
 		koichaSuitable: false,
-		description: 'The sharpest, most refreshing end of Marukyu Kōyamaen\'s lineup. An everyday matcha for cooking, lattes, and casual usucha.'
+		tasteNotes: ['bright', 'grassy', 'sharp'],
+		description:
+			'The sharpest, most refreshing end of Marukyu Kōyamaen\'s lineup. An everyday matcha for cooking, lattes, and casual usucha.'
 	},
 	{
 		id: 'mk-isuzu',
@@ -42,7 +49,8 @@ export const MATCHA_CATALOG: readonly CatalogEntry[] = [
 		region: 'uji',
 		taste: { x: -0.6, y: -0.45 },
 		usuchaSuitable: true,
-		koichaSuitable: false
+		koichaSuitable: false,
+		tasteNotes: ['brisk', 'vegetal', 'light umami']
 	},
 	{
 		id: 'mk-chigi-no-shiro',
@@ -53,7 +61,8 @@ export const MATCHA_CATALOG: readonly CatalogEntry[] = [
 		region: 'uji',
 		taste: { x: -0.4, y: -0.2 },
 		usuchaSuitable: true,
-		koichaSuitable: false
+		koichaSuitable: false,
+		tasteNotes: ['delicate', 'vegetal', 'smooth']
 	},
 	{
 		id: 'mk-yugen',
@@ -64,7 +73,8 @@ export const MATCHA_CATALOG: readonly CatalogEntry[] = [
 		region: 'uji',
 		taste: { x: -0.15, y: 0.05 },
 		usuchaSuitable: true,
-		koichaSuitable: false
+		koichaSuitable: false,
+		tasteNotes: ['mellow', 'umami', 'balanced']
 	},
 	{
 		id: 'mk-wako',
@@ -76,7 +86,9 @@ export const MATCHA_CATALOG: readonly CatalogEntry[] = [
 		taste: { x: 0, y: 0 },
 		usuchaSuitable: true,
 		koichaSuitable: true,
-		description: 'The center of Marukyu Kōyamaen\'s flavor chart — a balanced ceremonial usucha that sits at the origin of sharp / mild and refreshing / full-body.'
+		tasteNotes: ['balanced', 'mellow', 'gentle umami'],
+		description:
+			'The center of Marukyu Kōyamaen\'s flavor chart — a balanced ceremonial usucha that sits at the origin of sharp / mild and refreshing / full-body.'
 	},
 	{
 		id: 'mk-kinrin',
@@ -87,7 +99,8 @@ export const MATCHA_CATALOG: readonly CatalogEntry[] = [
 		region: 'uji',
 		taste: { x: 0.25, y: 0.25 },
 		usuchaSuitable: true,
-		koichaSuitable: true
+		koichaSuitable: true,
+		tasteNotes: ['smooth', 'rich umami', 'sweet finish']
 	},
 	{
 		id: 'mk-unkaku',
@@ -98,7 +111,8 @@ export const MATCHA_CATALOG: readonly CatalogEntry[] = [
 		region: 'uji',
 		taste: { x: 0.4, y: 0.4 },
 		usuchaSuitable: true,
-		koichaSuitable: true
+		koichaSuitable: true,
+		tasteNotes: ['creamy', 'deep umami', 'lingering sweetness']
 	},
 	{
 		id: 'mk-eiju',
@@ -110,7 +124,9 @@ export const MATCHA_CATALOG: readonly CatalogEntry[] = [
 		taste: { x: 0.55, y: 0.55 },
 		usuchaSuitable: true,
 		koichaSuitable: true,
-		description: 'One of Marukyu Kōyamaen\'s widely-loved ceremonial matchas — full-bodied, mellow, with a quiet natural sweetness.'
+		tasteNotes: ['mellow', 'umami', 'natural sweetness'],
+		description:
+			'One of Marukyu Kōyamaen\'s widely-loved ceremonial matchas — full-bodied, mellow, with a quiet natural sweetness.'
 	},
 	{
 		id: 'mk-choan',
@@ -121,7 +137,8 @@ export const MATCHA_CATALOG: readonly CatalogEntry[] = [
 		region: 'uji',
 		taste: { x: 0.7, y: 0.65 },
 		usuchaSuitable: true,
-		koichaSuitable: true
+		koichaSuitable: true,
+		tasteNotes: ['rich', 'deep umami', 'creamy']
 	},
 	{
 		id: 'mk-tenju',
@@ -133,7 +150,9 @@ export const MATCHA_CATALOG: readonly CatalogEntry[] = [
 		taste: { x: 0.85, y: 0.7 },
 		usuchaSuitable: true,
 		koichaSuitable: true,
-		description: 'The top-right corner of Marukyu\'s chart. Mild, deeply full-bodied, prized for koicha.'
+		tasteNotes: ['deep umami', 'creamy', 'koicha-prized'],
+		description:
+			'The top-right corner of Marukyu\'s chart. Mild, deeply full-bodied, prized for koicha.'
 	},
 
 	// ─── Ippodo (no published taste chart; surface in NotPlottedRail) ──
@@ -145,7 +164,8 @@ export const MATCHA_CATALOG: readonly CatalogEntry[] = [
 		grade: 'ceremonial',
 		region: 'uji',
 		usuchaSuitable: true,
-		koichaSuitable: false
+		koichaSuitable: false,
+		tasteNotes: ['bright', 'fresh', 'everyday usucha']
 	},
 	{
 		id: 'ip-kanro',
@@ -155,7 +175,8 @@ export const MATCHA_CATALOG: readonly CatalogEntry[] = [
 		grade: 'ceremonial',
 		region: 'uji',
 		usuchaSuitable: true,
-		koichaSuitable: true
+		koichaSuitable: true,
+		tasteNotes: ['balanced', 'smooth', 'subtle sweetness']
 	},
 	{
 		id: 'ip-kaboku',
@@ -165,7 +186,8 @@ export const MATCHA_CATALOG: readonly CatalogEntry[] = [
 		grade: 'premium',
 		region: 'uji',
 		usuchaSuitable: true,
-		koichaSuitable: false
+		koichaSuitable: false,
+		tasteNotes: ['soft', 'vegetal', 'easy-drinking']
 	},
 	{
 		id: 'ip-kanon',
@@ -175,7 +197,8 @@ export const MATCHA_CATALOG: readonly CatalogEntry[] = [
 		grade: 'ceremonial',
 		region: 'uji',
 		usuchaSuitable: true,
-		koichaSuitable: false
+		koichaSuitable: false,
+		tasteNotes: ['fragrant', 'delicate', 'floral']
 	},
 	{
 		id: 'ip-ikuyo-no-mukashi',
@@ -185,7 +208,8 @@ export const MATCHA_CATALOG: readonly CatalogEntry[] = [
 		grade: 'ceremonial',
 		region: 'uji',
 		usuchaSuitable: true,
-		koichaSuitable: true
+		koichaSuitable: true,
+		tasteNotes: ['full-bodied', 'rich umami', 'versatile']
 	},
 	{
 		id: 'ip-ummon-no-mukashi',
@@ -196,6 +220,7 @@ export const MATCHA_CATALOG: readonly CatalogEntry[] = [
 		region: 'uji',
 		usuchaSuitable: false,
 		koichaSuitable: true,
+		tasteNotes: ['rich', 'thick', 'deep umami'],
 		description: 'Ippodo\'s flagship koicha-style matcha. Rich, thick, slowly grown.'
 	},
 
@@ -209,7 +234,8 @@ export const MATCHA_CATALOG: readonly CatalogEntry[] = [
 		region: 'uji',
 		taste: { x: 0.65, y: 0.6 },
 		usuchaSuitable: true,
-		koichaSuitable: true
+		koichaSuitable: true,
+		tasteNotes: ['full-bodied', 'deep umami', 'smooth']
 	},
 	{
 		id: 'kb-chigi-no-shiro',
@@ -220,7 +246,8 @@ export const MATCHA_CATALOG: readonly CatalogEntry[] = [
 		region: 'uji',
 		taste: { x: -0.3, y: -0.1 },
 		usuchaSuitable: true,
-		koichaSuitable: false
+		koichaSuitable: false,
+		tasteNotes: ['delicate', 'vegetal', 'bright']
 	},
 	{
 		id: 'kb-aoi',
@@ -231,7 +258,8 @@ export const MATCHA_CATALOG: readonly CatalogEntry[] = [
 		region: 'uji',
 		taste: { x: 0.4, y: 0.45 },
 		usuchaSuitable: true,
-		koichaSuitable: true
+		koichaSuitable: true,
+		tasteNotes: ['mellow', 'umami', 'balanced']
 	},
 	{
 		id: 'kb-tachibanasaki',
@@ -242,7 +270,8 @@ export const MATCHA_CATALOG: readonly CatalogEntry[] = [
 		region: 'uji',
 		taste: { x: 0.2, y: 0.3 },
 		usuchaSuitable: true,
-		koichaSuitable: true
+		koichaSuitable: true,
+		tasteNotes: ['floral', 'bright', 'fresh']
 	}
 ];
 

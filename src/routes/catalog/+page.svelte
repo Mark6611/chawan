@@ -326,6 +326,18 @@
 					</div>
 				</div>
 
+				{#if sel.tasteNotes && sel.tasteNotes.length > 0}
+					<div class="mt-3 flex flex-wrap gap-1.5">
+						{#each sel.tasteNotes as note (note)}
+							<span
+								class="border-hairline text-muted rounded-full border-[0.5px] px-2 py-0.5 font-mono text-[10px] tracking-[0.05em]"
+							>
+								{note}
+							</span>
+						{/each}
+					</div>
+				{/if}
+
 				{#if sel.description}
 					<p class="text-muted mt-3 font-body text-[14px] italic leading-relaxed">
 						{sel.description}

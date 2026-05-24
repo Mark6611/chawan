@@ -109,6 +109,19 @@
 			</div>
 		{/if}
 
+		<!-- Taste notes -->
+		{#if entry.tasteNotes && entry.tasteNotes.length > 0}
+			<div class="mt-4 flex flex-wrap gap-1.5">
+				{#each entry.tasteNotes as note (note)}
+					<span
+						class="border-hairline text-muted rounded-full border-[0.5px] px-2.5 py-0.5 font-mono text-[10.5px] tracking-[0.05em]"
+					>
+						{note}
+					</span>
+				{/each}
+			</div>
+		{/if}
+
 		<!-- Description -->
 		{#if entry.description}
 			<p class="text-ink mt-5 font-body text-[15px] italic leading-relaxed">
