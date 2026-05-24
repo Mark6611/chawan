@@ -182,8 +182,7 @@
 		loaded = true;
 	});
 
-	function handleCreateNewTin(name: string) {
-		// Persist the form state so the user doesn't lose what they've typed.
+	function saveDraft() {
 		const draft = {
 			style,
 			powderGrams,
@@ -200,10 +199,22 @@
 		} catch {
 			// storage full / disabled — proceed anyway; user just loses form state
 		}
+	}
+
+	function handleCreateNewTin(name: string) {
+		// Persist the form state so the user doesn't lose what they've typed.
+		saveDraft();
 		const params = new URLSearchParams();
 		if (name) params.set('name', name);
 		params.set('returnTo', '/sessions/new/personal');
 		void goto(`/tins/new?${params.toString()}`);
+	}
+
+	function handleBrowseCatalog() {
+		// Same draft-save pattern; the catalog page reads ?return= and
+		// chains onward to /tins/new?catalogId=...&returnTo=...
+		saveDraft();
+		void goto('/catalog?return=/sessions/new/personal');
 	}
 
 	// ─── time-of-brew ─────────────────────────────────────────────────────
@@ -378,6 +389,7 @@
 					{personalSessions}
 					excludeSessionId={isEdit ? initial?.id : undefined}
 					oncreatenew={handleCreateNewTin}
+					onbrowsecatalog={handleBrowseCatalog}
 				/>
 			</div>
 		</Field>

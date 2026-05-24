@@ -36,6 +36,14 @@
 	type View = 'list' | 'chart';
 
 	// ─── URL-driven state ────────────────────────────────────
+	// `?return=...` flips the page into picker mode (rows fire onpick →
+	// route to /tins/new?catalogId=...&returnTo=<return> instead of
+	// going to detail). A "Cancel" link returns to <return> without
+	// picking. URL-driven so back-gesture works and the picker page
+	// is shareable.
+	const returnUrl = $derived(page.url.searchParams.get('return'));
+	const pickerMode = $derived(!!returnUrl);
+
 	const view = $derived<View>(
 		(page.url.searchParams.get('view') as View | null) ?? 'list'
 	);
@@ -56,6 +64,16 @@
 		if (value === null || value === '') url.searchParams.delete(key);
 		else url.searchParams.set(key, value);
 		goto(url.pathname + url.search, { replaceState: true, keepFocus: true, noScroll: true });
+	}
+
+	function handlePick(entryId: string) {
+		// Picker mode → forward to TinForm with the catalog prefill +
+		// returnTo so the form sends the user back where they started.
+		if (!returnUrl) return;
+		const params = new URLSearchParams();
+		params.set('catalogId', entryId);
+		params.set('returnTo', returnUrl);
+		void goto(`/tins/new?${params.toString()}`);
 	}
 
 	function setView(v: View) {
@@ -125,13 +143,31 @@
 </script>
 
 <main class="mx-auto max-w-md px-6 py-12 pb-28">
-	<Eyebrow>Reference</Eyebrow>
-	<div class="mt-2">
-		<Display size="l">Catalog</Display>
-	</div>
-	<p class="text-muted mt-3 max-w-[36ch] text-[14px] italic">
-		Known matcha SKUs from leading Japanese makers — the lineup before you pick a tin.
-	</p>
+	{#if pickerMode}
+		<a
+			href={returnUrl}
+			class="text-muted hover:text-ink font-mono text-[11px] tracking-[0.10em] uppercase"
+		>
+			← cancel
+		</a>
+		<div class="mt-8">
+			<Eyebrow>Browse catalog</Eyebrow>
+			<div class="mt-2">
+				<Display size="l">Pick a matcha</Display>
+			</div>
+			<p class="text-muted mt-3 max-w-[36ch] text-[14px] italic">
+				Tap to prefill the tin form — you'll fill in weight + opened date next.
+			</p>
+		</div>
+	{:else}
+		<Eyebrow>Reference</Eyebrow>
+		<div class="mt-2">
+			<Display size="l">Catalog</Display>
+		</div>
+		<p class="text-muted mt-3 max-w-[36ch] text-[14px] italic">
+			Known matcha SKUs from leading Japanese makers — the lineup before you pick a tin.
+		</p>
+	{/if}
 
 	<!-- ─── View toggle ──────────────────────────────────── -->
 	<div class="mt-6 flex gap-5">
@@ -208,7 +244,12 @@
 				<Eyebrow>{brand.name} · {entries.length}</Eyebrow>
 				<div class="border-hairline mt-2 border-t">
 					{#each entries as e (e.id)}
-						<CatalogRow entry={e} tried={ownedSet.has(e.id)} />
+						<CatalogRow
+							entry={e}
+							tried={ownedSet.has(e.id)}
+							picker={pickerMode}
+							onpick={pickerMode ? (en) => handlePick(en.id) : undefined}
+						/>
 					{/each}
 				</div>
 			</section>
@@ -221,7 +262,7 @@
 				size="hero"
 				{brandFilter}
 				ownedIds={Array.from(ownedSet)}
-				onSelect={(p) => goto(`/catalog/${p.id}`)}
+				onSelect={(p) => (pickerMode ? handlePick(p.id) : goto(`/catalog/${p.id}`))}
 			/>
 		</div>
 		<div class="mt-5 flex justify-center">

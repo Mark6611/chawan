@@ -17,13 +17,15 @@
 
 	import type { PersonalSession, Tin } from '$lib/db/types';
 	import { tinRemaining } from '$lib/tins/compute';
+	import Chawan from './Chawan.svelte';
 
 	let {
 		tinId = $bindable<string | undefined>(undefined),
 		tins,
 		personalSessions = [],
 		excludeSessionId,
-		oncreatenew
+		oncreatenew,
+		onbrowsecatalog
 	}: {
 		tinId?: string;
 		tins: Tin[];
@@ -32,6 +34,10 @@
 		 *  remaining-math so the picker shows the post-save remaining. */
 		excludeSessionId?: string;
 		oncreatenew?: (queryName: string) => void;
+		/** Optional — when provided, surfaces a "Browse catalog" footer
+		 *  action alongside "Create new tin". Parent typically saves the
+		 *  session draft + navigates to /catalog?return=... */
+		onbrowsecatalog?: () => void;
 	} = $props();
 
 	let query = $state('');
@@ -77,6 +83,10 @@
 
 	function createNew() {
 		oncreatenew?.(query.trim());
+	}
+
+	function browseCatalog() {
+		onbrowsecatalog?.();
 	}
 
 	const selectedRem = $derived(
@@ -208,6 +218,37 @@
 						</div>
 					</div>
 				</button>
+
+				<!-- "Browse catalog" footer (when wired) -->
+				{#if onbrowsecatalog}
+					<button
+						type="button"
+						onmousedown={(e) => {
+							e.preventDefault();
+							browseCatalog();
+						}}
+						class="border-hairline hover:bg-surface block w-full border-t px-4 py-3 text-left transition-colors"
+					>
+						<div class="flex items-center gap-3">
+							<div
+								class="border-rule grid h-7 w-7 shrink-0 place-items-center rounded-full border-[0.5px]"
+								aria-hidden="true"
+							>
+								<Chawan size={16} />
+							</div>
+							<div class="min-w-0 flex-1">
+								<div
+									class="text-ink font-mono text-[11px] font-medium tracking-[0.10em] uppercase"
+								>
+									Browse catalog
+								</div>
+								<div class="text-muted mt-0.5 font-mono text-[11px]">
+									Pick from the curated lineup →
+								</div>
+							</div>
+						</div>
+					</button>
+				{/if}
 			</div>
 		{/if}
 	</div>
