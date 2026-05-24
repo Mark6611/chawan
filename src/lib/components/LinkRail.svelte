@@ -10,6 +10,7 @@
 		{ href: '/', label: 'Today' },
 		{ href: '/sessions', label: 'Sessions' },
 		{ href: '/tins', label: 'Tins' },
+		{ href: '/catalog', label: 'Catalog' },
 		{ href: '/settings', label: 'Settings' }
 	];
 
