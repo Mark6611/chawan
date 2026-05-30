@@ -1,8 +1,5 @@
-<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-	<rect width="512" height="512" rx="112" fill="#181d19" />
-	<g transform="translate(256 256)">
-		<circle cx="0" cy="0" r="153" fill="none" stroke="#bed2aa" stroke-opacity="0.45" stroke-width="6" />
-		<circle cx="0" cy="0" r="107" fill="none" stroke="#bed2aa" stroke-opacity="0.45" stroke-width="6" />
-		<circle cx="0" cy="0" r="56" fill="#5e9874" fill-opacity="0.95" />
-	</g>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  
+  <rect width="1024" height="1024" rx="230" fill="#161b16"></rect>
+  <circle cx="512" cy="512" r="300" fill="none" stroke="#67ac7d" stroke-width="46" stroke-linecap="round" stroke-dasharray="1602 1885" transform="rotate(128 512 512)"></circle>
 </svg>

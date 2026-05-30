@@ -19,13 +19,24 @@ export default defineConfig({
 				start_url: '/',
 				scope: '/',
 				icons: [
+					// "any" (standard) and "maskable" kept as SEPARATE entries —
+					// a maskable icon's full-bleed bg looks wrong when used as
+					// standard, so don't share one entry across both purposes.
+					{ src: 'icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+					{ src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+					{ src: 'icon-1024.png', sizes: '1024x1024', type: 'image/png', purpose: 'any' },
 					{
-						src: 'icon.svg',
+						src: 'icon-maskable.svg',
 						sizes: 'any',
 						type: 'image/svg+xml',
-						purpose: 'any maskable'
+						purpose: 'maskable'
+					},
+					{
+						src: 'icon-maskable-1024.png',
+						sizes: '1024x1024',
+						type: 'image/png',
+						purpose: 'maskable'
 					}
-					// PNG icons (180/192/512) generated in Session 9. SVG alone suffices for dev + iOS install.
 				]
 			}
 		})
