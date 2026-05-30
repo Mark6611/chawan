@@ -15,6 +15,7 @@
 	// explicit transaction logic.
 
 	import { onMount, untrack } from 'svelte';
+	import { slide } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { repository } from '$lib/db/repository';
@@ -401,11 +402,13 @@
 		</Field>
 
 		{#if style === 'latte'}
-			<Field label="Milk">
-				<div class="mt-2">
-					<ChipGroup options={milkOpts} bind:value={milk} />
-				</div>
-			</Field>
+			<div transition:slide={{ duration: 180 }}>
+				<Field label="Milk">
+					<div class="mt-2">
+						<ChipGroup options={milkOpts} bind:value={milk} />
+					</div>
+				</Field>
+			</div>
 		{/if}
 
 		<div class="field-wrapper border-hairline border-b py-[14px]">

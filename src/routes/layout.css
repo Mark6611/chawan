@@ -148,6 +148,40 @@
 	}
 }
 
+/* ─────────────────────────────────────────────────────────────
+   Theme transition — only active during the brief flip window.
+   preferences.setTheme() adds .theming to <html>, changes data-theme,
+   removes .theming after 350ms. During that window every paintable
+   property cross-fades; outside it, all elements snap normally so
+   hover transitions etc. stay at their own durations.
+   ───────────────────────────────────────────────────────────── */
+html.theming,
+html.theming *,
+html.theming *::before,
+html.theming *::after {
+	transition:
+		background-color 0.3s ease,
+		color 0.3s ease,
+		border-color 0.3s ease,
+		fill 0.3s ease,
+		stroke 0.3s ease !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Honor the user's OS-level motion preference. Reduced-motion
+   collapses all animations + transitions to ~0ms across the app.
+   ───────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
+}
+
 @layer components {
 	/* Eyebrow pattern — used as the structural metadata label everywhere. */
 	.eyebrow {

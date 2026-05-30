@@ -4,6 +4,7 @@
 	// PersonalSessionForm but with cafe-specific fields.
 
 	import { onMount, untrack } from 'svelte';
+	import { slide } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { repository } from '$lib/db/repository';
 	import {
@@ -288,11 +289,13 @@
 		</Field>
 
 		{#if style === 'latte'}
-			<Field label="Milk">
-				<div class="mt-2">
-					<ChipGroup options={milkOpts} bind:value={milk} />
-				</div>
-			</Field>
+			<div transition:slide={{ duration: 180 }}>
+				<Field label="Milk">
+					<div class="mt-2">
+						<ChipGroup options={milkOpts} bind:value={milk} />
+					</div>
+				</Field>
+			</div>
 		{/if}
 
 		<Field label="Price">

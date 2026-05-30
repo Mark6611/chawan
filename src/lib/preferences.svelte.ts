@@ -36,6 +36,16 @@ class Preferences {
 	}
 
 	setTheme(t: Theme) {
+		// Brief "theming" class on <html> arms a cross-fade transition on
+		// every paint-affecting property (background, color, border, fill,
+		// stroke) so the data-theme attribute flip doesn't snap. CSS rule
+		// lives in layout.css; window is 350ms.
+		if (typeof document !== 'undefined') {
+			document.documentElement.classList.add('theming');
+			setTimeout(() => {
+				document.documentElement.classList.remove('theming');
+			}, 350);
+		}
 		this.theme = t;
 		this.applyTheme();
 		try {
