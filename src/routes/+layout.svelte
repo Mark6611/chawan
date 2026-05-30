@@ -1,17 +1,33 @@
 <script lang="ts">
 	// Fonts — self-hosted via Fontsource so the PWA stays offline-friendly.
+	// Scoped to latin + latin-ext only: the full aggregate imports shipped
+	// cyrillic / greek / vietnamese subsets we never render (~1.2 MB of
+	// woff2). latin-ext is required — it carries the ō macron in maker
+	// names like "Marukyu Kōyamaen" and cultivars like "Gokō". Kanji
+	// (永寿, 又玄, …) were never in these fonts; they render via the OS
+	// CJK fallback either way, so trimming doesn't affect them.
+	//
 	// Cormorant Garamond (display): regular + italic, multiple weights.
-	import '@fontsource/cormorant-garamond/400.css';
-	import '@fontsource/cormorant-garamond/500.css';
-	import '@fontsource/cormorant-garamond/600.css';
-	import '@fontsource/cormorant-garamond/400-italic.css';
+	import '@fontsource/cormorant-garamond/latin-400.css';
+	import '@fontsource/cormorant-garamond/latin-500.css';
+	import '@fontsource/cormorant-garamond/latin-600.css';
+	import '@fontsource/cormorant-garamond/latin-400-italic.css';
+	import '@fontsource/cormorant-garamond/latin-ext-400.css';
+	import '@fontsource/cormorant-garamond/latin-ext-500.css';
+	import '@fontsource/cormorant-garamond/latin-ext-600.css';
+	import '@fontsource/cormorant-garamond/latin-ext-400-italic.css';
 	// EB Garamond (body): regular + italic.
-	import '@fontsource/eb-garamond/400.css';
-	import '@fontsource/eb-garamond/400-italic.css';
+	import '@fontsource/eb-garamond/latin-400.css';
+	import '@fontsource/eb-garamond/latin-400-italic.css';
+	import '@fontsource/eb-garamond/latin-ext-400.css';
+	import '@fontsource/eb-garamond/latin-ext-400-italic.css';
 	// IBM Plex Mono (mono): light/regular/medium for the numeric scale.
-	import '@fontsource/ibm-plex-mono/300.css';
-	import '@fontsource/ibm-plex-mono/400.css';
-	import '@fontsource/ibm-plex-mono/500.css';
+	import '@fontsource/ibm-plex-mono/latin-300.css';
+	import '@fontsource/ibm-plex-mono/latin-400.css';
+	import '@fontsource/ibm-plex-mono/latin-500.css';
+	import '@fontsource/ibm-plex-mono/latin-ext-300.css';
+	import '@fontsource/ibm-plex-mono/latin-ext-400.css';
+	import '@fontsource/ibm-plex-mono/latin-ext-500.css';
 
 	import './layout.css';
 
