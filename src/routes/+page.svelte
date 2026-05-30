@@ -132,7 +132,15 @@
 
 		<!-- Bowls this week -->
 		<section>
-			<Eyebrow>Bowls this week</Eyebrow>
+			<div class="flex items-baseline justify-between">
+				<Eyebrow>Bowls this week</Eyebrow>
+				<a
+					href="/insights"
+					class="text-muted hover:text-ink font-mono text-[10.5px] tracking-[0.14em] uppercase"
+				>
+					insights →
+				</a>
+			</div>
 			<div class="mt-2 flex items-baseline gap-2">
 				<Mono size="xl" weight="light" tone="data">{weekBowls}</Mono>
 				<Mono size="meta" tone="muted">{weekBowls === 1 ? 'bowl' : 'bowls'}</Mono>
