@@ -19,17 +19,46 @@
 	} from '$lib/db/types';
 	import { formatRatio, formatTimeAgo } from '$lib/sessions/compute';
 	import { formatPrice } from '$lib/sessions/currency';
+	import {
+		buildCafeCard,
+		buildPersonalCard,
+		shareFilename,
+		type SessionCardData
+	} from '$lib/share/share-card';
 
 	import Eyebrow from '$lib/components/Eyebrow.svelte';
 	import Display from '$lib/components/Display.svelte';
 	import Mono from '$lib/components/Mono.svelte';
 	import Hairline from '$lib/components/Hairline.svelte';
 	import Rating from '$lib/components/Rating.svelte';
+	import ShareSheet from '$lib/components/ShareSheet.svelte';
 
 	let session = $state<Session | null | undefined>(undefined);
 	let tin = $state<Tin | null>(null);
 
 	const id = $derived(page.params.id);
+
+	// ─── Share sheet ─────────────────────────────────────────
+	let shareOpen = $state(false);
+	let shareData = $state<SessionCardData | null>(null);
+	let shareName = $state('');
+
+	// Personal cards need the tin; cafe cards are self-contained.
+	const canShare = $derived(!!session && (!isPersonal(session) || !!tin));
+
+	function openShare() {
+		if (!session) return;
+		let card: SessionCardData | null = null;
+		if (isPersonal(session)) {
+			if (!tin) return;
+			card = buildPersonalCard(session, tin);
+		} else {
+			card = buildCafeCard(session);
+		}
+		shareData = card;
+		shareName = shareFilename(card.title, card.date);
+		shareOpen = true;
+	}
 
 	async function load() {
 		if (!id) return;
@@ -91,12 +120,23 @@
 					{/if}
 				</div>
 			</div>
-			<a
-				href="/sessions/{session.id}/edit"
-				class="text-muted hover:text-ink font-mono text-[11px] tracking-[0.10em] uppercase"
-			>
-				edit
-			</a>
+			<div class="flex shrink-0 items-baseline gap-4">
+				{#if canShare}
+					<button
+						type="button"
+						onclick={openShare}
+						class="text-muted hover:text-ink font-mono text-[11px] tracking-[0.10em] uppercase"
+					>
+						share
+					</button>
+				{/if}
+				<a
+					href="/sessions/{session.id}/edit"
+					class="text-muted hover:text-ink font-mono text-[11px] tracking-[0.10em] uppercase"
+				>
+					edit
+				</a>
+			</div>
 		</div>
 
 		<!-- Meta line under the hero -->
@@ -226,3 +266,5 @@
 		{/if}
 	{/if}
 </main>
+
+<ShareSheet bind:open={shareOpen} data={shareData} filename={shareName} />
