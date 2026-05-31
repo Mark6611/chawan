@@ -8,7 +8,7 @@
 
 import { isCafe, isPersonal, type Session, type Tin } from '$lib/db/types';
 import { getCatalogEntry } from '$lib/catalog/matcha-catalog';
-import { hasTaste } from '$lib/catalog/types';
+import { hasTaste, type CatalogEntry, type TasteProfile } from '$lib/catalog/types';
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -199,4 +199,73 @@ export function palatePhrase(c: PalateCentroid): string {
 	if (horiz) return horiz;
 	if (vert) return vert;
 	return 'balanced';
+}
+
+/** The distinct catalog entries (with taste) behind the user's tins —
+ *  the set the palate share-card plots. Deduped by catalog id. */
+export function palateProducts(
+	tins: readonly Tin[]
+): (CatalogEntry & { taste: TasteProfile })[] {
+	const seen = new Set<string>();
+	const out: (CatalogEntry & { taste: TasteProfile })[] = [];
+	for (const t of tins) {
+		if (!t.catalogId || seen.has(t.catalogId)) continue;
+		seen.add(t.catalogId);
+		const e = getCatalogEntry(t.catalogId);
+		if (e && hasTaste(e)) out.push(e);
+	}
+	return out;
+}
+
+// ─── Season stat (for the share card) ────────────────────────────────
+
+const MONTH3 = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+interface SeasonDef {
+	name: string;
+	months: [number, number, number]; // calendar month indices
+}
+
+function seasonOf(month: number): SeasonDef {
+	if (month === 11 || month <= 1) return { name: 'Winter', months: [11, 0, 1] };
+	if (month <= 4) return { name: 'Spring', months: [2, 3, 4] };
+	if (month <= 7) return { name: 'Summer', months: [5, 6, 7] };
+	return { name: 'Autumn', months: [8, 9, 10] };
+}
+
+export interface SeasonStat {
+	name: string; // "Spring"
+	range: string; // "Mar – May"
+	count: number; // bowls this season
+	tins: number; // distinct tins used this season
+}
+
+/** Bowls + distinct tins in the season containing `now`. Handles winter's
+ *  year boundary (Dec → Feb spans two calendar years). */
+export function seasonStat(sessions: readonly Session[], now: Date = new Date()): SeasonStat {
+	const m = now.getMonth();
+	const y = now.getFullYear();
+	const s = seasonOf(m);
+
+	// Determine the start year of the current season occurrence.
+	let startYear = y;
+	if (s.name === 'Winter') startYear = m === 11 ? y : y - 1; // Dec=this year; Jan/Feb=prev
+	const start = new Date(startYear, s.months[0], 1).getTime();
+	const endYear = s.name === 'Winter' ? startYear + 1 : startYear;
+	const endMonth = s.months[2] + 1; // first day of the month after the season
+	const end = new Date(endYear, endMonth, 1).getTime();
+
+	const inWindow = sessions.filter((sess) => {
+		const t = new Date(sess.brewedAt).getTime();
+		return t >= start && t < end;
+	});
+	const tinIds = new Set<string>();
+	for (const sess of inWindow.filter(isPersonal)) tinIds.add(sess.tinId);
+
+	return {
+		name: s.name,
+		range: `${MONTH3[s.months[0]]} – ${MONTH3[s.months[2]]}`,
+		count: inWindow.length,
+		tins: tinIds.size
+	};
 }

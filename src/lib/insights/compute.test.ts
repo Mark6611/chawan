@@ -11,7 +11,9 @@ import {
 	ownedCatalogIds,
 	palateCentroid,
 	palatePhrase,
+	palateProducts,
 	ratedCount,
+	seasonStat,
 	styleSplit,
 	totalGramsConsumed,
 	whiskPreference
@@ -194,5 +196,57 @@ describe('catalog coverage + palate', () => {
 		expect(palatePhrase({ x: 0.1, y: 0.1, mappedCount: 1 })).toBe('balanced');
 		expect(palatePhrase({ x: 0.6, y: 0.1, mappedCount: 1 })).toBe('mild');
 		expect(palatePhrase({ x: 0.1, y: -0.6, mappedCount: 1 })).toBe('refreshing');
+	});
+});
+
+describe('palateProducts', () => {
+	it('returns distinct catalog entries with taste behind the tins', () => {
+		const tins = [
+			tin({ id: 't1', catalogId: 'mk-eiju' }),
+			tin({ id: 't2', catalogId: 'mk-eiju' }), // dup catalogId
+			tin({ id: 't3', catalogId: 'mk-wako' }),
+			tin({ id: 't4' }) // no catalogId
+		];
+		const out = palateProducts(tins);
+		expect(out.map((e) => e.id).sort()).toEqual(['mk-eiju', 'mk-wako']);
+		expect(out.every((e) => e.taste)).toBe(true);
+	});
+
+	it('skips catalog ids that do not resolve or have no taste', () => {
+		// ip-* (Ippodo) entries have no published taste → excluded.
+		const tins = [tin({ id: 't1', catalogId: 'ip-sayaka' }), tin({ id: 't2', catalogId: 'nope' })];
+		expect(palateProducts(tins)).toEqual([]);
+	});
+});
+
+describe('seasonStat', () => {
+	it('counts bowls + distinct tins within the season containing now', () => {
+		// Spring 2026 = Mar–May. now = 20 May 2026.
+		const now = new Date('2026-05-20T12:00:00.000Z');
+		const sessions: Session[] = [
+			p({ brewedAt: '2026-03-15T07:00:00.000Z', tinId: 't1' }),
+			p({ brewedAt: '2026-04-10T07:00:00.000Z', tinId: 't1' }),
+			p({ brewedAt: '2026-05-19T07:00:00.000Z', tinId: 't2' }),
+			p({ brewedAt: '2026-02-20T07:00:00.000Z', tinId: 't3' }) // winter — excluded
+		];
+		const stat = seasonStat(sessions, now);
+		expect(stat.name).toBe('Spring');
+		expect(stat.range).toBe('Mar – May');
+		expect(stat.count).toBe(3);
+		expect(stat.tins).toBe(2);
+	});
+
+	it('handles winter spanning the year boundary', () => {
+		// now = 10 Jan 2026 → Winter = Dec 2025 – Feb 2026.
+		const now = new Date('2026-01-10T12:00:00.000Z');
+		const sessions: Session[] = [
+			p({ brewedAt: '2025-12-25T07:00:00.000Z', tinId: 't1' }),
+			p({ brewedAt: '2026-01-05T07:00:00.000Z', tinId: 't1' }),
+			p({ brewedAt: '2025-11-30T07:00:00.000Z', tinId: 't2' }) // autumn — excluded
+		];
+		const stat = seasonStat(sessions, now);
+		expect(stat.name).toBe('Winter');
+		expect(stat.count).toBe(2);
+		expect(stat.tins).toBe(1);
 	});
 });

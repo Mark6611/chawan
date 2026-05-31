@@ -17,11 +17,15 @@
 	let {
 		open = $bindable(false),
 		data,
-		filename
+		filename,
+		eyebrow = 'Share this bowl',
+		heading = 'A card to keep'
 	}: {
 		open?: boolean;
 		data: ShareCardData | null;
 		filename: string;
+		eyebrow?: string;
+		heading?: string;
 	} = $props();
 
 	let previewCanvas = $state<HTMLCanvasElement>();
@@ -96,9 +100,9 @@
 		>
 			<div class="bg-rule mx-auto mb-4 h-1 w-10 rounded-full"></div>
 
-			<Eyebrow>Share this bowl</Eyebrow>
+			<Eyebrow>{eyebrow}</Eyebrow>
 			<div class="mt-1">
-				<Display size="m">A card to keep</Display>
+				<Display size="m">{heading}</Display>
 			</div>
 
 			<div class="mt-5 flex justify-center">

@@ -27,11 +27,19 @@
 		ownedCatalogIds,
 		palateCentroid,
 		palatePhrase,
+		palateProducts,
 		ratedCount,
+		seasonStat,
 		styleSplit,
 		totalGramsConsumed,
 		whiskPreference
 	} from '$lib/insights/compute';
+	import {
+		derivePalatePhrase,
+		shareDate,
+		shareFilename,
+		type ShareCardData
+	} from '$lib/share/share-card';
 
 	import Eyebrow from '$lib/components/Eyebrow.svelte';
 	import Display from '$lib/components/Display.svelte';
@@ -40,6 +48,7 @@
 	import Chawan from '$lib/components/Chawan.svelte';
 	import Rating from '$lib/components/Rating.svelte';
 	import FlavorChart from '$lib/components/FlavorChart.svelte';
+	import ShareSheet from '$lib/components/ShareSheet.svelte';
 
 	let sessions = $state<Session[]>([]);
 	let tins = $state<Tin[]>([]);
@@ -82,6 +91,52 @@
 		].filter((r) => r.n > 0)
 	);
 	const styleMax = $derived(Math.max(1, split.usucha, split.koicha, split.latte));
+
+	// ─── Share (palate + season stat) ────────────────────────
+	const palateProds = $derived(palateProducts(tins));
+	const season = $derived(seasonStat(sessions));
+	const palateMakers = $derived(new Set(palateProds.map((p) => p.brand)).size);
+
+	let shareOpen = $state(false);
+	let shareData = $state<ShareCardData | null>(null);
+	let shareName = $state('');
+	let shareEyebrow = $state('Share');
+	let shareHeading = $state('A card to keep');
+
+	function openPalateShare() {
+		if (palateProds.length === 0) return;
+		const date = shareDate(new Date().toISOString());
+		shareData = {
+			kind: 'palate',
+			format: 'square',
+			date,
+			products: palateProds,
+			phrase: derivePalatePhrase(palateProds),
+			sub: `${palateProds.length} ${palateProds.length === 1 ? 'tin' : 'tins'} · ${palateMakers} ${palateMakers === 1 ? 'maker' : 'makers'} plotted`
+		};
+		shareName = shareFilename('My palate', date);
+		shareEyebrow = 'Share my palate';
+		shareHeading = 'Your palate, plotted';
+		shareOpen = true;
+	}
+
+	function openSeasonShare() {
+		const date = shareDate(new Date().toISOString());
+		shareData = {
+			kind: 'stat',
+			format: 'square',
+			date,
+			eyebrow: 'THIS SEASON',
+			figure: String(season.count),
+			unit: season.count === 1 ? 'bowl' : 'bowls',
+			caption: 'A quiet season\nof whisking.',
+			sub: `${season.range} · ${season.tins} ${season.tins === 1 ? 'tin' : 'tins'}`
+		};
+		shareName = shareFilename(`${season.count} bowls`, date);
+		shareEyebrow = 'Share this season';
+		shareHeading = 'A season, in one number';
+		shareOpen = true;
+	}
 </script>
 
 <main class="mx-auto max-w-md px-6 py-12 pb-28">
@@ -144,6 +199,20 @@
 					<Mono size="meta" tone="muted">Most often a {busiest}.</Mono>
 				</div>
 			{/if}
+			{#if season.count > 0}
+				<div class="mt-3 flex items-baseline justify-between">
+					<Mono size="meta" tone="muted">
+						This season · {season.count} {season.count === 1 ? 'bowl' : 'bowls'}
+					</Mono>
+					<button
+						type="button"
+						onclick={openSeasonShare}
+						class="text-tea hover:text-ink font-mono text-[10.5px] tracking-[0.14em] uppercase"
+					>
+						share →
+					</button>
+				</div>
+			{/if}
 		</section>
 
 		<!-- Palate map (hero) -->
@@ -152,7 +221,18 @@
 			<section>
 				<div class="flex items-baseline justify-between">
 					<Eyebrow>Your palate</Eyebrow>
-					<Mono size="meta" tone="muted">{centroid.mappedCount} mapped</Mono>
+					<div class="flex items-baseline gap-4">
+						<Mono size="meta" tone="muted">{centroid.mappedCount} mapped</Mono>
+						{#if palateProds.length > 0}
+							<button
+								type="button"
+								onclick={openPalateShare}
+								class="text-tea hover:text-ink font-mono text-[10.5px] tracking-[0.14em] uppercase"
+							>
+								share →
+							</button>
+						{/if}
+					</div>
 				</div>
 				<div class="mt-2">
 					<Display size="m" italic as="h2">Mostly {palatePhrase(centroid)}.</Display>
@@ -294,3 +374,11 @@
 		{/if}
 	{/if}
 </main>
+
+<ShareSheet
+	bind:open={shareOpen}
+	data={shareData}
+	filename={shareName}
+	eyebrow={shareEyebrow}
+	heading={shareHeading}
+/>
