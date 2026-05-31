@@ -1,13 +1,14 @@
 <script lang="ts">
 	// Bottom sheet for sharing a card. Eyebrow + display + live preview +
-	// two actions (Share… / Save image) — the shipped sheet vocabulary per
-	// affordance.md. Preview renders at 1× immediately; export renders at 3×
-	// on tap. The card is a file, not a network — Share… hands the PNG to
-	// the OS share sheet, Save image downloads it. No upload.
+	// optional Square/Story toggle + two actions (Share… / Save image) —
+	// the shipped sheet vocabulary per affordance.md. Preview renders at 1×
+	// immediately; export renders at 3× on tap. The card is a file, not a
+	// network — Share… hands the PNG to the OS share sheet, Save image
+	// downloads it. No upload.
 
 	import { fade, slide } from 'svelte/transition';
 	import { drawShareCard, renderShareCard } from '$lib/share/render-canvas';
-	import { shareOrDownload, type ShareCardData } from '$lib/share/share-card';
+	import { shareOrDownload, type ShareCardData, type ShareFormat } from '$lib/share/share-card';
 
 	import Eyebrow from './Eyebrow.svelte';
 	import Display from './Display.svelte';
@@ -31,28 +32,48 @@
 	let previewCanvas = $state<HTMLCanvasElement>();
 	let busy = $state(false);
 	let error = $state<string | null>(null);
+	let format = $state<ShareFormat>('square');
 
-	// Draw the 1× preview whenever the sheet is open with data + a canvas.
+	// Stat cards have no story variant — only session + palate can toggle.
+	const canToggle = $derived(!!data && data.kind !== 'stat');
+	const effective = $derived<ShareCardData | null>(data ? ({ ...data, format } as ShareCardData) : null);
+
+	// Reset the format to the incoming card's default when a new card opens.
+	// Reads `data` only, so toggling `format` later doesn't re-reset it.
 	$effect(() => {
-		if (open && data && previewCanvas) {
+		if (data) format = data.format ?? 'square';
+	});
+
+	// Draw the 1× preview when open with data + canvas + on format change.
+	$effect(() => {
+		if (open && effective && previewCanvas) {
 			error = null;
-			drawShareCard(previewCanvas, data, 1).catch((e) => {
+			drawShareCard(previewCanvas, effective, 1).catch((e) => {
 				error = e instanceof Error ? e.message : 'Could not render the preview.';
 			});
 		}
 	});
 
+	// Preview box keeps the card's aspect: square 236² / story 9:16.
+	const previewW = $derived(format === 'story' ? 210 : 236);
+	const previewH = $derived(format === 'story' ? 373 : 236);
+
 	function close() {
 		open = false;
 	}
 
+	async function render(): Promise<Blob | null> {
+		if (!effective) return null;
+		return renderShareCard(effective, 3);
+	}
+
 	async function doShare() {
-		if (!data || busy) return;
+		if (!effective || busy) return;
 		busy = true;
 		error = null;
 		try {
-			const blob = await renderShareCard(data, 3);
-			await shareOrDownload(blob, filename);
+			const blob = await render();
+			if (blob) await shareOrDownload(blob, filename);
 			open = false;
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Could not create the image.';
@@ -62,17 +83,19 @@
 	}
 
 	async function doSave() {
-		if (!data || busy) return;
+		if (!effective || busy) return;
 		busy = true;
 		error = null;
 		try {
-			const blob = await renderShareCard(data, 3);
-			const url = URL.createObjectURL(blob);
-			const a = document.createElement('a');
-			a.href = url;
-			a.download = filename;
-			a.click();
-			setTimeout(() => URL.revokeObjectURL(url), 1000);
+			const blob = await render();
+			if (blob) {
+				const url = URL.createObjectURL(blob);
+				const a = document.createElement('a');
+				a.href = url;
+				a.download = filename;
+				a.click();
+				setTimeout(() => URL.revokeObjectURL(url), 1000);
+			}
 			open = false;
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Could not save the image.';
@@ -100,7 +123,31 @@
 		>
 			<div class="bg-rule mx-auto mb-4 h-1 w-10 rounded-full"></div>
 
-			<Eyebrow>{eyebrow}</Eyebrow>
+			<div class="flex items-baseline justify-between gap-3">
+				<Eyebrow>{eyebrow}</Eyebrow>
+				{#if canToggle}
+					<div class="flex gap-3">
+						<button
+							type="button"
+							onclick={() => (format = 'square')}
+							class="font-mono text-[10.5px] tracking-[0.14em] uppercase {format === 'square'
+								? 'text-tea'
+								: 'text-muted hover:text-ink'}"
+						>
+							Square
+						</button>
+						<button
+							type="button"
+							onclick={() => (format = 'story')}
+							class="font-mono text-[10.5px] tracking-[0.14em] uppercase {format === 'story'
+								? 'text-tea'
+								: 'text-muted hover:text-ink'}"
+						>
+							Story
+						</button>
+					</div>
+				{/if}
+			</div>
 			<div class="mt-1">
 				<Display size="m">{heading}</Display>
 			</div>
@@ -109,7 +156,7 @@
 				<canvas
 					bind:this={previewCanvas}
 					class="border-hairline rounded-[14px] border-[0.5px]"
-					style="width: 236px; height: 236px;"
+					style="width: {previewW}px; height: {previewH}px;"
 				></canvas>
 			</div>
 

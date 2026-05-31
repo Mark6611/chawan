@@ -318,10 +318,10 @@ function drawRating(
 	ctx: CanvasRenderingContext2D,
 	rating: number,
 	x: number,
-	top: number
+	top: number,
+	r = 11, // ø22 square / ø26 story (r=13)
+	gap = 14
 ): void {
-	const r = 11; // ø22
-	const gap = 14;
 	const cy = top + r;
 	for (let i = 0; i < 5; i++) {
 		const cx = x + r + i * (r * 2 + gap);
@@ -602,6 +602,206 @@ function drawStatCard(ctx: CanvasRenderingContext2D, data: StatCardData): void {
 	}
 }
 
+// ─── Story format (1080 × 1920) ─────────────────────────────
+
+const ST = {
+	W: 1080,
+	H: 1920,
+	left: 110,
+	right: 970,
+	center: 540,
+	contentW: 860,
+	availTop: 320, // below the centered header
+	availBottom: 1680 // above the sign-off
+};
+
+/** Centered header: ensō + CHAWAN + date, stacked at the top. */
+function storyHeader(ctx: CanvasRenderingContext2D, date: string): void {
+	drawEnso(ctx, ST.center, 182, 64, NIGHT.inkMid, 2.6);
+	trackedText(ctx, 'CHAWAN', ST.center, 230, `500 24px "${MONO}"`, NIGHT.inkMid, 0.34, 24, 'center');
+	trackedText(
+		ctx,
+		date.toUpperCase(),
+		ST.center,
+		266,
+		`400 20px "${MONO}"`,
+		NIGHT.inkLow,
+		0.22,
+		20,
+		'center'
+	);
+}
+
+/** "A FILE, NOT A FEED" sign-off with a short vertical hairline above. */
+function storySignOff(ctx: CanvasRenderingContext2D): void {
+	ctx.save();
+	ctx.strokeStyle = NIGHT.hairline;
+	ctx.lineWidth = 1;
+	ctx.beginPath();
+	ctx.moveTo(ST.center + 0.5, 1716);
+	ctx.lineTo(ST.center + 0.5, 1780);
+	ctx.stroke();
+	ctx.restore();
+	trackedText(
+		ctx,
+		'A FILE, NOT A FEED',
+		ST.center,
+		1800,
+		`500 18px "${MONO}"`,
+		NIGHT.inkFaint,
+		0.22,
+		18,
+		'center'
+	);
+}
+
+function drawSessionStory(ctx: CanvasRenderingContext2D, data: SessionCardData): void {
+	storyHeader(ctx, data.date);
+	storySignOff(ctx);
+
+	const titleSize = data.kind === 'session-cafe' ? 132 : 168;
+	const eyebrow = data.kind === 'session-cafe' ? 'CAFÉ' : 'PERSONAL';
+	const hasRating = !!data.rating && data.rating > 0;
+	const hasNotes = !!data.notes && data.notes.trim().length > 0;
+
+	ctx.font = `italic 400 ${titleSize}px "${DISPLAY}"`;
+	const titleLines = wrapText(ctx, data.title, ST.contentW);
+	const titleLineH = titleSize * 0.98;
+
+	let noteLines: string[] = [];
+	const noteSize = 44;
+	const noteLineH = noteSize * 1.5;
+	if (hasNotes) {
+		ctx.font = `italic 400 ${noteSize}px "${BODY}"`;
+		noteLines = wrapText(ctx, `“${data.notes!.trim()}”`, Math.min(760, ST.contentW));
+	}
+
+	// metrics 2-col grid
+	const cols = 2;
+	const colGap = 64;
+	const colW = (ST.contentW - colGap) / cols;
+	const cellH = 20 + 14 + 92; // label + gap + value
+	const rowGap = 70;
+	const rows = Math.ceil(data.metrics.length / cols);
+	const metricsH = rows * cellH + (rows - 1) * rowGap;
+
+	const hairlineGap = 76;
+	const total =
+		22 + // eyebrow
+		26 +
+		titleLines.length * titleLineH +
+		24 +
+		30 + // sub
+		hairlineGap +
+		1 +
+		hairlineGap +
+		metricsH +
+		(hasRating ? 56 + 26 : 0) +
+		(hasNotes ? (hasRating ? 48 : 60) + noteLines.length * noteLineH : 0);
+
+	const avail = ST.availBottom - ST.availTop;
+	let y = ST.availTop + Math.max(0, (avail - total) / 2);
+
+	trackedText(ctx, eyebrow, ST.left, y, `500 22px "${MONO}"`, NIGHT.tea, 0.22, 22);
+	y += 22 + 26;
+
+	ctx.save();
+	ctx.font = `italic 400 ${titleSize}px "${DISPLAY}"`;
+	ctx.fillStyle = NIGHT.ink;
+	ctx.textBaseline = 'top';
+	titleLines.forEach((ln, i) => ctx.fillText(ln, ST.left, y + i * titleLineH));
+	ctx.restore();
+	y += titleLines.length * titleLineH + 24;
+
+	ctx.save();
+	ctx.font = `400 30px "${MONO}"`;
+	ctx.fillStyle = NIGHT.inkMid;
+	ctx.textBaseline = 'top';
+	ctx.fillText(data.sub, ST.left, y);
+	ctx.restore();
+	y += 30 + hairlineGap;
+
+	ctx.save();
+	ctx.strokeStyle = NIGHT.hairline;
+	ctx.lineWidth = 1;
+	ctx.beginPath();
+	ctx.moveTo(ST.left, y + 0.5);
+	ctx.lineTo(ST.left + 160, y + 0.5);
+	ctx.stroke();
+	ctx.restore();
+	y += 1 + hairlineGap;
+
+	// metric grid
+	data.metrics.forEach((m, i) => {
+		const col = i % cols;
+		const row = Math.floor(i / cols);
+		const cx = ST.left + col * (colW + colGap);
+		const cellTop = y + row * (cellH + rowGap);
+		trackedText(ctx, m.label.toUpperCase(), cx, cellTop, `500 20px "${MONO}"`, NIGHT.inkLow, 0.22, 20);
+		const baseline = cellTop + 20 + 14 + 92 * 0.76;
+		ctx.save();
+		ctx.textBaseline = 'alphabetic';
+		ctx.font = `300 92px "${MONO}"`;
+		ctx.fillStyle = m.accent ? NIGHT.tea : NIGHT.ink;
+		ctx.fillText(m.value, cx, baseline);
+		const vw = ctx.measureText(m.value).width;
+		if (m.unit) {
+			ctx.font = `400 30px "${MONO}"`;
+			ctx.fillStyle = NIGHT.inkLow;
+			ctx.fillText(m.unit, cx + vw + 8, baseline);
+		}
+		ctx.restore();
+	});
+	y += metricsH;
+
+	if (hasRating) {
+		y += 56;
+		drawRating(ctx, data.rating!, ST.left, y, 13, 16);
+		y += 26;
+	}
+
+	if (hasNotes) {
+		y += hasRating ? 48 : 60;
+		ctx.save();
+		ctx.font = `italic 400 ${noteSize}px "${BODY}"`;
+		ctx.fillStyle = NIGHT.inkMid;
+		ctx.textBaseline = 'top';
+		noteLines.forEach((ln, i) => ctx.fillText(ln, ST.left, y + i * noteLineH));
+		ctx.restore();
+	}
+}
+
+function drawPalateStory(ctx: CanvasRenderingContext2D, data: PalateCardData): void {
+	storyHeader(ctx, data.date);
+	storySignOff(ctx);
+
+	const box = 720;
+	const phraseLines = data.phrase.split('\n');
+	const phraseSize = 92;
+	const phraseLineH = phraseSize * 1.04;
+
+	const total = 22 + 40 + box + 64 + phraseLines.length * phraseLineH + 24 + 28;
+	const avail = ST.availBottom - ST.availTop;
+	let y = ST.availTop + Math.max(0, (avail - total) / 2);
+
+	trackedText(ctx, 'MY PALATE', ST.center, y, `500 22px "${MONO}"`, NIGHT.tea, 0.22, 22, 'center');
+	y += 22 + 40;
+
+	drawMiniChart(ctx, data.products, ST.center - box / 2, y, box);
+	y += box + 64;
+
+	y = centeredText(
+		ctx,
+		phraseLines,
+		y,
+		`italic 400 ${phraseSize}px "${DISPLAY}"`,
+		NIGHT.ink,
+		phraseLineH
+	);
+	y += 24;
+	centeredText(ctx, [data.sub], y, `400 28px "${MONO}"`, NIGHT.inkMid, 28);
+}
+
 // ─── Public API ──────────────────────────────────────────────
 
 /** Draw a card onto a provided canvas at the given scale (1 = preview,
@@ -611,14 +811,15 @@ export async function drawShareCard(
 	data: ShareCardData,
 	scale = 1
 ): Promise<void> {
-	if (data.format === 'story') throw new Error('Story format lands in Session 22.');
-
 	await ensureFonts();
 
-	const w = SQ.W * scale;
-	const h = SQ.H * scale;
-	canvas.width = w;
-	canvas.height = h;
+	const story = data.format === 'story';
+	if (story && data.kind === 'stat') throw new Error('The stat card has no story variant.');
+
+	const W = 1080;
+	const H = story ? 1920 : 1080;
+	canvas.width = W * scale;
+	canvas.height = H * scale;
 
 	const ctx = canvas.getContext('2d');
 	if (!ctx) throw new Error('2D canvas context unavailable.');
@@ -626,11 +827,19 @@ export async function drawShareCard(
 
 	// Background
 	ctx.fillStyle = NIGHT.paper;
-	ctx.fillRect(0, 0, SQ.W, SQ.H);
+	ctx.fillRect(0, 0, W, H);
 
-	if (data.kind === 'palate') drawPalateCard(ctx, data);
-	else if (data.kind === 'stat') drawStatCard(ctx, data);
-	else drawSessionCard(ctx, data);
+	if (story) {
+		if (data.kind === 'palate') drawPalateStory(ctx, data);
+		else if (data.kind === 'session-personal' || data.kind === 'session-cafe')
+			drawSessionStory(ctx, data);
+	} else if (data.kind === 'palate') {
+		drawPalateCard(ctx, data);
+	} else if (data.kind === 'stat') {
+		drawStatCard(ctx, data);
+	} else {
+		drawSessionCard(ctx, data);
+	}
 }
 
 /** Render a card to a PNG Blob. Default 3× (3240²) for export crispness. */
