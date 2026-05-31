@@ -1,9 +1,12 @@
-// Canvas renderer for share cards. Phase 5, Session 20: square session
-// cards (personal + café). Stat / palate / story land in Session 21.
+// Canvas renderer for share cards. Phase 5.
 //
 // Everything is drawn in 1080-unit space; ctx.scale(S, S) handles the
-// output resolution (S=3 → 3240² export, S=1 → preview). Colors are the
-// FIXED night card palette — the card never follows the in-app theme.
+// output resolution (S=3 → 3240² export, S=1 → preview).
+//
+// The card defaults to the night treatment (richer in a feed) but the
+// share sheet lets the user pick night or day. `P` is the active palette,
+// set at the top of drawShareCard before any synchronous drawing — every
+// draw helper reads `P`, not a fixed palette.
 //
 // All positions/sizes follow share-spec.md. Canvas drawing is imperative,
 // so this is verbose by nature; the structure mirrors the spec's blocks.
@@ -18,15 +21,43 @@ import type {
 import { BRANDS } from '$lib/catalog/brands';
 import type { BrandGlyphShape } from '$lib/catalog/types';
 
-const NIGHT = {
+export type CardTheme = 'night' | 'day';
+
+interface Palette {
+	paper: string;
+	ink: string;
+	inkMid: string;
+	inkLow: string;
+	inkFaint: string;
+	tea: string;
+	hairline: string;
+	rule: string; // metric-column dividers — a touch stronger than hairline
+}
+
+const NIGHT: Palette = {
 	paper: '#161b16',
 	ink: '#f3f0e9',
 	inkMid: '#b6ad9e',
 	inkLow: '#867d6f',
 	inkFaint: '#5a5249',
 	tea: '#67ac7d',
-	hairline: 'rgba(225,230,220,0.13)'
+	hairline: 'rgba(225,230,220,0.13)',
+	rule: 'rgba(225,230,220,0.26)'
 };
+
+const DAY: Palette = {
+	paper: '#e9e0cf', // warm wood paper
+	ink: '#26221c',
+	inkMid: '#6b6253',
+	inkLow: '#8c8273',
+	inkFaint: '#b9af9c',
+	tea: '#3c7a51', // deeper tea so it reads on light
+	hairline: 'rgba(40,30,12,0.14)',
+	rule: 'rgba(40,30,12,0.26)'
+};
+
+/** Active palette — set by drawShareCard before drawing. */
+let P: Palette = NIGHT;
 
 const MONO = 'IBM Plex Mono';
 const DISPLAY = 'Cormorant Garamond';
@@ -169,7 +200,7 @@ function drawSessionCard(ctx: CanvasRenderingContext2D, data: SessionCardData): 
 	blocks.push({
 		height: 21,
 		draw: (top) =>
-			trackedText(ctx, eyebrow, SQ.left, top, `500 21px "${MONO}"`, NIGHT.tea, 0.22, 21)
+			trackedText(ctx, eyebrow, SQ.left, top, `500 21px "${MONO}"`, P.tea, 0.22, 21)
 	});
 	// gap 22 baked as spacer below
 	blocks.push(spacer(22));
@@ -180,7 +211,7 @@ function drawSessionCard(ctx: CanvasRenderingContext2D, data: SessionCardData): 
 		draw: (top) => {
 			ctx.save();
 			ctx.font = `italic 400 ${titleSize}px "${DISPLAY}"`;
-			ctx.fillStyle = NIGHT.ink;
+			ctx.fillStyle = P.ink;
 			ctx.textBaseline = 'top';
 			titleLines.forEach((ln, i) => ctx.fillText(ln, SQ.left, top + i * titleLineH));
 			ctx.restore();
@@ -194,7 +225,7 @@ function drawSessionCard(ctx: CanvasRenderingContext2D, data: SessionCardData): 
 		draw: (top) => {
 			ctx.save();
 			ctx.font = `400 26px "${MONO}"`;
-			ctx.fillStyle = NIGHT.inkMid;
+			ctx.fillStyle = P.inkMid;
 			ctx.textBaseline = 'top';
 			ctx.fillText(data.sub, SQ.left, top);
 			ctx.restore();
@@ -207,7 +238,7 @@ function drawSessionCard(ctx: CanvasRenderingContext2D, data: SessionCardData): 
 		height: 1,
 		draw: (top) => {
 			ctx.save();
-			ctx.strokeStyle = NIGHT.hairline;
+			ctx.strokeStyle = P.hairline;
 			ctx.lineWidth = 1;
 			ctx.beginPath();
 			ctx.moveTo(SQ.left, top + 0.5);
@@ -239,7 +270,7 @@ function drawSessionCard(ctx: CanvasRenderingContext2D, data: SessionCardData): 
 			draw: (top) => {
 				ctx.save();
 				ctx.font = `italic 400 ${noteSize}px "${BODY}"`;
-				ctx.fillStyle = NIGHT.inkMid;
+				ctx.fillStyle = P.inkMid;
 				ctx.textBaseline = 'top';
 				noteLines.forEach((ln, i) => ctx.fillText(ln, SQ.left, top + i * noteLineH));
 				ctx.restore();
@@ -270,18 +301,24 @@ function drawMetrics(
 	const colW = SQ.contentW / n;
 	const valueBaseline = top + 19 + 14 + 74 * 0.76; // alphabetic baseline of the value row
 
+	// Column 0 sits flush at the left margin (aligned with the title above);
+	// later columns inset their content past the divider so the rule doesn't
+	// kiss the numbers.
+	const INSET = 28;
+
 	metrics.forEach((m, i) => {
 		const colX = SQ.left + colW * i;
-		const pad = 2;
+		const contentX = i === 0 ? SQ.left : colX + INSET;
 
-		// vertical hairline between columns
+		// vertical divider between columns — stronger than a hairline, inset
+		// vertically a touch, sitting in the gutter ahead of the content.
 		if (i > 0) {
 			ctx.save();
-			ctx.strokeStyle = NIGHT.hairline;
-			ctx.lineWidth = 1;
+			ctx.strokeStyle = P.rule;
+			ctx.lineWidth = 1.25;
 			ctx.beginPath();
-			ctx.moveTo(colX + 0.5, top);
-			ctx.lineTo(colX + 0.5, top + blockH);
+			ctx.moveTo(colX + 0.5, top + 4);
+			ctx.lineTo(colX + 0.5, top + blockH - 2);
 			ctx.stroke();
 			ctx.restore();
 		}
@@ -290,10 +327,10 @@ function drawMetrics(
 		trackedText(
 			ctx,
 			m.label.toUpperCase(),
-			colX + pad,
+			contentX,
 			top,
 			`500 19px "${MONO}"`,
-			NIGHT.inkLow,
+			P.inkLow,
 			0.22,
 			19
 		);
@@ -302,13 +339,13 @@ function drawMetrics(
 		ctx.save();
 		ctx.textBaseline = 'alphabetic';
 		ctx.font = `300 74px "${MONO}"`;
-		ctx.fillStyle = m.accent ? NIGHT.tea : NIGHT.ink;
-		ctx.fillText(m.value, colX + pad, valueBaseline);
+		ctx.fillStyle = m.accent ? P.tea : P.ink;
+		ctx.fillText(m.value, contentX, valueBaseline);
 		const vw = ctx.measureText(m.value).width;
 		if (m.unit) {
 			ctx.font = `400 26px "${MONO}"`;
-			ctx.fillStyle = NIGHT.inkLow;
-			ctx.fillText(m.unit, colX + pad + vw + 8, valueBaseline);
+			ctx.fillStyle = P.inkLow;
+			ctx.fillText(m.unit, contentX + vw + 8, valueBaseline);
 		}
 		ctx.restore();
 	});
@@ -331,25 +368,25 @@ function drawRating(
 		ctx.beginPath();
 		ctx.arc(cx, cy, r, 0, Math.PI * 2);
 		if (filled) {
-			ctx.fillStyle = NIGHT.tea;
+			ctx.fillStyle = P.tea;
 			ctx.fill();
 		} else if (half) {
 			// left half tea, ring on the rest
 			ctx.save();
 			ctx.beginPath();
 			ctx.arc(cx, cy, r, Math.PI / 2, (Math.PI * 3) / 2);
-			ctx.fillStyle = NIGHT.tea;
+			ctx.fillStyle = P.tea;
 			ctx.fill();
 			ctx.restore();
 			ctx.beginPath();
 			ctx.arc(cx, cy, r - 1, 0, Math.PI * 2);
-			ctx.strokeStyle = NIGHT.inkFaint;
+			ctx.strokeStyle = P.inkFaint;
 			ctx.lineWidth = 2;
 			ctx.stroke();
 		} else {
 			ctx.beginPath();
 			ctx.arc(cx, cy, r - 1, 0, Math.PI * 2);
-			ctx.strokeStyle = NIGHT.inkFaint;
+			ctx.strokeStyle = P.inkFaint;
 			ctx.lineWidth = 2;
 			ctx.stroke();
 		}
@@ -360,15 +397,15 @@ function drawRating(
 // ─── Maker bar + sign-off (shared by all square cards) ──────
 
 function drawMakerBar(ctx: CanvasRenderingContext2D, date: string): void {
-	drawEnso(ctx, SQ.left + 18, 88 + 18, 36, NIGHT.inkMid, 1.6);
-	trackedText(ctx, 'CHAWAN', 146, 96, `500 21px "${MONO}"`, NIGHT.inkMid, 0.3, 21, 'left');
+	drawEnso(ctx, SQ.left + 18, 88 + 18, 36, P.inkMid, 1.6);
+	trackedText(ctx, 'CHAWAN', 146, 96, `500 21px "${MONO}"`, P.inkMid, 0.3, 21, 'left');
 	trackedText(
 		ctx,
 		date.toUpperCase(),
 		SQ.right,
 		96,
 		`400 21px "${MONO}"`,
-		NIGHT.inkLow,
+		P.inkLow,
 		0.22,
 		21,
 		'right'
@@ -376,7 +413,7 @@ function drawMakerBar(ctx: CanvasRenderingContext2D, date: string): void {
 }
 
 function drawSignOff(ctx: CanvasRenderingContext2D): void {
-	drawEnso(ctx, SQ.center, 985, 30, NIGHT.tea);
+	drawEnso(ctx, SQ.center, 985, 30, P.tea);
 }
 
 /** Centered (non-tracked) text. Returns the y advanced past the block. */
@@ -457,7 +494,7 @@ function drawMiniChart(
 
 	// frame
 	ctx.save();
-	ctx.strokeStyle = NIGHT.hairline;
+	ctx.strokeStyle = P.hairline;
 	ctx.lineWidth = 1;
 	ctx.strokeRect(ox, oy, box, box);
 
@@ -486,24 +523,24 @@ function drawMiniChart(
 
 	// axis labels
 	const lab = `500 18px "${MONO}"`;
-	trackedText(ctx, 'FULL-BODY', SQ.center, oy - 30, lab, NIGHT.inkLow, 0.18, 18, 'center');
-	trackedText(ctx, 'REFRESHING', SQ.center, oy + box + 12, lab, NIGHT.inkLow, 0.18, 18, 'center');
+	trackedText(ctx, 'FULL-BODY', SQ.center, oy - 30, lab, P.inkLow, 0.18, 18, 'center');
+	trackedText(ctx, 'REFRESHING', SQ.center, oy + box + 12, lab, P.inkLow, 0.18, 18, 'center');
 	ctx.save();
 	ctx.translate(ox - 14, oy + box / 2);
 	ctx.rotate(-Math.PI / 2);
-	trackedText(ctx, 'SHARP', 0, 0, lab, NIGHT.inkLow, 0.18, 18, 'center');
+	trackedText(ctx, 'SHARP', 0, 0, lab, P.inkLow, 0.18, 18, 'center');
 	ctx.restore();
 	ctx.save();
 	ctx.translate(ox + box + 14, oy + box / 2);
 	ctx.rotate(Math.PI / 2);
-	trackedText(ctx, 'MILD', 0, 0, lab, NIGHT.inkLow, 0.18, 18, 'center');
+	trackedText(ctx, 'MILD', 0, 0, lab, P.inkLow, 0.18, 18, 'center');
 	ctx.restore();
 
 	// dots — the user's tins, each in its brand glyph, in tea
 	const r = Math.max(7, box * 0.016);
 	for (const p of products) {
 		const shape = BRANDS[p.brand]?.glyph ?? 'disc';
-		drawBrandGlyph(ctx, shape, projX(p.taste.x), projY(p.taste.y), r, NIGHT.tea);
+		drawBrandGlyph(ctx, shape, projX(p.taste.x), projY(p.taste.y), r, P.tea);
 	}
 }
 
@@ -523,7 +560,7 @@ function drawPalateCard(ctx: CanvasRenderingContext2D, data: PalateCardData): vo
 	const avail = SQ.availBottom - SQ.availTop;
 	let y = SQ.availTop + Math.max(0, (avail - stackH) / 2);
 
-	trackedText(ctx, 'MY PALATE', SQ.center, y, `500 21px "${MONO}"`, NIGHT.tea, 0.22, 21, 'center');
+	trackedText(ctx, 'MY PALATE', SQ.center, y, `500 21px "${MONO}"`, P.tea, 0.22, 21, 'center');
 	y += 21 + 30;
 
 	drawMiniChart(ctx, data.products, SQ.center - box / 2, y, box);
@@ -534,12 +571,12 @@ function drawPalateCard(ctx: CanvasRenderingContext2D, data: PalateCardData): vo
 		phraseLines,
 		y,
 		`italic 400 ${phraseSize}px "${DISPLAY}"`,
-		NIGHT.ink,
+		P.ink,
 		phraseLineH
 	);
 	y += 20;
 
-	centeredText(ctx, [data.sub], y, `400 24px "${MONO}"`, NIGHT.inkMid, 24);
+	centeredText(ctx, [data.sub], y, `400 24px "${MONO}"`, P.inkMid, 24);
 }
 
 // ─── Stat card ──────────────────────────────────────────────
@@ -560,7 +597,7 @@ function drawStatCard(ctx: CanvasRenderingContext2D, data: StatCardData): void {
 	let y = SQ.availTop + Math.max(0, (avail - stackH) / 2);
 
 	// eyebrow
-	trackedText(ctx, data.eyebrow, SQ.center, y, `500 21px "${MONO}"`, NIGHT.tea, 0.22, 21, 'center');
+	trackedText(ctx, data.eyebrow, SQ.center, y, `500 21px "${MONO}"`, P.tea, 0.22, 21, 'center');
 	y += 21 + 36;
 
 	// figure (+ unit baseline-aligned, group centered)
@@ -575,11 +612,11 @@ function drawStatCard(ctx: CanvasRenderingContext2D, data: StatCardData): void {
 	const startX = SQ.center - groupW / 2;
 	ctx.textAlign = 'left';
 	ctx.font = `300 ${figureSize}px "${MONO}"`;
-	ctx.fillStyle = NIGHT.ink;
+	ctx.fillStyle = P.ink;
 	ctx.fillText(data.figure, startX, baseline);
 	if (data.unit) {
 		ctx.font = `italic 400 64px "${DISPLAY}"`;
-		ctx.fillStyle = NIGHT.inkMid;
+		ctx.fillStyle = P.inkMid;
 		ctx.fillText(' ' + data.unit, startX + fw, baseline);
 	}
 	ctx.restore();
@@ -591,14 +628,14 @@ function drawStatCard(ctx: CanvasRenderingContext2D, data: StatCardData): void {
 		captionLines,
 		y,
 		`italic 400 ${captionSize}px "${DISPLAY}"`,
-		NIGHT.inkMid,
+		P.inkMid,
 		captionLineH
 	);
 
 	// sub
 	if (data.sub) {
 		y += 24;
-		centeredText(ctx, [data.sub], y, `400 24px "${MONO}"`, NIGHT.inkMid, 24);
+		centeredText(ctx, [data.sub], y, `400 24px "${MONO}"`, P.inkMid, 24);
 	}
 }
 
@@ -617,15 +654,15 @@ const ST = {
 
 /** Centered header: ensō + CHAWAN + date, stacked at the top. */
 function storyHeader(ctx: CanvasRenderingContext2D, date: string): void {
-	drawEnso(ctx, ST.center, 182, 64, NIGHT.inkMid, 2.6);
-	trackedText(ctx, 'CHAWAN', ST.center, 230, `500 24px "${MONO}"`, NIGHT.inkMid, 0.34, 24, 'center');
+	drawEnso(ctx, ST.center, 182, 64, P.inkMid, 2.6);
+	trackedText(ctx, 'CHAWAN', ST.center, 230, `500 24px "${MONO}"`, P.inkMid, 0.34, 24, 'center');
 	trackedText(
 		ctx,
 		date.toUpperCase(),
 		ST.center,
 		266,
 		`400 20px "${MONO}"`,
-		NIGHT.inkLow,
+		P.inkLow,
 		0.22,
 		20,
 		'center'
@@ -635,7 +672,7 @@ function storyHeader(ctx: CanvasRenderingContext2D, date: string): void {
 /** "A FILE, NOT A FEED" sign-off with a short vertical hairline above. */
 function storySignOff(ctx: CanvasRenderingContext2D): void {
 	ctx.save();
-	ctx.strokeStyle = NIGHT.hairline;
+	ctx.strokeStyle = P.hairline;
 	ctx.lineWidth = 1;
 	ctx.beginPath();
 	ctx.moveTo(ST.center + 0.5, 1716);
@@ -648,7 +685,7 @@ function storySignOff(ctx: CanvasRenderingContext2D): void {
 		ST.center,
 		1800,
 		`500 18px "${MONO}"`,
-		NIGHT.inkFaint,
+		P.inkFaint,
 		0.22,
 		18,
 		'center'
@@ -702,12 +739,12 @@ function drawSessionStory(ctx: CanvasRenderingContext2D, data: SessionCardData):
 	const avail = ST.availBottom - ST.availTop;
 	let y = ST.availTop + Math.max(0, (avail - total) / 2);
 
-	trackedText(ctx, eyebrow, ST.left, y, `500 22px "${MONO}"`, NIGHT.tea, 0.22, 22);
+	trackedText(ctx, eyebrow, ST.left, y, `500 22px "${MONO}"`, P.tea, 0.22, 22);
 	y += 22 + 26;
 
 	ctx.save();
 	ctx.font = `italic 400 ${titleSize}px "${DISPLAY}"`;
-	ctx.fillStyle = NIGHT.ink;
+	ctx.fillStyle = P.ink;
 	ctx.textBaseline = 'top';
 	titleLines.forEach((ln, i) => ctx.fillText(ln, ST.left, y + i * titleLineH));
 	ctx.restore();
@@ -715,14 +752,14 @@ function drawSessionStory(ctx: CanvasRenderingContext2D, data: SessionCardData):
 
 	ctx.save();
 	ctx.font = `400 30px "${MONO}"`;
-	ctx.fillStyle = NIGHT.inkMid;
+	ctx.fillStyle = P.inkMid;
 	ctx.textBaseline = 'top';
 	ctx.fillText(data.sub, ST.left, y);
 	ctx.restore();
 	y += 30 + hairlineGap;
 
 	ctx.save();
-	ctx.strokeStyle = NIGHT.hairline;
+	ctx.strokeStyle = P.hairline;
 	ctx.lineWidth = 1;
 	ctx.beginPath();
 	ctx.moveTo(ST.left, y + 0.5);
@@ -737,17 +774,17 @@ function drawSessionStory(ctx: CanvasRenderingContext2D, data: SessionCardData):
 		const row = Math.floor(i / cols);
 		const cx = ST.left + col * (colW + colGap);
 		const cellTop = y + row * (cellH + rowGap);
-		trackedText(ctx, m.label.toUpperCase(), cx, cellTop, `500 20px "${MONO}"`, NIGHT.inkLow, 0.22, 20);
+		trackedText(ctx, m.label.toUpperCase(), cx, cellTop, `500 20px "${MONO}"`, P.inkLow, 0.22, 20);
 		const baseline = cellTop + 20 + 14 + 92 * 0.76;
 		ctx.save();
 		ctx.textBaseline = 'alphabetic';
 		ctx.font = `300 92px "${MONO}"`;
-		ctx.fillStyle = m.accent ? NIGHT.tea : NIGHT.ink;
+		ctx.fillStyle = m.accent ? P.tea : P.ink;
 		ctx.fillText(m.value, cx, baseline);
 		const vw = ctx.measureText(m.value).width;
 		if (m.unit) {
 			ctx.font = `400 30px "${MONO}"`;
-			ctx.fillStyle = NIGHT.inkLow;
+			ctx.fillStyle = P.inkLow;
 			ctx.fillText(m.unit, cx + vw + 8, baseline);
 		}
 		ctx.restore();
@@ -764,7 +801,7 @@ function drawSessionStory(ctx: CanvasRenderingContext2D, data: SessionCardData):
 		y += hasRating ? 48 : 60;
 		ctx.save();
 		ctx.font = `italic 400 ${noteSize}px "${BODY}"`;
-		ctx.fillStyle = NIGHT.inkMid;
+		ctx.fillStyle = P.inkMid;
 		ctx.textBaseline = 'top';
 		noteLines.forEach((ln, i) => ctx.fillText(ln, ST.left, y + i * noteLineH));
 		ctx.restore();
@@ -784,7 +821,7 @@ function drawPalateStory(ctx: CanvasRenderingContext2D, data: PalateCardData): v
 	const avail = ST.availBottom - ST.availTop;
 	let y = ST.availTop + Math.max(0, (avail - total) / 2);
 
-	trackedText(ctx, 'MY PALATE', ST.center, y, `500 22px "${MONO}"`, NIGHT.tea, 0.22, 22, 'center');
+	trackedText(ctx, 'MY PALATE', ST.center, y, `500 22px "${MONO}"`, P.tea, 0.22, 22, 'center');
 	y += 22 + 40;
 
 	drawMiniChart(ctx, data.products, ST.center - box / 2, y, box);
@@ -795,11 +832,11 @@ function drawPalateStory(ctx: CanvasRenderingContext2D, data: PalateCardData): v
 		phraseLines,
 		y,
 		`italic 400 ${phraseSize}px "${DISPLAY}"`,
-		NIGHT.ink,
+		P.ink,
 		phraseLineH
 	);
 	y += 24;
-	centeredText(ctx, [data.sub], y, `400 28px "${MONO}"`, NIGHT.inkMid, 28);
+	centeredText(ctx, [data.sub], y, `400 28px "${MONO}"`, P.inkMid, 28);
 }
 
 // ─── Public API ──────────────────────────────────────────────
@@ -809,9 +846,15 @@ function drawPalateStory(ctx: CanvasRenderingContext2D, data: PalateCardData): v
 export async function drawShareCard(
 	canvas: HTMLCanvasElement,
 	data: ShareCardData,
-	scale = 1
+	scale = 1,
+	theme: CardTheme = 'night'
 ): Promise<void> {
 	await ensureFonts();
+
+	// Set the active palette before any (synchronous) drawing. JS is
+	// single-threaded and the draw below never awaits, so this is safe
+	// even if a preview + export are kicked off close together.
+	P = theme === 'day' ? DAY : NIGHT;
 
 	const story = data.format === 'story';
 	if (story && data.kind === 'stat') throw new Error('The stat card has no story variant.');
@@ -826,7 +869,7 @@ export async function drawShareCard(
 	ctx.scale(scale, scale);
 
 	// Background
-	ctx.fillStyle = NIGHT.paper;
+	ctx.fillStyle = P.paper;
 	ctx.fillRect(0, 0, W, H);
 
 	if (story) {
@@ -843,9 +886,13 @@ export async function drawShareCard(
 }
 
 /** Render a card to a PNG Blob. Default 3× (3240²) for export crispness. */
-export async function renderShareCard(data: ShareCardData, scale = 3): Promise<Blob> {
+export async function renderShareCard(
+	data: ShareCardData,
+	scale = 3,
+	theme: CardTheme = 'night'
+): Promise<Blob> {
 	const canvas = document.createElement('canvas');
-	await drawShareCard(canvas, data, scale);
+	await drawShareCard(canvas, data, scale, theme);
 	return new Promise((resolve, reject) => {
 		canvas.toBlob((blob) => {
 			if (blob) resolve(blob);

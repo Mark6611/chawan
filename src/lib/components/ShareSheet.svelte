@@ -1,13 +1,15 @@
 <script lang="ts">
-	// Bottom sheet for sharing a card. Eyebrow + display + live preview +
-	// optional Square/Story toggle + two actions (Share… / Save image) —
-	// the shipped sheet vocabulary per affordance.md. Preview renders at 1×
-	// immediately; export renders at 3× on tap. The card is a file, not a
-	// network — Share… hands the PNG to the OS share sheet, Save image
-	// downloads it. No upload.
+	// Bottom sheet for sharing a card. Eyebrow + display + Night/Day +
+	// (Square/Story) toggles + live preview + two actions — the shipped
+	// sheet vocabulary per affordance.md. Preview renders at 1×; export at
+	// 3× on tap.
+	//
+	// Share… → the OS share sheet (AirDrop, Messages, and on iOS "Save
+	// Image" → Photos). Download → a direct file download (Files on iOS,
+	// Downloads on desktop). The card is a file, not a network — no upload.
 
 	import { fade, slide } from 'svelte/transition';
-	import { drawShareCard, renderShareCard } from '$lib/share/render-canvas';
+	import { drawShareCard, renderShareCard, type CardTheme } from '$lib/share/render-canvas';
 	import { shareOrDownload, type ShareCardData, type ShareFormat } from '$lib/share/share-card';
 
 	import Eyebrow from './Eyebrow.svelte';
@@ -33,28 +35,30 @@
 	let busy = $state(false);
 	let error = $state<string | null>(null);
 	let format = $state<ShareFormat>('square');
+	let theme = $state<CardTheme>('night');
 
-	// Stat cards have no story variant — only session + palate can toggle.
-	const canToggle = $derived(!!data && data.kind !== 'stat');
-	const effective = $derived<ShareCardData | null>(data ? ({ ...data, format } as ShareCardData) : null);
+	// Stat cards have no story variant — only session + palate can toggle format.
+	const canToggleFormat = $derived(!!data && data.kind !== 'stat');
+	const effective = $derived<ShareCardData | null>(
+		data ? ({ ...data, format } as ShareCardData) : null
+	);
 
-	// Reset the format to the incoming card's default when a new card opens.
-	// Reads `data` only, so toggling `format` later doesn't re-reset it.
+	// Reset format to the incoming card's default when a new card opens.
+	// (Reads `data` only, so toggling `format` later doesn't self-reset.)
 	$effect(() => {
 		if (data) format = data.format ?? 'square';
 	});
 
-	// Draw the 1× preview when open with data + canvas + on format change.
+	// Draw the 1× preview on open / format / theme change.
 	$effect(() => {
 		if (open && effective && previewCanvas) {
 			error = null;
-			drawShareCard(previewCanvas, effective, 1).catch((e) => {
+			drawShareCard(previewCanvas, effective, 1, theme).catch((e) => {
 				error = e instanceof Error ? e.message : 'Could not render the preview.';
 			});
 		}
 	});
 
-	// Preview box keeps the card's aspect: square 236² / story 9:16.
 	const previewW = $derived(format === 'story' ? 210 : 236);
 	const previewH = $derived(format === 'story' ? 373 : 236);
 
@@ -64,7 +68,7 @@
 
 	async function render(): Promise<Blob | null> {
 		if (!effective) return null;
-		return renderShareCard(effective, 3);
+		return renderShareCard(effective, 3, theme);
 	}
 
 	async function doShare() {
@@ -82,7 +86,7 @@
 		}
 	}
 
-	async function doSave() {
+	async function doDownload() {
 		if (!effective || busy) return;
 		busy = true;
 		error = null;
@@ -103,6 +107,10 @@
 			busy = false;
 		}
 	}
+
+	// Small inline toggle: [a · b], active option in tea.
+	const toggleClass = (active: boolean) =>
+		`font-mono text-[10.5px] tracking-[0.14em] uppercase ${active ? 'text-tea' : 'text-muted hover:text-ink'}`;
 </script>
 
 {#if open && data}
@@ -123,33 +131,40 @@
 		>
 			<div class="bg-rule mx-auto mb-4 h-1 w-10 rounded-full"></div>
 
-			<div class="flex items-baseline justify-between gap-3">
-				<Eyebrow>{eyebrow}</Eyebrow>
-				{#if canToggle}
+			<Eyebrow>{eyebrow}</Eyebrow>
+			<div class="mt-1">
+				<Display size="m">{heading}</Display>
+			</div>
+
+			<!-- Toggles: theme always; format for session + palate -->
+			<div class="mt-4 flex items-center gap-5">
+				<div class="flex gap-3">
+					<button type="button" onclick={() => (theme = 'night')} class={toggleClass(theme === 'night')}>
+						Night
+					</button>
+					<button type="button" onclick={() => (theme = 'day')} class={toggleClass(theme === 'day')}>
+						Day
+					</button>
+				</div>
+				{#if canToggleFormat}
+					<span class="bg-rule h-3 w-px"></span>
 					<div class="flex gap-3">
 						<button
 							type="button"
 							onclick={() => (format = 'square')}
-							class="font-mono text-[10.5px] tracking-[0.14em] uppercase {format === 'square'
-								? 'text-tea'
-								: 'text-muted hover:text-ink'}"
+							class={toggleClass(format === 'square')}
 						>
 							Square
 						</button>
 						<button
 							type="button"
 							onclick={() => (format = 'story')}
-							class="font-mono text-[10.5px] tracking-[0.14em] uppercase {format === 'story'
-								? 'text-tea'
-								: 'text-muted hover:text-ink'}"
+							class={toggleClass(format === 'story')}
 						>
 							Story
 						</button>
 					</div>
 				{/if}
-			</div>
-			<div class="mt-1">
-				<Display size="m">{heading}</Display>
 			</div>
 
 			<div class="mt-5 flex justify-center">
@@ -170,7 +185,7 @@
 				<PrimaryButton onclick={doShare} disabled={busy}>
 					{busy ? 'Preparing…' : 'Share…'}
 				</PrimaryButton>
-				<PrimaryButton kind="line" onclick={doSave} disabled={busy}>Save image</PrimaryButton>
+				<PrimaryButton kind="line" onclick={doDownload} disabled={busy}>Download</PrimaryButton>
 			</div>
 		</div>
 	</div>
