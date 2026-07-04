@@ -80,6 +80,23 @@ describe('TinSchema', () => {
 		void _h;
 		expect(TinSchema.parse(minimal)).toMatchObject({ id: 't1' });
 	});
+
+	it('accepts price + notes (bag-recording parity)', () => {
+		const withExtras = {
+			...validTin,
+			priceCents: 4200,
+			priceCurrency: 'JPY',
+			notes: 'Gift from Kyoto trip'
+		};
+		expect(TinSchema.parse(withExtras)).toEqual(withExtras);
+	});
+
+	it('rejects negative priceCents and bad currency codes', () => {
+		expect(() => TinSchema.parse({ ...validTin, priceCents: -1 })).toThrow();
+		expect(() =>
+			TinSchema.parse({ ...validTin, priceCents: 100, priceCurrency: 'JP' })
+		).toThrow();
+	});
 });
 
 describe('Session schemas', () => {

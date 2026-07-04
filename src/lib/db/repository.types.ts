@@ -15,6 +15,11 @@ export interface Repository {
 	archiveTin(id: string): Promise<void>;
 	unarchiveTin(id: string): Promise<void>;
 
+	// ─── Tin photos (device-local, never synced) ────────────
+	getTinPhoto(tinId: string): Promise<Blob | undefined>;
+	setTinPhoto(tinId: string, blob: Blob): Promise<void>;
+	deleteTinPhoto(tinId: string): Promise<void>;
+
 	// ─── Sessions ───────────────────────────────────────────
 	listSessions(): Promise<Session[]>;
 	listSessionsByTin(tinId: string): Promise<PersonalSession[]>;

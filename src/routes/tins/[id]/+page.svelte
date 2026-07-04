@@ -18,6 +18,7 @@
 	} from '$lib/db/types';
 	import { tinFreshness, tinRemaining } from '$lib/tins/compute';
 	import { formatTimeAgo } from '$lib/sessions/compute';
+	import { formatPrice } from '$lib/sessions/currency';
 
 	import Eyebrow from '$lib/components/Eyebrow.svelte';
 	import Display from '$lib/components/Display.svelte';
@@ -30,22 +31,36 @@
 	// `undefined` = still loading; `null` = lookup completed and tin doesn't exist.
 	let tin = $state<Tin | null | undefined>(undefined);
 	let sessions = $state<PersonalSession[]>([]);
+	let photoBlob = $state<Blob | null>(null);
+	let photoUrl = $state<string | null>(null);
 
 	const id = $derived(page.params.id);
 
 	async function load() {
 		if (!id) return;
-		const [t, s] = await Promise.all([
+		const [t, s, photo] = await Promise.all([
 			repository.getTin(id),
-			repository.listSessionsByTin(id)
+			repository.listSessionsByTin(id),
+			repository.getTinPhoto(id)
 		]);
 		tin = t ?? null;
 		// Newest first for the history list.
 		sessions = s.slice().sort((a, b) => b.brewedAt.localeCompare(a.brewedAt));
+		photoBlob = photo ?? null;
 	}
 	$effect(() => {
 		void syncState.tick;
 		if (id) load();
+	});
+
+	// Object-URL lifecycle for the photo.
+	$effect(() => {
+		if (photoBlob) {
+			const url = URL.createObjectURL(photoBlob);
+			photoUrl = url;
+			return () => URL.revokeObjectURL(url);
+		}
+		photoUrl = null;
 	});
 
 	const remaining = $derived(tin ? tinRemaining(tin, sessions) : 0);
@@ -141,10 +156,24 @@
 					})}
 				</Mono>
 			{/if}
+			{#if tin.priceCents != null}
+				<Mono size="meta" tone="muted">
+					· {formatPrice(tin.priceCents, tin.priceCurrency ?? 'USD')}
+				</Mono>
+			{/if}
 			{#if tin.archived}
 				<Mono size="meta" tone="faint">· archived</Mono>
 			{/if}
 		</div>
+
+		<!-- Photo (device-local) -->
+		{#if photoUrl}
+			<img
+				src={photoUrl}
+				alt="{tin.name} tin"
+				class="border-hairline mt-5 aspect-[4/3] w-full rounded-[14px] border-[0.5px] object-cover"
+			/>
+		{/if}
 
 		<Hairline class="my-7" />
 
@@ -181,6 +210,17 @@
 						<Mono size="meta" tone={freshLabel.tone}>{freshLabel.label}</Mono>
 					{/if}
 				</div>
+			</section>
+		{/if}
+
+		<!-- Notes -->
+		{#if tin.notes}
+			<Hairline class="my-7" />
+			<section>
+				<Eyebrow>Notes</Eyebrow>
+				<p class="text-ink font-body mt-3 text-[15px] leading-relaxed italic">
+					{tin.notes}
+				</p>
 			</section>
 		{/if}
 

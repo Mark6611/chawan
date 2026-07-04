@@ -102,9 +102,25 @@ export const TinSchema = z.object({
 	// Phase 3: soft link back to the catalog entry the tin was created from.
 	// Drives the "I've tried" indicator on catalog screens. Optional —
 	// tins created manually (without the catalog picker) leave this null.
-	catalogId: z.string().optional()
+	catalogId: z.string().optional(),
+	// Parity with the coffee app's bag recording: what you paid + free notes.
+	// Money as integer cents (per convention), currency ISO 4217 — both set
+	// together or neither, same shape as CafeSession's price.
+	priceCents: z.number().int().nonnegative().optional(),
+	priceCurrency: z.string().length(3).optional(),
+	notes: z.string().optional()
 });
 export type Tin = z.infer<typeof TinSchema>;
+
+// Tin photo — stored in a SEPARATE local Dexie table (tinPhotos), keyed by
+// tinId. Deliberately outside TinSchema: photos are device-local (not synced
+// to Supabase — blobs would need a Storage bucket, a Phase-6 candidate) and
+// excluded from the JSON backup. TS-only, no Zod: it never crosses a wire.
+export interface TinPhoto {
+	tinId: string;
+	blob: Blob;
+	updatedAt: string; // ISO
+}
 
 // ─────────────────────────────────────────────────────────────
 // Session — discriminated union on `kind`

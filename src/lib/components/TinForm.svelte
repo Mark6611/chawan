@@ -6,7 +6,7 @@
 	// Saves through the repository, then navigates back to the list (new)
 	// or the detail page (edit).
 
-	import { untrack } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { repository } from '$lib/db/repository';
@@ -22,6 +22,15 @@
 	} from '$lib/db/types';
 	import { getCatalogEntry } from '$lib/catalog/matcha-catalog';
 	import { snapshotForTin } from '$lib/catalog/snapshot';
+	import {
+		CURRENCIES,
+		formatPrice,
+		getCurrency,
+		parsePrice,
+		readCurrency,
+		writeCurrency
+	} from '$lib/sessions/currency';
+	import { downscalePhoto } from '$lib/tins/photo';
 
 	import Eyebrow from './Eyebrow.svelte';
 	import Display from './Display.svelte';
@@ -66,6 +75,67 @@
 	let openedAt = $state(initial?.openedAt ?? '');
 	let harvestMonth = $state(initial?.harvestDate?.slice(5, 7) ?? '');
 	let harvestYear = $state(initial?.harvestDate?.slice(0, 4) ?? '');
+	let notes = $state(initial?.notes ?? '');
+
+	// Price — same vocabulary as the cafe session form: symbol + decimal
+	// input + sticky currency select in the field's action slot.
+	const initialPriceText = untrack(() =>
+		initial?.priceCents != null
+			? formatPrice(initial.priceCents, initial.priceCurrency ?? 'USD').replace(/^[^\d]+/, '')
+			: ''
+	);
+	let priceText = $state(initialPriceText);
+	let currencyCode = $state<string>(initial?.priceCurrency ?? readCurrency());
+	const currency = $derived(getCurrency(currencyCode));
+	const priceCents = $derived(parsePrice(priceText, currencyCode));
+
+	// Photo — device-local blob (never synced). `photoBlob` holds the pending
+	// image; `photoRemoved` marks an explicit removal in edit mode.
+	let photoBlob = $state<Blob | null>(null);
+	let photoRemoved = $state(false);
+	let photoBusy = $state(false);
+	let photoPreview = $state<string | null>(null);
+	let fileInput = $state<HTMLInputElement>();
+
+	// Edit mode: load the existing photo for preview.
+	onMount(async () => {
+		if (isEdit && initial) {
+			const existing = await repository.getTinPhoto(initial.id);
+			if (existing) photoBlob = existing;
+		}
+	});
+
+	// Object-URL lifecycle for the preview.
+	$effect(() => {
+		if (photoBlob) {
+			const url = URL.createObjectURL(photoBlob);
+			photoPreview = url;
+			return () => URL.revokeObjectURL(url);
+		}
+		photoPreview = null;
+	});
+
+	async function onPhotoChange(e: Event) {
+		const input = e.currentTarget as HTMLInputElement;
+		const file = input.files?.[0];
+		if (!file) return;
+		photoBusy = true;
+		error = null;
+		try {
+			photoBlob = await downscalePhoto(file);
+			photoRemoved = false;
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Could not read that image.';
+		} finally {
+			photoBusy = false;
+			input.value = ''; // allow re-picking the same file
+		}
+	}
+
+	function removePhoto() {
+		photoBlob = null;
+		photoRemoved = true;
+	}
 
 	let saving = $state(false);
 	let error = $state<string | null>(null);
@@ -123,10 +193,23 @@
 				archived: initial?.archived ?? false,
 				createdAt: initial?.createdAt ?? now,
 				updatedAt: now,
-				catalogId: finalCatalogId
+				catalogId: finalCatalogId,
+				// Both together or neither — same rule as CafeSession's price.
+				priceCents: priceCents > 0 ? priceCents : undefined,
+				priceCurrency: priceCents > 0 ? currencyCode : undefined,
+				notes: notes.trim() || undefined
 			};
 
 			await repository.saveTin(next);
+			if (priceCents > 0) writeCurrency(currencyCode); // sticky for next time
+
+			// Photo persists locally, keyed by the tin id (new mode gets the
+			// freshly generated id here).
+			if (photoBlob && !photoRemoved) {
+				await repository.setTinPhoto(next.id, photoBlob);
+			} else if (photoRemoved && isEdit) {
+				await repository.deleteTinPhoto(next.id);
+			}
 
 			// If we arrived here from a session form's "Create new tin" flow,
 			// return there with ?tinId= so the form can auto-select the new
@@ -246,7 +329,35 @@
 		<Stepper bind:value={weightGrams} min={5} max={500} step={5} unit="g" />
 	</Field>
 
-	<Field label="Opened" hairline={false}>
+	<!-- Price — parity with the coffee app's bag recording. Same input
+	     vocabulary as the cafe session form; currency select in the action
+	     slot, sticky via chawan:currency. -->
+	<Field label="Price">
+		{#snippet action()}
+			<select
+				bind:value={currencyCode}
+				class="text-muted hover:text-ink bg-transparent font-mono text-[10.5px] font-medium tracking-[0.14em] uppercase"
+				aria-label="Currency"
+			>
+				{#each CURRENCIES as c (c.code)}
+					<option value={c.code}>{c.code}</option>
+				{/each}
+			</select>
+		{/snippet}
+		<div class="flex items-baseline gap-2">
+			<span class="text-faint font-mono text-[32px] leading-none">{currency.symbol}</span>
+			<input
+				type="text"
+				inputmode="decimal"
+				bind:value={priceText}
+				placeholder={currency.decimals === 0 ? '0' : '0.00'}
+				autocomplete="off"
+				class="text-ink placeholder:text-faint w-full font-mono text-[32px] leading-none tabular-nums"
+			/>
+		</div>
+	</Field>
+
+	<Field label="Opened">
 		{#snippet action()}
 			{#if openedAt}
 				<button
@@ -267,6 +378,67 @@
 			{/if}
 		{/snippet}
 		<Mono size="m" tone={openedAt ? 'ink' : 'faint'}>{openedLabel}</Mono>
+	</Field>
+
+	<Field label="Notes">
+		{#snippet action()}
+			<Mono size="meta" tone="faint">optional</Mono>
+		{/snippet}
+		<textarea
+			bind:value={notes}
+			rows="3"
+			placeholder="Source, first impressions, provenance…"
+			class="text-ink placeholder:text-faint font-body w-full text-[15px] italic"
+		></textarea>
+	</Field>
+
+	<!-- Photo — stays on this device (not synced, not in the JSON backup). -->
+	<Field label="Photo" hairline={false}>
+		{#snippet action()}
+			{#if photoPreview}
+				<button
+					type="button"
+					onclick={removePhoto}
+					class="text-muted hover:text-ink font-mono text-[11px] tracking-[0.10em] uppercase"
+				>
+					remove
+				</button>
+			{:else}
+				<Mono size="meta" tone="faint">optional · stays on this device</Mono>
+			{/if}
+		{/snippet}
+
+		<input
+			bind:this={fileInput}
+			type="file"
+			accept="image/*"
+			onchange={onPhotoChange}
+			class="hidden"
+		/>
+
+		{#if photoPreview}
+			<button
+				type="button"
+				onclick={() => fileInput?.click()}
+				class="block w-full"
+				aria-label="Replace photo"
+			>
+				<img
+					src={photoPreview}
+					alt="{name || 'Tin'} photo"
+					class="border-hairline aspect-[4/3] w-full rounded-[14px] border-[0.5px] object-cover"
+				/>
+			</button>
+		{:else}
+			<button
+				type="button"
+				onclick={() => fileInput?.click()}
+				disabled={photoBusy}
+				class="border-rule text-muted hover:text-ink w-full rounded-[14px] border-[0.5px] py-6 text-center font-mono text-[11px] tracking-[0.10em] uppercase transition-colors disabled:opacity-50"
+			>
+				{photoBusy ? 'Reading…' : '+ Add a photo'}
+			</button>
+		{/if}
 	</Field>
 
 	{#if error}

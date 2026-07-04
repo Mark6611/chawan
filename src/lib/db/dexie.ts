@@ -7,11 +7,12 @@
 // without touching the UI.
 
 import Dexie, { type Table } from 'dexie';
-import type { Tin, Session } from './types';
+import type { Tin, TinPhoto, Session } from './types';
 
 export class ChawanDexie extends Dexie {
 	tins!: Table<Tin, string>;
 	sessions!: Table<Session, string>;
+	tinPhotos!: Table<TinPhoto, string>;
 
 	constructor() {
 		super('chawan');
@@ -58,6 +59,16 @@ export class ChawanDexie extends Dexie {
 					`[dexie] v1→v2 migration: ${renamedKind} kind(s) and ${renamedField} field(s) renamed`
 				);
 			});
+
+		// v3: tinPhotos — device-local photo per tin, keyed by tinId.
+		// IndexedDB stores Blobs natively. Deliberately a separate table so
+		// the Tin record itself stays JSON-serializable for sync + backup
+		// (photos don't cross either wire; see TinPhoto in types.ts).
+		this.version(3).stores({
+			tins: 'id, archived, openedAt, createdAt',
+			sessions: 'id, kind, tinId, brewedAt, createdAt',
+			tinPhotos: 'tinId'
+		});
 	}
 }
 

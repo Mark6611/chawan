@@ -52,6 +52,21 @@ class DexieRepository implements Repository {
 		pushTin(updated);
 	}
 
+	// ─── Tin photos (device-local, never synced — see TinPhoto) ──
+
+	async getTinPhoto(tinId: string): Promise<Blob | undefined> {
+		const row = await db.tinPhotos.get(tinId);
+		return row?.blob;
+	}
+
+	async setTinPhoto(tinId: string, blob: Blob): Promise<void> {
+		await db.tinPhotos.put({ tinId, blob, updatedAt: nowIso() });
+	}
+
+	async deleteTinPhoto(tinId: string): Promise<void> {
+		await db.tinPhotos.delete(tinId);
+	}
+
 	// ─── Sessions ───────────────────────────────────────────
 
 	async listSessions(): Promise<Session[]> {
