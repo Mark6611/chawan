@@ -8,7 +8,12 @@ export default defineConfig({
 		tailwindcss(),
 		sveltekit(),
 		SvelteKitPWA({
-			registerType: 'autoUpdate',
+			// 'prompt' — a freshly deployed service worker WAITS instead of
+			// auto-activating; PwaUpdatePrompt surfaces a reload affordance so
+			// the user picks up new versions deliberately. Cures the recurring
+			// stale-bundle problem (old icon, missing features after deploys).
+			// Pattern lifted from the coffee app (its commit 82082e1).
+			registerType: 'prompt',
 			manifest: {
 				name: 'Chawan',
 				short_name: 'Chawan',

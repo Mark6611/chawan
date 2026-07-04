@@ -32,6 +32,7 @@
 	import './layout.css';
 
 	import LinkRail from '$lib/components/LinkRail.svelte';
+	import PwaUpdatePrompt from '$lib/components/PwaUpdatePrompt.svelte';
 	import { preferences } from '$lib/preferences.svelte';
 	import { auth } from '$lib/auth.svelte';
 	import { syncState } from '$lib/sync.svelte';
@@ -106,6 +107,8 @@
 		></span>
 	</a>
 {/if}
+
+<PwaUpdatePrompt />
 
 {@render children()}
 
