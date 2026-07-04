@@ -48,7 +48,7 @@
 
 	function openShare() {
 		if (!session) return;
-		let card: SessionCardData | null = null;
+		let card: SessionCardData;
 		if (isPersonal(session)) {
 			if (!tin) return;
 			card = buildPersonalCard(session, tin);
@@ -95,7 +95,7 @@
 <main class="mx-auto max-w-md px-6 py-12 pb-28">
 	<a
 		href="/sessions"
-		class="text-muted hover:text-ink font-mono text-[11px] tracking-[0.10em] uppercase"
+		class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink"
 	>
 		← back
 	</a>
@@ -125,14 +125,14 @@
 					<button
 						type="button"
 						onclick={openShare}
-						class="text-muted hover:text-ink font-mono text-[11px] tracking-[0.10em] uppercase"
+						class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink"
 					>
 						share
 					</button>
 				{/if}
 				<a
 					href="/sessions/{session.id}/edit"
-					class="text-muted hover:text-ink font-mono text-[11px] tracking-[0.10em] uppercase"
+					class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink"
 				>
 					edit
 				</a>
@@ -150,13 +150,11 @@
 						<Mono size="meta" tone="muted">· {tin.cultivar}</Mono>
 					{/if}
 				{/if}
+			{:else if session.maker}
+				<Mono size="meta" tone="muted">{session.maker}</Mono>
+				<Mono size="meta" tone="muted">· {REGION_LABELS[session.region]}</Mono>
 			{:else}
-				{#if session.maker}
-					<Mono size="meta" tone="muted">{session.maker}</Mono>
-					<Mono size="meta" tone="muted">· {REGION_LABELS[session.region]}</Mono>
-				{:else}
-					<Mono size="meta" tone="muted">{REGION_LABELS[session.region]}</Mono>
-				{/if}
+				<Mono size="meta" tone="muted">{REGION_LABELS[session.region]}</Mono>
 			{/if}
 		</div>
 
@@ -251,7 +249,7 @@
 			<Hairline class="my-7" />
 			<section>
 				<Eyebrow>Notes</Eyebrow>
-				<p class="text-ink font-body mt-3 text-[16px] leading-relaxed italic">
+				<p class="mt-3 font-body text-[16px] leading-relaxed text-ink italic">
 					{session.notes}
 				</p>
 			</section>

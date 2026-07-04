@@ -111,7 +111,7 @@
 <main class="mx-auto max-w-md px-6 py-12 pb-28">
 	<a
 		href="/tins"
-		class="text-muted hover:text-ink font-mono text-[11px] tracking-[0.10em] uppercase"
+		class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink"
 	>
 		← back
 	</a>
@@ -137,7 +137,7 @@
 			</div>
 			<a
 				href="/tins/{tin.id}/edit"
-				class="text-muted hover:text-ink font-mono text-[11px] tracking-[0.10em] uppercase"
+				class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink"
 			>
 				edit
 			</a>
@@ -171,7 +171,7 @@
 			<img
 				src={photoUrl}
 				alt="{tin.name} tin"
-				class="border-hairline mt-5 aspect-[4/3] w-full rounded-[14px] border-[0.5px] object-cover"
+				class="mt-5 aspect-[4/3] w-full rounded-[14px] border-[0.5px] border-hairline object-cover"
 			/>
 		{/if}
 
@@ -218,7 +218,7 @@
 			<Hairline class="my-7" />
 			<section>
 				<Eyebrow>Notes</Eyebrow>
-				<p class="text-ink font-body mt-3 text-[15px] leading-relaxed italic">
+				<p class="mt-3 font-body text-[15px] leading-relaxed text-ink italic">
 					{tin.notes}
 				</p>
 			</section>
@@ -233,12 +233,12 @@
 					<Mono size="meta" tone="faint">No sessions yet. Brew one and it'll appear here.</Mono>
 				</div>
 			{:else}
-				<ul class="border-hairline mt-2 border-t">
+				<ul class="mt-2 border-t border-hairline">
 					{#each sessions as s (s.id)}
 						<li>
 							<a
 								href="/sessions/{s.id}"
-								class="hover:bg-surface border-hairline -mx-6 block border-b px-6 py-3 transition-colors"
+								class="-mx-6 block border-b border-hairline px-6 py-3 transition-colors hover:bg-surface"
 							>
 								<div class="flex items-baseline justify-between gap-3">
 									<Mono size="meta" tone="muted"

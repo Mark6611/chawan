@@ -34,7 +34,7 @@
 	<div class="mt-2">
 		<Display size="l">Chart exhibit</Display>
 	</div>
-	<p class="text-muted mt-3 text-[14px] italic">
+	<p class="mt-3 text-[14px] text-muted italic">
 		The Marukyu 10-product set should read as a clean diagonal stripe sharp→mild ×
 		refreshing→full-body. Brand glyphs (disc / ring / diamond) distinguish without color.
 	</p>

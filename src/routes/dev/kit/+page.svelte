@@ -39,7 +39,7 @@
 <main class="mx-auto max-w-md px-6 py-12 pb-24">
 	<Eyebrow>Dev · component kit</Eyebrow>
 	<Display size="l">Atoms</Display>
-	<p class="text-muted mt-2 text-[13px] italic">
+	<p class="mt-2 text-[13px] text-muted italic">
 		Every primitive used by the real screens. Flip the theme toggle (top-right) to see day + night.
 	</p>
 
@@ -151,7 +151,7 @@
 				<Mono size="m" tone="ink">Eiju · Marukyu Kōyamaen</Mono>
 			</Field>
 			<Field label="Notes" hairline={false}>
-				<p class="text-ink text-[14px] italic">Vegetal, no astringency.</p>
+				<p class="text-[14px] text-ink italic">Vegetal, no astringency.</p>
 			</Field>
 		</div>
 	</section>

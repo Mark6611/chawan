@@ -22,7 +22,7 @@
 </script>
 
 <nav
-	class="border-rule bg-paper/95 fixed right-0 bottom-0 left-0 border-t backdrop-blur pb-[env(safe-area-inset-bottom)]"
+	class="fixed right-0 bottom-0 left-0 border-t border-rule bg-paper/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
 	aria-label="Primary"
 >
 	<div class="mx-auto flex max-w-md justify-between px-6 py-3">

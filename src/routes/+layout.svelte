@@ -66,7 +66,7 @@
 <button
 	type="button"
 	onclick={() => preferences.toggleTheme()}
-	class="border-rule text-ink hover:bg-surface fixed top-3 right-3 z-50 grid h-9 w-9 place-items-center rounded-full border bg-transparent transition-colors"
+	class="fixed top-3 right-3 z-50 grid h-9 w-9 place-items-center rounded-full border border-rule bg-transparent text-ink transition-colors hover:bg-surface"
 	aria-label="Toggle theme (current: {preferences.theme})"
 	title="Theme: {preferences.theme}"
 >
@@ -109,14 +109,11 @@
 {#if auth.user && (syncState.syncing || syncState.lastError)}
 	<a
 		href="/settings"
-		class="border-rule bg-paper hover:bg-surface fixed top-3 right-14 z-50 grid h-9 w-9 place-items-center rounded-full border transition-colors"
+		class="fixed top-3 right-14 z-50 grid h-9 w-9 place-items-center rounded-full border border-rule bg-paper transition-colors hover:bg-surface"
 		aria-label={syncState.syncing ? 'Syncing in progress' : 'Sync error — tap for details'}
 		title={syncState.syncing ? 'Syncing…' : 'Sync error'}
 	>
-		<span
-			class="h-2 w-2 rounded-full {syncState.syncing
-				? 'bg-warn animate-pulse'
-				: 'bg-danger'}"
+		<span class="h-2 w-2 rounded-full {syncState.syncing ? 'animate-pulse bg-warn' : 'bg-danger'}"
 		></span>
 	</a>
 {/if}

@@ -27,21 +27,21 @@ tea green vs copper, italic primary vs upright primary).
 Deep earth-dark base with a barely-perceptible green undertone. Warm
 off-white ink scale. A single tea-green accent.
 
-| Token            | Value                              | Use                                            |
-| ---------------- | ---------------------------------- | ---------------------------------------------- |
-| `--color-paper`  | `oklch(0.175 0.006 145)`           | App base background                            |
-| `--color-surface`| `oklch(0.205 0.008 145)`           | Raised surface (form fields, tiles)            |
-| `--color-card`   | `oklch(0.235 0.008 145)`           | Cards / hero blocks                            |
-| `--color-ink`    | `oklch(0.94 0.01 95)`              | Primary text                                   |
-| `--color-ink-70` | `oklch(0.74 0.01 95)`              | Secondary text                                 |
-| `--color-muted`  | `oklch(0.55 0.01 95)`              | Labels, eyebrows                               |
-| `--color-faint`  | `oklch(0.38 0.01 95)`              | Lowest-emphasis text                           |
-| `--color-hairline`| `rgba(225,230,220,0.09)`           | 0.5px structural lines                         |
-| `--color-rule`   | `rgba(225,230,220,0.18)`           | Heavier section separators                     |
-| `--color-tea`    | `oklch(0.62 0.09 152)`             | Selection outlines, primary CTA fill           |
-| `--color-tea-wash`| `oklch(0.62 0.09 152 / 0.10)`      | Selected chip background                       |
-| `--color-on-tea` | `#0e1310`                          | Text on tea-filled button                      |
-| `--color-data`   | `oklch(0.62 0.09 152)` (= tea)     | Numerics, consumption rails, accent text       |
+| Token              | Value                          | Use                                      |
+| ------------------ | ------------------------------ | ---------------------------------------- |
+| `--color-paper`    | `oklch(0.175 0.006 145)`       | App base background                      |
+| `--color-surface`  | `oklch(0.205 0.008 145)`       | Raised surface (form fields, tiles)      |
+| `--color-card`     | `oklch(0.235 0.008 145)`       | Cards / hero blocks                      |
+| `--color-ink`      | `oklch(0.94 0.01 95)`          | Primary text                             |
+| `--color-ink-70`   | `oklch(0.74 0.01 95)`          | Secondary text                           |
+| `--color-muted`    | `oklch(0.55 0.01 95)`          | Labels, eyebrows                         |
+| `--color-faint`    | `oklch(0.38 0.01 95)`          | Lowest-emphasis text                     |
+| `--color-hairline` | `rgba(225,230,220,0.09)`       | 0.5px structural lines                   |
+| `--color-rule`     | `rgba(225,230,220,0.18)`       | Heavier section separators               |
+| `--color-tea`      | `oklch(0.62 0.09 152)`         | Selection outlines, primary CTA fill     |
+| `--color-tea-wash` | `oklch(0.62 0.09 152 / 0.10)`  | Selected chip background                 |
+| `--color-on-tea`   | `#0e1310`                      | Text on tea-filled button                |
+| `--color-data`     | `oklch(0.62 0.09 152)` (= tea) | Numerics, consumption rails, accent text |
 
 ### Day (opt-in via `[data-theme="day"]`)
 
@@ -50,24 +50,25 @@ near-black ink. Green reserved for button fills and selection outlines
 only — `--color-data` drops to ink so numerics and rails read as
 black-on-wood.
 
-| Token            | Value                              | Use                                            |
-| ---------------- | ---------------------------------- | ---------------------------------------------- |
-| `--color-paper`  | `oklch(0.905 0.022 78)`            | Warm pale-oak wood                             |
-| `--color-surface`| `oklch(0.945 0.018 78)`            | Lighter wood                                   |
-| `--color-card`   | `#ffffff`                          | Pure white for raised content                  |
-| `--color-ink`    | `oklch(0.18 0.010 70)`             | Near-black warm                                |
-| `--color-ink-70` | `oklch(0.42 0.012 75)`             |                                                |
-| `--color-muted`  | `oklch(0.58 0.010 75)`             |                                                |
-| `--color-faint`  | `oklch(0.74 0.008 75)`             |                                                |
-| `--color-hairline`| `rgba(60,40,15,0.13)`              |                                                |
-| `--color-tea`    | `oklch(0.45 0.10 152)`             | Darker so it reads on wood                     |
-| `--color-tea-wash`| `oklch(0.45 0.10 152 / 0.08)`     |                                                |
-| `--color-on-tea` | `#ffffff`                          | White text on tea button (contrast)            |
-| `--color-data`   | `oklch(0.18 0.010 70)` (= ink)     | **Numerics drop to ink in day mode**           |
+| Token              | Value                          | Use                                  |
+| ------------------ | ------------------------------ | ------------------------------------ |
+| `--color-paper`    | `oklch(0.905 0.022 78)`        | Warm pale-oak wood                   |
+| `--color-surface`  | `oklch(0.945 0.018 78)`        | Lighter wood                         |
+| `--color-card`     | `#ffffff`                      | Pure white for raised content        |
+| `--color-ink`      | `oklch(0.18 0.010 70)`         | Near-black warm                      |
+| `--color-ink-70`   | `oklch(0.42 0.012 75)`         |                                      |
+| `--color-muted`    | `oklch(0.58 0.010 75)`         |                                      |
+| `--color-faint`    | `oklch(0.74 0.008 75)`         |                                      |
+| `--color-hairline` | `rgba(60,40,15,0.13)`          |                                      |
+| `--color-tea`      | `oklch(0.45 0.10 152)`         | Darker so it reads on wood           |
+| `--color-tea-wash` | `oklch(0.45 0.10 152 / 0.08)`  |                                      |
+| `--color-on-tea`   | `#ffffff`                      | White text on tea button (contrast)  |
+| `--color-data`     | `oklch(0.18 0.010 70)` (= ink) | **Numerics drop to ink in day mode** |
 
 ### Where the accent goes — and doesn't
 
 **Green (`--color-tea`) is allowed on:**
+
 - Primary CTA button (filled tea)
 - Selection outlines: segmented active, region chips, milk chips, whisk tiles
 - Selection indicator dots (the 4×4px marker inside a selected segment)
@@ -75,6 +76,7 @@ black-on-wood.
 - Form input cursor blink
 
 **Green (`--color-tea`) is NOT used on:**
+
 - Numerics — use `--color-data` instead (ink in day, tea in night)
 - Rating dots — use `--color-data`
 - Consumption rails — use `--color-data`
@@ -89,8 +91,8 @@ black-on-wood.
 
 ```css
 --font-display: 'Cormorant Garamond', 'EB Garamond', Georgia, serif;
---font-body:    'EB Garamond', Georgia, serif;
---font-mono:    'IBM Plex Mono', ui-monospace, monospace;
+--font-body: 'EB Garamond', Georgia, serif;
+--font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 ```
 
 All three loaded from Google Fonts. **Different from the coffee app on
@@ -100,20 +102,20 @@ body + the more architectural Plex Mono.
 
 ### Scale
 
-| Role                       | Family   | Size  | Weight | Style          | Notes                                  |
-| -------------------------- | -------- | ----- | ------ | -------------- | -------------------------------------- |
-| **Display XL (hero)**      | display  | 42px  | 400    | italic         | Tin detail, Session detail headlines   |
-| **Display L (h1)**         | display  | 34–36px| 400   | italic / upright | Today, screen titles                  |
-| **Display M (h2)**         | display  | 26–28px| 400   | italic         | Card titles, modal prompts             |
-| **Display S (h3)**         | display  | 18–22px| 400   | upright        | Row titles, tin names                  |
-| **Body**                   | body     | 16px  | 400    | regular        | Default paragraph                      |
-| **Body italic (notes)**    | body     | 14–16px| 400   | italic         | Session notes, contemplative captions  |
-| **Mono numeric XL**        | mono     | 36–64px| 300   | tabular-nums   | Big numerals (e.g. "3 bowls", "76°C")  |
-| **Mono numeric L**         | mono     | 22–32px| 300–400| tabular-nums  | Detail stats (powder, water, ratio)    |
-| **Mono numeric M**         | mono     | 15–18px| 400    | tabular-nums   | Row metrics (grams remaining)          |
-| **Mono meta**              | mono     | 11–13px| 400    | regular        | Inline meta (Marukyu Kōyamaen · Uji)   |
-| **Eyebrow**                | mono     | 10.5px | 500   | uppercase, 0.14em | Section labels, metadata               |
-| **Eyebrow micro**          | mono     | 9–10px | 500   | uppercase, 0.16–0.20em | Section heads, faint labels    |
+| Role                    | Family  | Size    | Weight  | Style                  | Notes                                 |
+| ----------------------- | ------- | ------- | ------- | ---------------------- | ------------------------------------- |
+| **Display XL (hero)**   | display | 42px    | 400     | italic                 | Tin detail, Session detail headlines  |
+| **Display L (h1)**      | display | 34–36px | 400     | italic / upright       | Today, screen titles                  |
+| **Display M (h2)**      | display | 26–28px | 400     | italic                 | Card titles, modal prompts            |
+| **Display S (h3)**      | display | 18–22px | 400     | upright                | Row titles, tin names                 |
+| **Body**                | body    | 16px    | 400     | regular                | Default paragraph                     |
+| **Body italic (notes)** | body    | 14–16px | 400     | italic                 | Session notes, contemplative captions |
+| **Mono numeric XL**     | mono    | 36–64px | 300     | tabular-nums           | Big numerals (e.g. "3 bowls", "76°C") |
+| **Mono numeric L**      | mono    | 22–32px | 300–400 | tabular-nums           | Detail stats (powder, water, ratio)   |
+| **Mono numeric M**      | mono    | 15–18px | 400     | tabular-nums           | Row metrics (grams remaining)         |
+| **Mono meta**           | mono    | 11–13px | 400     | regular                | Inline meta (Marukyu Kōyamaen · Uji)  |
+| **Eyebrow**             | mono    | 10.5px  | 500     | uppercase, 0.14em      | Section labels, metadata              |
+| **Eyebrow micro**       | mono    | 9–10px  | 500     | uppercase, 0.16–0.20em | Section heads, faint labels           |
 
 ### The eyebrow pattern
 
@@ -122,7 +124,7 @@ Used everywhere as the structural label. **Always:** monospace, uppercase,
 uses identical spec; keep them aligned.
 
 ```html
-<div class="font-mono text-[10.5px] font-medium uppercase tracking-[0.14em] text-muted">
+<div class="font-mono text-[10.5px] font-medium tracking-[0.14em] text-muted uppercase">
 	Mon 19 May · 07:55 · Personal
 </div>
 ```
@@ -243,27 +245,28 @@ After dropping in `tokens.css`, the most common patterns:
 
 ```html
 <!-- Eyebrow -->
-<div class="font-mono text-[10.5px] font-medium uppercase tracking-[0.14em] text-muted">…</div>
+<div class="font-mono text-[10.5px] font-medium tracking-[0.14em] text-muted uppercase">…</div>
 
 <!-- Display heading, italic -->
-<h1 class="font-display text-[34px] italic leading-[1.05] tracking-[-0.015em] text-ink">Today</h1>
+<h1 class="font-display text-[34px] leading-[1.05] tracking-[-0.015em] text-ink italic">Today</h1>
 
 <!-- Mono numeric -->
-<span class="font-mono text-[22px] font-normal tabular-nums text-ink">2.0</span>
+<span class="font-mono text-[22px] font-normal text-ink tabular-nums">2.0</span>
 <span class="font-mono text-[11px] text-muted">g</span>
 
 <!-- Hairline -->
 <div class="h-px bg-hairline"></div>
 
 <!-- Field row (inside a form) -->
-<div class="border-b-[0.5px] border-hairline py-[14px] flex flex-col gap-2">
+<div class="flex flex-col gap-2 border-b-[0.5px] border-hairline py-[14px]">
 	<div class="eyebrow">Powder</div>
 	<div>…</div>
 </div>
 
 <!-- Primary button -->
-<button class="bg-tea text-on-tea rounded-full px-5 py-4
-              font-mono text-[11.5px] font-medium uppercase tracking-[0.10em]">
+<button
+	class="rounded-full bg-tea px-5 py-4 font-mono text-[11.5px] font-medium tracking-[0.10em] text-on-tea uppercase"
+>
 	Begin a session
 </button>
 ```

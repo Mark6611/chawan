@@ -29,9 +29,7 @@ export function lifetimeBowls(sessions: readonly Session[]): number {
 
 /** Total grams of matcha consumed across all personal sessions. */
 export function totalGramsConsumed(sessions: readonly Session[]): number {
-	return sessions
-		.filter(isPersonal)
-		.reduce((sum, s) => sum + (s.powderGrams || 0), 0);
+	return sessions.filter(isPersonal).reduce((sum, s) => sum + (s.powderGrams || 0), 0);
 }
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -87,14 +85,18 @@ export function whiskPreference(sessions: readonly Session[]): string | null {
 	}
 	let best: string | null = null;
 	let bestN = 0;
-	for (const [whisk, n] of tally) if (n > bestN) ((best = whisk), (bestN = n));
+	for (const [whisk, n] of tally) {
+		if (n > bestN) {
+			best = whisk;
+			bestN = n;
+		}
+	}
 	return best;
 }
 
 // ─── Ratings ─────────────────────────────────────────────────────────
 
-const isRated = (s: Session): s is Session & { rating: number } =>
-	s.rating != null && s.rating > 0;
+const isRated = (s: Session): s is Session & { rating: number } => s.rating != null && s.rating > 0;
 
 /** Average rating across rated sessions (rating > 0), or null. */
 export function averageRating(sessions: readonly Session[]): number | null {
@@ -144,7 +146,9 @@ export function cafeSpendByCurrency(sessions: readonly Session[]): Record<string
 	return totals;
 }
 
-export function mostVisitedCafe(sessions: readonly Session[]): { name: string; count: number } | null {
+export function mostVisitedCafe(
+	sessions: readonly Session[]
+): { name: string; count: number } | null {
 	const tally = new Map<string, number>();
 	for (const s of sessions.filter(isCafe)) {
 		tally.set(s.cafeName, (tally.get(s.cafeName) ?? 0) + 1);
@@ -203,9 +207,7 @@ export function palatePhrase(c: PalateCentroid): string {
 
 /** The distinct catalog entries (with taste) behind the user's tins —
  *  the set the palate share-card plots. Deduped by catalog id. */
-export function palateProducts(
-	tins: readonly Tin[]
-): (CatalogEntry & { taste: TasteProfile })[] {
+export function palateProducts(tins: readonly Tin[]): (CatalogEntry & { taste: TasteProfile })[] {
 	const seen = new Set<string>();
 	const out: (CatalogEntry & { taste: TasteProfile })[] = [];
 	for (const t of tins) {

@@ -32,7 +32,7 @@
 
 <svelte:element
 	this={as}
-	class="text-ink font-display tracking-[-0.015em] {italic ? 'italic' : 'not-italic'} {sizeClass[
+	class="font-display tracking-[-0.015em] text-ink {italic ? 'italic' : 'not-italic'} {sizeClass[
 		size
 	]}"
 >

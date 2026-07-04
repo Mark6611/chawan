@@ -127,9 +127,9 @@
 		<!-- sheet -->
 		<div
 			transition:slide={{ duration: 220 }}
-			class="bg-paper border-rule relative w-full max-w-md rounded-t-[22px] border-t px-6 pt-3 pb-[calc(env(safe-area-inset-bottom)+24px)]"
+			class="relative w-full max-w-md rounded-t-[22px] border-t border-rule bg-paper px-6 pt-3 pb-[calc(env(safe-area-inset-bottom)+24px)]"
 		>
-			<div class="bg-rule mx-auto mb-4 h-1 w-10 rounded-full"></div>
+			<div class="mx-auto mb-4 h-1 w-10 rounded-full bg-rule"></div>
 
 			<Eyebrow>{eyebrow}</Eyebrow>
 			<div class="mt-1">
@@ -139,15 +139,23 @@
 			<!-- Toggles: theme always; format for session + palate -->
 			<div class="mt-4 flex items-center gap-5">
 				<div class="flex gap-3">
-					<button type="button" onclick={() => (theme = 'night')} class={toggleClass(theme === 'night')}>
+					<button
+						type="button"
+						onclick={() => (theme = 'night')}
+						class={toggleClass(theme === 'night')}
+					>
 						Night
 					</button>
-					<button type="button" onclick={() => (theme = 'day')} class={toggleClass(theme === 'day')}>
+					<button
+						type="button"
+						onclick={() => (theme = 'day')}
+						class={toggleClass(theme === 'day')}
+					>
 						Day
 					</button>
 				</div>
 				{#if canToggleFormat}
-					<span class="bg-rule h-3 w-px"></span>
+					<span class="h-3 w-px bg-rule"></span>
 					<div class="flex gap-3">
 						<button
 							type="button"
@@ -170,13 +178,13 @@
 			<div class="mt-5 flex justify-center">
 				<canvas
 					bind:this={previewCanvas}
-					class="border-hairline rounded-[14px] border-[0.5px]"
+					class="rounded-[14px] border-[0.5px] border-hairline"
 					style="width: {previewW}px; height: {previewH}px;"
 				></canvas>
 			</div>
 
 			{#if error}
-				<div class="border-danger mt-4 rounded-[14px] border-[0.5px] px-4 py-3">
+				<div class="mt-4 rounded-[14px] border-[0.5px] border-danger px-4 py-3">
 					<Mono size="meta" tone="ink">{error}</Mono>
 				</div>
 			{/if}

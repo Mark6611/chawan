@@ -73,20 +73,7 @@ export type ShareCardData = SessionCardData | PalateCardData | StatCardData;
 // Builders — domain object → card payload
 // ─────────────────────────────────────────────────────────────
 
-const MONTHS = [
-	'Jan',
-	'Feb',
-	'Mar',
-	'Apr',
-	'May',
-	'Jun',
-	'Jul',
-	'Aug',
-	'Sep',
-	'Oct',
-	'Nov',
-	'Dec'
-];
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 /** ISO timestamp → "20 May 2026". Date only — never the time (privacy). */
 export function shareDate(iso: string): string {

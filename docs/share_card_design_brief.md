@@ -15,12 +15,12 @@ without a Design round).
 
 The original chawan brief listed "Sharing / blog / public posts" and
 "Social features" as **explicitly out of scope.** The share card is a
-*conscious, narrow* reversal — recorded so it's a decision, not a drift.
+_conscious, narrow_ reversal — recorded so it's a decision, not a drift.
 
 **The line:** a share card is **a file, not a network.** It's a local PNG
 the user generates on-device and shares through the OS share sheet
 (Messages, AirDrop, Photos, wherever). There is **no** feed, profile,
-follow, comment, like, hosted page, or share *link*. Nothing leaves the
+follow, comment, like, hosted page, or share _link_. Nothing leaves the
 device except the image the user explicitly hands off. Design should hold
 this line: the card is a beautiful artifact, not an on-ramp to social
 features.
@@ -33,14 +33,14 @@ The app has three things genuinely worth sharing. **Design's first job is
 to decide which earn a card for v1** — one done beautifully beats three
 done thinly. My leanings noted, but it's your call:
 
-1. **Session card** *(likely the core)* — a single logged session.
+1. **Session card** _(likely the core)_ — a single logged session.
    - Personal: tin name + maker, style, powder / water / temp (the
      big-mono brew block), water:powder ratio, rating, notes, date.
    - Cafe: cafe name, region, style, price, rating, notes, date.
-2. **Palate card** *(distinctive second)* — the user's FlavorChart with
+2. **Palate card** _(distinctive second)_ — the user's FlavorChart with
    their tins plotted + the derived phrase ("Mostly mild + full-body").
    Already exists as a component; rasterizes cleanly (it's SVG).
-3. **Stat card** *(nice-to-have)* — e.g. "32 bowls this season" or a
+3. **Stat card** _(nice-to-have)_ — e.g. "32 bowls this season" or a
    week/month rhythm number. Risk: closest to the gamification the rest
    of the app avoids — handle with the same restraint as Insights.
 
@@ -179,7 +179,7 @@ in SvelteKit.
    reads more intentional, but following the user's theme is more
    personal. Lean: fixed night treatment for richness; confirm.
 3. **Where the share action lives** — session detail is the obvious home
-   (share *this* session). Does Insights also get a "share my palate"
+   (share _this_ session). Does Insights also get a "share my palate"
    action? Don't scatter share buttons across the app.
 4. **Square only, or square + story** — start square; story later if
    wanted.

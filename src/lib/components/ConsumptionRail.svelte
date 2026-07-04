@@ -22,15 +22,15 @@
 		<div class="relative mb-1 h-2">
 			{#each ticks as t, i (i)}
 				<span
-					class="bg-data absolute top-0 h-2 w-px"
+					class="absolute top-0 h-2 w-px bg-data"
 					style="left: {Math.max(0, Math.min(1, t)) * 100}%"
 				></span>
 			{/each}
 		</div>
 	{/if}
-	<div class="bg-hairline relative h-[2px] w-full">
+	<div class="relative h-[2px] w-full bg-hairline">
 		<div
-			class="bg-data absolute top-0 left-0 h-[2px] transition-[width] duration-300"
+			class="absolute top-0 left-0 h-[2px] bg-data transition-[width] duration-300"
 			style="width: {fill * 100}%"
 		></div>
 	</div>

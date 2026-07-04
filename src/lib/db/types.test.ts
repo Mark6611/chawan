@@ -93,9 +93,7 @@ describe('TinSchema', () => {
 
 	it('rejects negative priceCents and bad currency codes', () => {
 		expect(() => TinSchema.parse({ ...validTin, priceCents: -1 })).toThrow();
-		expect(() =>
-			TinSchema.parse({ ...validTin, priceCents: 100, priceCurrency: 'JP' })
-		).toThrow();
+		expect(() => TinSchema.parse({ ...validTin, priceCents: 100, priceCurrency: 'JP' })).toThrow();
 	});
 });
 

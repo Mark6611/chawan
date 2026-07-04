@@ -14,13 +14,7 @@
 	import { BRANDS, listBrands } from '$lib/catalog/brands';
 	import { searchCatalog } from '$lib/catalog/search';
 	import { hasTaste, type BrandId } from '$lib/catalog/types';
-	import {
-		GRADE_LABELS,
-		REGION_LABELS,
-		type Grade,
-		type Region,
-		type Tin
-	} from '$lib/db/types';
+	import { GRADE_LABELS, REGION_LABELS, type Grade, type Region, type Tin } from '$lib/db/types';
 	import { repository } from '$lib/db/repository';
 	import { syncState } from '$lib/sync.svelte';
 
@@ -46,9 +40,7 @@
 	const returnUrl = $derived(page.url.searchParams.get('return'));
 	const pickerMode = $derived(!!returnUrl);
 
-	const view = $derived<View>(
-		(page.url.searchParams.get('view') as View | null) ?? 'list'
-	);
+	const view = $derived<View>((page.url.searchParams.get('view') as View | null) ?? 'list');
 	const brandFilter = $derived<BrandId | undefined>(
 		(page.url.searchParams.get('brand') as BrandId | null) ?? undefined
 	);
@@ -119,9 +111,7 @@
 		loadTins();
 	});
 
-	const ownedIds = $derived(
-		tins.map((t) => t.catalogId).filter((id): id is string => !!id)
-	);
+	const ownedIds = $derived(tins.map((t) => t.catalogId).filter((id): id is string => !!id));
 	const ownedSet = $derived(new Set(ownedIds));
 
 	// ─── Filtered set ────────────────────────────────────────
@@ -137,7 +127,7 @@
 
 	// Grouped by brand → grade for the LIST view's section headers.
 	const groupedForList = $derived.by(() => {
-		const groups = new Map<BrandId, typeof MATCHA_CATALOG[number][]>();
+		const groups = new Map<BrandId, (typeof MATCHA_CATALOG)[number][]>();
 		for (const e of filtered) {
 			if (!groups.has(e.brand)) groups.set(e.brand, []);
 			groups.get(e.brand)!.push(e);
@@ -164,7 +154,7 @@
 	{#if pickerMode}
 		<a
 			href={returnUrl}
-			class="text-muted hover:text-ink font-mono text-[11px] tracking-[0.10em] uppercase"
+			class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink"
 		>
 			← cancel
 		</a>
@@ -173,7 +163,7 @@
 			<div class="mt-2">
 				<Display size="l">Pick a matcha</Display>
 			</div>
-			<p class="text-muted mt-3 max-w-[36ch] text-[14px] italic">
+			<p class="mt-3 max-w-[36ch] text-[14px] text-muted italic">
 				Tap to prefill the tin form — you'll fill in weight + opened date next.
 			</p>
 		</div>
@@ -182,7 +172,7 @@
 		<div class="mt-2">
 			<Display size="l">Catalog</Display>
 		</div>
-		<p class="text-muted mt-3 max-w-[36ch] text-[14px] italic">
+		<p class="mt-3 max-w-[36ch] text-[14px] text-muted italic">
 			Known matcha SKUs from leading Japanese makers — the lineup before you pick a tin.
 		</p>
 	{/if}
@@ -211,7 +201,7 @@
 
 	<!-- ─── Filter rail (horizontally scrollable on mobile) ─ -->
 	<div class="-mx-6 mt-4 overflow-x-auto px-6">
-		<div class="flex gap-2 whitespace-nowrap pb-1">
+		<div class="flex gap-2 pb-1 whitespace-nowrap">
 			{#each brands as b (b.id)}
 				{@const sel = brandFilter === b.id}
 				<button
@@ -260,7 +250,7 @@
 			{@const brand = brands.find((b) => b.id === brandId)!}
 			<section class="mb-7">
 				<Eyebrow>{brand.name} · {entries.length}</Eyebrow>
-				<div class="border-hairline mt-2 border-t">
+				<div class="mt-2 border-t border-hairline">
 					{#each entries as e (e.id)}
 						<CatalogRow
 							entry={e}
@@ -293,13 +283,11 @@
 		{#if !pickerMode && selectedEntry}
 			{@const sel = selectedEntry}
 			{@const brand = BRANDS[sel.brand]}
-			<div
-				class="border-hairline relative mt-5 rounded-[14px] border-[0.5px] px-4 py-4"
-			>
+			<div class="relative mt-5 rounded-[14px] border-[0.5px] border-hairline px-4 py-4">
 				<button
 					type="button"
 					onclick={() => (selectedId = undefined)}
-					class="text-muted hover:text-ink absolute top-2 right-3 grid h-6 w-6 place-items-center font-mono text-[16px] leading-none"
+					class="absolute top-2 right-3 grid h-6 w-6 place-items-center font-mono text-[16px] leading-none text-muted hover:text-ink"
 					aria-label="Clear selection"
 				>
 					×
@@ -309,15 +297,15 @@
 					<BrandGlyph brand={sel.brand} size={14} />
 					<div class="min-w-0 flex-1">
 						<div class="flex items-baseline gap-2">
-							<span class="text-ink truncate font-display text-[20px] italic">{sel.name}</span>
+							<span class="truncate font-display text-[20px] text-ink italic">{sel.name}</span>
 							{#if sel.kanji}
-								<span class="text-muted shrink-0 font-display text-[14px]">{sel.kanji}</span>
+								<span class="shrink-0 font-display text-[14px] text-muted">{sel.kanji}</span>
 							{/if}
 							{#if ownedSet.has(sel.id)}
 								<span class="ml-1 shrink-0"><Chawan size={12} filled /></span>
 							{/if}
 						</div>
-						<div class="text-muted mt-0.5 font-mono text-[11px]">
+						<div class="mt-0.5 font-mono text-[11px] text-muted">
 							{brand.shortName} · {GRADE_LABELS[sel.grade]} · {REGION_LABELS[sel.region]}
 							{#if sel.cultivars && sel.cultivars.length > 0}
 								· {sel.cultivars.join(' · ')}
@@ -330,7 +318,7 @@
 					<div class="mt-3 flex flex-wrap gap-1.5">
 						{#each sel.tasteNotes as note (note)}
 							<span
-								class="border-hairline text-muted rounded-full border-[0.5px] px-2 py-0.5 font-mono text-[10px] tracking-[0.05em]"
+								class="rounded-full border-[0.5px] border-hairline px-2 py-0.5 font-mono text-[10px] tracking-[0.05em] text-muted"
 							>
 								{note}
 							</span>
@@ -339,7 +327,7 @@
 				{/if}
 
 				{#if sel.description}
-					<p class="text-muted mt-3 font-body text-[14px] italic leading-relaxed">
+					<p class="mt-3 font-body text-[14px] leading-relaxed text-muted italic">
 						{sel.description}
 					</p>
 				{/if}
@@ -347,7 +335,7 @@
 				<div class="mt-3 flex items-center justify-end">
 					<a
 						href="/catalog/{sel.id}"
-						class="text-tea hover:text-ink font-mono text-[11px] font-medium tracking-[0.10em] uppercase"
+						class="font-mono text-[11px] font-medium tracking-[0.10em] text-tea uppercase hover:text-ink"
 					>
 						Open detail →
 					</a>
@@ -356,11 +344,7 @@
 		{/if}
 
 		<div class="mt-5 flex justify-center">
-			<ChartLegend
-				active={brandFilter}
-				{counts}
-				onSelect={(b) => setParam('brand', b ?? null)}
-			/>
+			<ChartLegend active={brandFilter} {counts} onSelect={(b) => setParam('brand', b ?? null)} />
 		</div>
 		<NotPlottedRail products={unplotted} />
 		{#if plotted.length === 0 && unplotted.length === 0}

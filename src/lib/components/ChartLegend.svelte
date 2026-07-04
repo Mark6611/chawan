@@ -41,17 +41,17 @@
 				aria-pressed={active === brand.id}
 			>
 				<BrandGlyph brand={brand.id} size={11} />
-				<span class="text-ink font-mono text-[11px]">{brand.shortName}</span>
+				<span class="font-mono text-[11px] text-ink">{brand.shortName}</span>
 				{#if count != null}
-					<span class="text-muted font-mono text-[10px]">· {count}</span>
+					<span class="font-mono text-[10px] text-muted">· {count}</span>
 				{/if}
 			</button>
 		{:else}
 			<div class="flex items-center gap-2" style="opacity: {dimmed ? 0.35 : 1};">
 				<BrandGlyph brand={brand.id} size={11} />
-				<span class="text-ink font-mono text-[11px]">{brand.shortName}</span>
+				<span class="font-mono text-[11px] text-ink">{brand.shortName}</span>
 				{#if count != null}
-					<span class="text-muted font-mono text-[10px]">· {count}</span>
+					<span class="font-mono text-[10px] text-muted">· {count}</span>
 				{/if}
 			</div>
 		{/if}

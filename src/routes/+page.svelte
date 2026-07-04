@@ -95,7 +95,7 @@
 			<div class="mt-6">
 				<Display size="m">Your first bowl.</Display>
 			</div>
-			<p class="text-muted mt-4 max-w-[24ch] text-[14px] italic">
+			<p class="mt-4 max-w-[24ch] text-[14px] text-muted italic">
 				Tap below to log your first matcha session.
 			</p>
 			<div class="mt-8 w-full">
@@ -136,7 +136,7 @@
 				<Eyebrow>Bowls this week</Eyebrow>
 				<a
 					href="/insights"
-					class="text-muted hover:text-ink font-mono text-[10.5px] tracking-[0.14em] uppercase"
+					class="font-mono text-[10.5px] tracking-[0.14em] text-muted uppercase hover:text-ink"
 				>
 					insights →
 				</a>
@@ -179,18 +179,18 @@
 			<button
 				type="button"
 				onclick={logAgain}
-				class="border-tea bg-tea-wash mb-3 flex w-full items-center justify-between rounded-full
-					border-[0.5px] px-5 py-3 text-left transition-opacity duration-150 hover:opacity-90"
+				class="mb-3 flex w-full items-center justify-between rounded-full border-[0.5px] border-tea
+					bg-tea-wash px-5 py-3 text-left transition-opacity duration-150 hover:opacity-90"
 			>
 				<span class="flex flex-col gap-0.5">
-					<span class="text-tea font-mono text-[10.5px] font-medium tracking-[0.14em] uppercase">
+					<span class="font-mono text-[10.5px] font-medium tracking-[0.14em] text-tea uppercase">
 						Again? · {Math.max(1, Math.floor(usual.hoursAgo))}h ago
 					</span>
-					<span class="text-ink font-mono text-[12px]">
+					<span class="font-mono text-[12px] text-ink">
 						{usual.session.style} · {usual.session.powderGrams}g · {usual.session.waterTempC}°C
 					</span>
 				</span>
-				<span class="text-tea font-mono text-[14px]">→</span>
+				<span class="font-mono text-[14px] text-tea">→</span>
 			</button>
 		{/if}
 

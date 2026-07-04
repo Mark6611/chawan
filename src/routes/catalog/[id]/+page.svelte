@@ -36,9 +36,7 @@
 		void syncState.tick;
 		loadTins();
 	});
-	const ownedCount = $derived(
-		entry ? tins.filter((t) => t.catalogId === entry.id).length : 0
-	);
+	const ownedCount = $derived(entry ? tins.filter((t) => t.catalogId === entry.id).length : 0);
 
 	const labelFor = $derived(entry?.id);
 	const highlightId = $derived(entry?.id);
@@ -61,7 +59,7 @@
 <main class="mx-auto max-w-md px-6 py-12 pb-28">
 	<a
 		href="/catalog"
-		class="text-muted hover:text-ink font-mono text-[11px] tracking-[0.10em] uppercase"
+		class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink"
 	>
 		← back
 	</a>
@@ -80,7 +78,7 @@
 			<div class="mt-2 flex items-baseline gap-3">
 				<Display size="xl">{entry.name}</Display>
 				{#if entry.kanji}
-					<span class="text-muted font-display text-[22px]">{entry.kanji}</span>
+					<span class="font-display text-[22px] text-muted">{entry.kanji}</span>
 				{/if}
 			</div>
 		</div>
@@ -105,7 +103,8 @@
 			<div class="mt-4 flex items-center gap-2">
 				<Chawan size={16} filled />
 				<Mono size="meta" tone="data">
-					You've tried this · {ownedCount} {ownedCount === 1 ? 'tin' : 'tins'} in inventory
+					You've tried this · {ownedCount}
+					{ownedCount === 1 ? 'tin' : 'tins'} in inventory
 				</Mono>
 			</div>
 		{/if}
@@ -115,7 +114,7 @@
 			<div class="mt-4 flex flex-wrap gap-1.5">
 				{#each entry.tasteNotes as note (note)}
 					<span
-						class="border-hairline text-muted rounded-full border-[0.5px] px-2.5 py-0.5 font-mono text-[10.5px] tracking-[0.05em]"
+						class="rounded-full border-[0.5px] border-hairline px-2.5 py-0.5 font-mono text-[10.5px] tracking-[0.05em] text-muted"
 					>
 						{note}
 					</span>
@@ -125,7 +124,7 @@
 
 		<!-- Description -->
 		{#if entry.description}
-			<p class="text-ink mt-5 font-body text-[15px] italic leading-relaxed">
+			<p class="mt-5 font-body text-[15px] leading-relaxed text-ink italic">
 				{entry.description}
 			</p>
 		{/if}
@@ -163,9 +162,9 @@
 		{:else}
 			<section>
 				<Eyebrow>Taste profile</Eyebrow>
-				<p class="text-muted mt-2 text-[14px] italic">
-					{brand.shortName} doesn't publish a flavor chart for this product. It surfaces in the
-					Not Plotted rail on the catalog browse.
+				<p class="mt-2 text-[14px] text-muted italic">
+					{brand.shortName} doesn't publish a flavor chart for this product. It surfaces in the Not Plotted
+					rail on the catalog browse.
 				</p>
 			</section>
 		{/if}
@@ -181,7 +180,7 @@
 					href={entry.productUrl}
 					target="_blank"
 					rel="noopener noreferrer"
-					class="text-muted hover:text-ink font-mono text-[11px] tracking-[0.10em] uppercase"
+					class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink"
 				>
 					Source · maker's product page ↗
 				</a>

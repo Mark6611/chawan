@@ -31,12 +31,12 @@
 		<BrandGlyph brand={entry.brand} size={14} title={brand.shortName} />
 		<div class="min-w-0 flex-1">
 			<div class="flex items-baseline gap-2">
-				<span class="text-ink font-display text-[18px] italic truncate">{entry.name}</span>
+				<span class="truncate font-display text-[18px] text-ink italic">{entry.name}</span>
 				{#if entry.kanji}
-					<span class="text-muted font-display text-[14px] shrink-0">{entry.kanji}</span>
+					<span class="shrink-0 font-display text-[14px] text-muted">{entry.kanji}</span>
 				{/if}
 			</div>
-			<div class="text-muted mt-0.5 font-mono text-[11px] tracking-[0.05em]">
+			<div class="mt-0.5 font-mono text-[11px] tracking-[0.05em] text-muted">
 				{brand.shortName} · {GRADE_LABELS[entry.grade]} · {REGION_LABELS[entry.region]}
 			</div>
 		</div>
@@ -44,7 +44,7 @@
 			<Chawan size={14} filled />
 		{/if}
 		{#if !picker}
-			<span class="text-faint shrink-0 font-mono text-[14px]" aria-hidden="true">›</span>
+			<span class="shrink-0 font-mono text-[14px] text-faint" aria-hidden="true">›</span>
 		{/if}
 	</div>
 {/snippet}
@@ -53,7 +53,7 @@
 	<button
 		type="button"
 		onclick={() => onpick?.(entry)}
-		class="hover:bg-surface border-hairline -mx-6 block w-full border-b px-6 py-3 text-left transition-colors"
+		class="-mx-6 block w-full border-b border-hairline px-6 py-3 text-left transition-colors hover:bg-surface"
 		aria-label="Pick {entry.name}"
 	>
 		{@render body()}
@@ -61,7 +61,7 @@
 {:else}
 	<a
 		href="/catalog/{entry.id}"
-		class="hover:bg-surface border-hairline -mx-6 block border-b px-6 py-3 transition-colors"
+		class="-mx-6 block border-b border-hairline px-6 py-3 transition-colors hover:bg-surface"
 		aria-label="Open {entry.name}"
 	>
 		{@render body()}

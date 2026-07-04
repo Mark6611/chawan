@@ -94,9 +94,7 @@
 	const currency = $derived(getCurrency(currencyCode));
 	const priceCents = $derived(parsePrice(priceText, currencyCode));
 
-	const canSave = $derived(
-		cafeName.trim().length > 0 && !!region && (style !== 'latte' || !!milk)
-	);
+	const canSave = $derived(cafeName.trim().length > 0 && !!region && (style !== 'latte' || !!milk));
 
 	onMount(async () => {
 		if (!isEdit) currencyCode = readCurrency();
@@ -193,7 +191,7 @@
 <main class="mx-auto max-w-md px-6 py-12 pb-28">
 	<a
 		href={backHref}
-		class="text-muted hover:text-ink font-mono text-[11px] tracking-[0.10em] uppercase"
+		class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink"
 	>
 		← back
 	</a>
@@ -210,10 +208,10 @@
 			<button
 				type="button"
 				onclick={() => (editingTime = true)}
-				class="text-tea hover:text-ink font-mono text-[10.5px] font-medium tracking-[0.14em] uppercase"
+				class="font-mono text-[10.5px] font-medium tracking-[0.14em] text-tea uppercase hover:text-ink"
 				aria-label="Edit brew time"
 			>
-				{timeLabel} <span class="text-faint ml-1">↗</span>
+				{timeLabel} <span class="ml-1 text-faint">↗</span>
 			</button>
 		{:else}
 			<div class="field-wrapper flex items-center gap-3">
@@ -221,12 +219,12 @@
 					type="datetime-local"
 					value={brewedAtLocal}
 					onchange={onTimeChange}
-					class="text-ink font-mono text-[14px]"
+					class="font-mono text-[14px] text-ink"
 				/>
 				<button
 					type="button"
 					onclick={() => (editingTime = false)}
-					class="text-tea hover:text-ink font-mono text-[10.5px] tracking-[0.10em] uppercase"
+					class="font-mono text-[10.5px] tracking-[0.10em] text-tea uppercase hover:text-ink"
 				>
 					done
 				</button>
@@ -248,7 +246,7 @@
 				bind:value={cafeName}
 				placeholder="Stonemill"
 				autocomplete="off"
-				class="text-ink placeholder:text-faint w-full font-display text-[22px] italic"
+				class="w-full font-display text-[22px] text-ink italic placeholder:text-faint"
 			/>
 			<datalist id="cafe-names">
 				{#each uniqueCafeNames as name (name)}
@@ -267,7 +265,7 @@
 				bind:value={maker}
 				placeholder="Marukyu Kōyamaen"
 				autocomplete="off"
-				class="text-ink placeholder:text-faint font-body w-full text-[15px]"
+				class="w-full font-body text-[15px] text-ink placeholder:text-faint"
 			/>
 			<datalist id="maker-names">
 				{#each uniqueMakers as name (name)}
@@ -302,7 +300,7 @@
 			{#snippet action()}
 				<select
 					bind:value={currencyCode}
-					class="text-muted hover:text-ink bg-transparent font-mono text-[10.5px] font-medium tracking-[0.14em] uppercase"
+					class="bg-transparent font-mono text-[10.5px] font-medium tracking-[0.14em] text-muted uppercase hover:text-ink"
 					aria-label="Currency"
 				>
 					{#each CURRENCIES as c (c.code)}
@@ -311,14 +309,14 @@
 				</select>
 			{/snippet}
 			<div class="flex items-baseline gap-2">
-				<span class="text-faint font-mono text-[32px] leading-none">{currency.symbol}</span>
+				<span class="font-mono text-[32px] leading-none text-faint">{currency.symbol}</span>
 				<input
 					type="text"
 					inputmode="decimal"
 					bind:value={priceText}
 					placeholder={currency.decimals === 0 ? '0' : '0.00'}
 					autocomplete="off"
-					class="text-ink placeholder:text-faint w-full font-mono text-[32px] leading-none tabular-nums"
+					class="w-full font-mono text-[32px] leading-none text-ink tabular-nums placeholder:text-faint"
 				/>
 			</div>
 		</Field>
@@ -334,12 +332,12 @@
 				bind:value={notes}
 				rows="3"
 				placeholder="How was it?"
-				class="text-ink placeholder:text-faint font-body w-full text-[15px] italic"
+				class="w-full font-body text-[15px] text-ink italic placeholder:text-faint"
 			></textarea>
 		</Field>
 
 		{#if error}
-			<div class="bg-tea-wash border-danger mt-6 rounded-[14px] border-[0.5px] px-4 py-3">
+			<div class="mt-6 rounded-[14px] border-[0.5px] border-danger bg-tea-wash px-4 py-3">
 				<Mono size="meta" tone="ink">{error}</Mono>
 			</div>
 		{/if}
@@ -356,7 +354,7 @@
 					type="button"
 					onclick={deleteSession}
 					disabled={saving}
-					class="text-danger hover:opacity-80 font-mono text-[11px] tracking-[0.10em] uppercase disabled:opacity-40"
+					class="font-mono text-[11px] tracking-[0.10em] text-danger uppercase hover:opacity-80 disabled:opacity-40"
 				>
 					Delete session
 				</button>

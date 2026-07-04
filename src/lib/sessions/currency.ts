@@ -58,10 +58,12 @@ export function formatPrice(cents: number, code: string): string {
 	return `${info.symbol}${value.toFixed(info.decimals)}`;
 }
 
-/** Parse a user-typed string like "7.50" or "750" into integer cents.
- *  Respects the currency's decimal count — JPY parses "600" as 60000 cents. */
-export function parsePrice(text: string, code: string): number {
-	const info = getCurrency(code);
+/** Parse a user-typed string like "7.50" or "600" into integer cents.
+ *  Currency-agnostic on purpose: "600" is always 60000 cents; the DISPLAY
+ *  layer (formatPrice) handles JPY's zero-decimal rendering. The `_code`
+ *  param is kept so call sites read naturally and the signature can grow
+ *  currency-aware later without churn. */
+export function parsePrice(text: string, _code: string): number {
 	const trimmed = text.trim();
 	if (!trimmed) return 0;
 	const n = Number.parseFloat(trimmed);

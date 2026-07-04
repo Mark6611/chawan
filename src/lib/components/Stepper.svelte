@@ -39,20 +39,22 @@
 		type="button"
 		onclick={dec}
 		aria-label="Decrease"
-		class="border-rule text-muted hover:text-ink grid h-9 w-9 place-items-center rounded-full border font-mono text-[14px] leading-none"
-	>−</button>
+		class="grid h-9 w-9 place-items-center rounded-full border border-rule font-mono text-[14px] leading-none text-muted hover:text-ink"
+		>−</button
+	>
 
-	<span class="text-ink min-w-[3ch] text-center font-mono text-[28px] font-light tabular-nums"
+	<span class="min-w-[3ch] text-center font-mono text-[28px] font-light text-ink tabular-nums"
 		>{formatted}</span
 	>
 	{#if unit}
-		<span class="text-muted font-mono text-[11px]">{unit}</span>
+		<span class="font-mono text-[11px] text-muted">{unit}</span>
 	{/if}
 
 	<button
 		type="button"
 		onclick={inc}
 		aria-label="Increase"
-		class="border-rule text-muted hover:text-ink grid h-9 w-9 place-items-center rounded-full border font-mono text-[14px] leading-none"
-	>+</button>
+		class="grid h-9 w-9 place-items-center rounded-full border border-rule font-mono text-[14px] leading-none text-muted hover:text-ink"
+		>+</button
+	>
 </div>

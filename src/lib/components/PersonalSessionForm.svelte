@@ -100,9 +100,7 @@
 			: []
 	);
 
-	const currentRem = $derived(
-		selectedTin ? tinRemaining(selectedTin, sessionsForSelected) : 0
-	);
+	const currentRem = $derived(selectedTin ? tinRemaining(selectedTin, sessionsForSelected) : 0);
 	const afterRem = $derived(Math.max(0, currentRem - powderGrams));
 	const avgPerSession = $derived.by(() => {
 		if (sessionsForSelected.length === 0) return powderGrams;
@@ -303,7 +301,7 @@
 <main class="mx-auto max-w-md px-6 py-12 pb-28">
 	<a
 		href={backHref}
-		class="text-muted hover:text-ink font-mono text-[11px] tracking-[0.10em] uppercase"
+		class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink"
 	>
 		← back
 	</a>
@@ -320,10 +318,10 @@
 			<button
 				type="button"
 				onclick={() => (editingTime = true)}
-				class="text-tea hover:text-ink font-mono text-[10.5px] font-medium tracking-[0.14em] uppercase"
+				class="font-mono text-[10.5px] font-medium tracking-[0.14em] text-tea uppercase hover:text-ink"
 				aria-label="Edit brew time"
 			>
-				{timeLabel} <span class="text-faint ml-1">↗</span>
+				{timeLabel} <span class="ml-1 text-faint">↗</span>
 			</button>
 		{:else}
 			<div class="field-wrapper flex items-center gap-3">
@@ -331,12 +329,12 @@
 					type="datetime-local"
 					value={brewedAtLocal}
 					onchange={onTimeChange}
-					class="text-ink font-mono text-[14px]"
+					class="font-mono text-[14px] text-ink"
 				/>
 				<button
 					type="button"
 					onclick={() => (editingTime = false)}
-					class="text-tea hover:text-ink font-mono text-[10.5px] tracking-[0.10em] uppercase"
+					class="font-mono text-[10.5px] tracking-[0.10em] text-tea uppercase hover:text-ink"
 				>
 					done
 				</button>
@@ -353,7 +351,7 @@
 	{:else if !isEdit && activeTins.length === 0}
 		<div class="flex flex-col items-center text-center">
 			<Display size="m">No tins yet.</Display>
-			<p class="text-muted mt-4 max-w-[26ch] text-[14px] italic">
+			<p class="mt-4 max-w-[26ch] text-[14px] text-muted italic">
 				Add a tin first — personal sessions deduct from your inventory.
 			</p>
 			<div class="mt-8 w-full">
@@ -363,18 +361,16 @@
 	{:else}
 		{#if showDefaultsBanner}
 			<div
-				class="border-tea bg-tea-wash mb-4 flex items-center justify-between rounded-full border-[0.5px] py-2 pl-4 pr-2"
+				class="mb-4 flex items-center justify-between rounded-full border-[0.5px] border-tea bg-tea-wash py-2 pr-2 pl-4"
 			>
-				<span
-					class="text-tea font-mono text-[10.5px] font-medium tracking-[0.14em] uppercase"
-				>
+				<span class="font-mono text-[10.5px] font-medium tracking-[0.14em] text-tea uppercase">
 					Defaults applied · tap any field to change
 				</span>
 				<button
 					type="button"
 					onclick={() => (showDefaultsBanner = false)}
 					aria-label="Dismiss"
-					class="text-muted hover:text-ink grid h-6 w-6 place-items-center font-mono text-[16px] leading-none"
+					class="grid h-6 w-6 place-items-center font-mono text-[16px] leading-none text-muted hover:text-ink"
 				>
 					×
 				</button>
@@ -411,7 +407,7 @@
 			</div>
 		{/if}
 
-		<div class="field-wrapper border-hairline border-b py-[14px]">
+		<div class="field-wrapper border-b border-hairline py-[14px]">
 			<div class="grid grid-cols-2 gap-6">
 				<div class="flex flex-col gap-2">
 					<Eyebrow>Powder</Eyebrow>
@@ -427,7 +423,8 @@
 				<div class="mt-4">
 					<Mono size="meta" tone="muted">
 						After this bowl: {afterRem.toFixed(0)}g in {selectedTin.name}
-						{#if bowlsLeftAfter > 0} · ~{bowlsLeftAfter} bowls left{/if}
+						{#if bowlsLeftAfter > 0}
+							· ~{bowlsLeftAfter} bowls left{/if}
 					</Mono>
 				</div>
 			{/if}
@@ -454,12 +451,12 @@
 				bind:value={notes}
 				rows="3"
 				placeholder="How was it?"
-				class="text-ink placeholder:text-faint font-body w-full text-[15px] italic"
+				class="w-full font-body text-[15px] text-ink italic placeholder:text-faint"
 			></textarea>
 		</Field>
 
 		{#if error}
-			<div class="bg-tea-wash border-danger mt-6 rounded-[14px] border-[0.5px] px-4 py-3">
+			<div class="mt-6 rounded-[14px] border-[0.5px] border-danger bg-tea-wash px-4 py-3">
 				<Mono size="meta" tone="ink">{error}</Mono>
 			</div>
 		{/if}
@@ -476,7 +473,7 @@
 					type="button"
 					onclick={deleteSession}
 					disabled={saving}
-					class="text-danger hover:opacity-80 font-mono text-[11px] tracking-[0.10em] uppercase disabled:opacity-40"
+					class="font-mono text-[11px] tracking-[0.10em] text-danger uppercase hover:opacity-80 disabled:opacity-40"
 				>
 					Delete session
 				</button>

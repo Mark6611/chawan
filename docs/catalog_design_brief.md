@@ -26,18 +26,18 @@ Ippodo and Kanbayashi Shunsho's main lines.
 
 ### What an entry contains
 
-| Field | Shape | Example |
-|---|---|---|
-| brand | string | "Marukyu Kōyamaen" |
-| name | string | "Eiju 永寿" |
-| grade | enum (ceremonial / premium / culinary) | ceremonial |
-| region | enum (uji / nishio / yame / kagoshima / shizuoka / other) | uji |
-| cultivars | optional string[] | ["Yabukita", "Asahi"] (blends OK) |
-| tasteProfile | `{ x: number, y: number }` (each −1..+1) | `{ x: 0.6, y: 0.5 }` (mild + full-body) |
-| usuchaSuitable / koichaSuitable | boolean | both true |
-| price | optional `{ jpyPerGram: number }` | `{ jpyPerGram: 80 }` |
-| description | optional string | one paragraph |
-| productUrl | optional string | maker's product page |
+| Field                           | Shape                                                     | Example                                 |
+| ------------------------------- | --------------------------------------------------------- | --------------------------------------- |
+| brand                           | string                                                    | "Marukyu Kōyamaen"                      |
+| name                            | string                                                    | "Eiju 永寿"                             |
+| grade                           | enum (ceremonial / premium / culinary)                    | ceremonial                              |
+| region                          | enum (uji / nishio / yame / kagoshima / shizuoka / other) | uji                                     |
+| cultivars                       | optional string[]                                         | ["Yabukita", "Asahi"] (blends OK)       |
+| tasteProfile                    | `{ x: number, y: number }` (each −1..+1)                  | `{ x: 0.6, y: 0.5 }` (mild + full-body) |
+| usuchaSuitable / koichaSuitable | boolean                                                   | both true                               |
+| price                           | optional `{ jpyPerGram: number }`                         | `{ jpyPerGram: 80 }`                    |
+| description                     | optional string                                           | one paragraph                           |
+| productUrl                      | optional string                                           | maker's product page                    |
 
 Taste profile uses the **two-axis grid Marukyu publishes**: x-axis goes
 `sharp (−1) ↔ mild (+1)`, y-axis goes `refreshing (−1) ↔ full-body
@@ -172,18 +172,18 @@ I'll implement in SvelteKit + Tailwind v4 (same stack as Phase 1+2).
 Marukyu Kōyamaen's published chart (use these as the working set when
 designing the chart):
 
-| Product | Sharp↔Mild (x) | Refreshing↔Full-body (y) |
-|---|---|---|
-| Aoarashi 青嵐 | −0.85 | −0.7 |
-| Isuzu 五十鈴 | −0.6 | −0.45 |
-| Chigi no shiro 千木の白 | −0.4 | −0.2 |
-| Yugen 又玄 | −0.15 | +0.05 |
-| Wako 和光 | 0 | 0 |
-| Kinrin 金輪 | +0.25 | +0.25 |
-| Unkaku 雲鶴 | +0.4 | +0.4 |
-| Eiju 永寿 | +0.55 | +0.55 |
-| Choan 長寿 | +0.7 | +0.65 |
-| Tenju 天授 | +0.85 | +0.7 |
+| Product                 | Sharp↔Mild (x) | Refreshing↔Full-body (y) |
+| ----------------------- | -------------- | ------------------------ |
+| Aoarashi 青嵐           | −0.85          | −0.7                     |
+| Isuzu 五十鈴            | −0.6           | −0.45                    |
+| Chigi no shiro 千木の白 | −0.4           | −0.2                     |
+| Yugen 又玄              | −0.15          | +0.05                    |
+| Wako 和光               | 0              | 0                        |
+| Kinrin 金輪             | +0.25          | +0.25                    |
+| Unkaku 雲鶴             | +0.4           | +0.4                     |
+| Eiju 永寿               | +0.55          | +0.55                    |
+| Choan 長寿              | +0.7           | +0.65                    |
+| Tenju 天授              | +0.85          | +0.7                     |
 
 (Approximate from the published chart. We'll refine when we have
 better source data.)

@@ -11,9 +11,10 @@ Two new surfaces on top of the shipped Phase 1–3 app:
    an image you can save or share.
 
 Status: **pre-build**. The app is live in production (SvelteKit + Dexie
-+ Supabase sync + catalog). This is Phase 4. Read alongside
-`../docs/catalog_design_brief.md` and the original chawan handoff
-(`~/Downloads/handoff 3/`).
+
+- Supabase sync + catalog). This is Phase 4. Read alongside
+  `../docs/catalog_design_brief.md` and the original chawan handoff
+  (`~/Downloads/handoff 3/`).
 
 ---
 
@@ -21,7 +22,7 @@ Status: **pre-build**. The app is live in production (SvelteKit + Dexie
 
 The original chawan brief listed **"Sharing / blog / public posts" and
 "Social features" as explicitly out of scope.** The share card is a
-*conscious, narrow reversal* of that — documented here so it's a decision
+_conscious, narrow reversal_ of that — documented here so it's a decision
 on the record, not a silent drift.
 
 **What the reversal IS:** the ability to generate a single image artifact
@@ -29,7 +30,7 @@ on the record, not a silent drift.
 themselves. A local, user-initiated export.
 
 **What it is NOT (still firmly out of scope):** feeds, profiles, follows,
-public hosted pages, share *links*, comments, likes, discovery, any
+public hosted pages, share _links_, comments, likes, discovery, any
 server-rendered or server-hosted social surface. No account is ever
 visible to anyone else. The card is a file, not a network.
 
@@ -44,7 +45,7 @@ the larger, higher-value surface regardless.
 1. **Insights computed at read time, no stored aggregates, no new table.**
    Matches the standing convention ("computed values derived at read
    time, never stored"). A new pure-functional `src/lib/insights/
-   compute.ts` (unit-tested like `sessions/compute.ts` + `again.ts`)
+compute.ts` (unit-tested like `sessions/compute.ts` + `again.ts`)
    derives every metric from `repository.listSessions()` +
    `listTins()`. No Supabase schema change.
 
@@ -82,30 +83,36 @@ Everything below is already in the schema. The Design challenge is
 show them as a calm reflective page rather than a metrics dashboard.
 
 **Consumption rhythm**
+
 - Bowls over time (rolling week / month / all-time)
 - Busiest day-of-week, typical time-of-day
 - Lifetime total bowls; total grams of matcha consumed
 
 **Tins**
+
 - Most-used tin; fastest-consumed tin
 - Average grams per bowl; your typical water:powder ratio
 - Active vs archived count; catalog coverage ("tried 6 of 20 cataloged")
 
 **Ratings**
+
 - Distribution across the half-star scale
 - Average rating by tin / by style / by cafe
 - Highest-rated sessions
 
 **Brew habits (personal sessions)**
+
 - Average powder / water / temperature
 - Whisk preference; style split (usucha / koicha / latte %)
 
 **Cafe sessions**
+
 - Total spend; spend over time; average cup price
 - Most-visited cafe; price by region (show source currency, no conversion
   — consistent with the catalog decision)
 
 **Palate map (the hero)**
+
 - Your tins (those linked to a catalog entry via `Tin.catalogId`, or
   with their own taste coords) plotted on the flavor chart
 - Shows where your taste clusters — sharp/mild × refreshing/full-body
@@ -140,7 +147,7 @@ glyph as the single recurring graphic, tea green reserved for
 selection/CTA. **No new fonts, no new base colors.** Big-mono numerics
 are the established way to show a number — lean on them for the stats.
 
-The one fresh challenge: how does a *reflective data surface* look in
+The one fresh challenge: how does a _reflective data surface_ look in
 this typographic, restraint-first language without becoming either (a) a
 cold analytics dashboard or (b) a gamified scoreboard? That's the core
 design question.
@@ -245,11 +252,11 @@ implement in SvelteKit + Tailwind v4.
 
 ## Build sequence after Design lands (~3 sessions)
 
-| Session | Goal |
-| ------- | ---- |
+| Session     | Goal                                                                                                                                  |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | **Warm-up** | Close the 3 loose ends: confirm Supabase migrations 0003 + 0004, guard `/dev/*` routes out of production, trim font subsets to latin. |
-| **19** | `src/lib/insights/compute.ts` (pure, fully unit-tested) + `/insights` route, normal + low-data states, palate map via FlavorChart. |
-| **20** | Share card — client-side PNG generation, Web Share API + download fallback, the share affordance. |
+| **19**      | `src/lib/insights/compute.ts` (pure, fully unit-tested) + `/insights` route, normal + low-data states, palate map via FlavorChart.    |
+| **20**      | Share card — client-side PNG generation, Web Share API + download fallback, the share affordance.                                     |
 
 ---
 

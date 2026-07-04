@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-	normalizeFromServer,
-	parseSessionFromServer,
-	parseTinFromServer
-} from './sync-normalize';
+import { normalizeFromServer, parseSessionFromServer, parseTinFromServer } from './sync-normalize';
 
 const num = new Set(['amount', 'rating']);
 const ts = new Set(['createdAt']);

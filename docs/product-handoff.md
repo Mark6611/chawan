@@ -1,6 +1,6 @@
 # Chawan and Friend — Session Handoff
 
-A personal matcha session log PWA. Sibling to the existing **Coffee Brew Log**. Two-mode product: log sessions you brewed yourself, or sessions you bought at a store. The name nods to the matcha bowl (*chawan*) and the personal-vs-store fork.
+A personal matcha session log PWA. Sibling to the existing **Coffee Brew Log**. Two-mode product: log sessions you brewed yourself, or sessions you bought at a store. The name nods to the matcha bowl (_chawan_) and the personal-vs-store fork.
 
 Status: **pre-build**. Architecture and product shape are decided. The design round is the next step — a Claude Design prompt is included below, ready to send.
 
@@ -10,19 +10,19 @@ Status: **pre-build**. Architecture and product shape are decided. The design ro
 
 Solo personal log of matcha sessions. Every time you drink matcha you record it. Sessions split into two kinds and share one chronological feed:
 
-| | Personal | Store-bought |
-|---|---|---|
-| When | You made it at home | You bought a cup somewhere |
-| Tin / source | Pulls from your tin inventory | Just record matcha's region (Yame, Uji, etc.) — no tin |
-| Brewing details | Powder grams, water grams/ml, water temp, whisk type | None |
-| Style | usucha / koicha / **latte** | usucha-equivalent (clear) / latte |
-| Milk (if latte) | Type (cow / oat / almond / soy / coconut / other) | Same |
-| Store-specific | — | Store name, price |
-| Common | Rating, notes, isFavorite, sessionAt | Rating, notes, isFavorite, sessionAt |
+|                 | Personal                                             | Store-bought                                           |
+| --------------- | ---------------------------------------------------- | ------------------------------------------------------ |
+| When            | You made it at home                                  | You bought a cup somewhere                             |
+| Tin / source    | Pulls from your tin inventory                        | Just record matcha's region (Yame, Uji, etc.) — no tin |
+| Brewing details | Powder grams, water grams/ml, water temp, whisk type | None                                                   |
+| Style           | usucha / koicha / **latte**                          | usucha-equivalent (clear) / latte                      |
+| Milk (if latte) | Type (cow / oat / almond / soy / coconut / other)    | Same                                                   |
+| Store-specific  | —                                                    | Store name, price                                      |
+| Common          | Rating, notes, isFavorite, sessionAt                 | Rating, notes, isFavorite, sessionAt                   |
 
 **Tin inventory** (parallel to coffee bags): `name`, `maker`, `grade` (ceremonial / premium / culinary), `region` (enum: Uji / Nishio / Yame / Kagoshima / Shizuoka / Other), `cultivar` (optional — Yabukita / Okumidori / Samidori / etc.), `harvestDate`, `weightGrams`, `openedAt`, `archived`, `createdAt`.
 
-**New session flow forks first**: when the user taps "+ new session", first decision is *personal or store?* — the form below changes shape accordingly.
+**New session flow forks first**: when the user taps "+ new session", first decision is _personal or store?_ — the form below changes shape accordingly.
 
 ---
 
@@ -116,9 +116,10 @@ Deliver mockups (or precise verbal descriptions) for each screen, the token spec
 
 ## Reference: the coffee app
 
-Lives at `/Users/kornkrankeeratitejakarn/Desktop/CODE/` (deployed at [coffee-brew-log-git-main-kornkran-s-projects.vercel.app](https://coffee-brew-log-git-main-kornkran-s-projects.vercel.app)). Use it as a *pattern source*, not a template to fork.
+Lives at `/Users/kornkrankeeratitejakarn/Desktop/CODE/` (deployed at [coffee-brew-log-git-main-kornkran-s-projects.vercel.app](https://coffee-brew-log-git-main-kornkran-s-projects.vercel.app)). Use it as a _pattern source_, not a template to fork.
 
 **Patterns worth carrying over:**
+
 - The local-first sync layer ([src/lib/sync.ts](../CODE/src/lib/sync.ts)) — push-on-write, pull-on-sign-in, manual "Sync now". Includes the Postgres-timestamp normalization that took two sessions to find.
 - The repository boundary ([src/lib/db/repository.ts](../CODE/src/lib/db/repository.ts)) — components never touch Dexie directly. Same architecture rule should apply in the matcha app.
 - Zod schemas at the type layer ([src/lib/db/types.ts](../CODE/src/lib/db/types.ts)) — single source of truth for shape + runtime validation.
@@ -126,11 +127,13 @@ Lives at `/Users/kornkrankeeratitejakarn/Desktop/CODE/` (deployed at [coffee-bre
 - The weekly backup script pattern (`scripts/export.mjs` + launchd plist) — when the matcha app is shipped, set up a sibling backup job for `matcha_tins` + `matcha_sessions`.
 
 **Patterns to NOT carry over:**
+
 - The origin flag system (resolveOrigin + OriginFlag + OriginInput) — irrelevant for matcha.
 - The brew-method discriminated Zod union (espresso vs pour-over) — matcha has three styles but the structure is different (latte adds milk fields, store-bought skips brew details entirely). Probably needs a fresher schema design rather than copying.
 - The copper-accented dark paper palette — Design will produce a new one.
 
 **Conventions to honor (from coffee app's CLAUDE.md):**
+
 - All DB access through `repository.ts` boundary
 - Timestamps stored as ISO strings (not Date objects)
 - Computed values (ratios, derived metrics) computed at read time, never stored
@@ -167,6 +170,7 @@ Lives at `/Users/kornkrankeeratitejakarn/Desktop/CODE/` (deployed at [coffee-bre
 Active and in production. Phase 2 (Supabase sync, magic-link auth, origin flag indicator system) is shipped. Continues in a parallel session — don't touch its repo from the Chawan session unless explicitly asked.
 
 Pending hygiene items on the coffee side (FYI, not your concern):
+
 - Rotate Resend SMTP key (deferred)
 - Rotate Supabase service role key (was pasted in chat last session)
 

@@ -21,7 +21,7 @@
 	}
 </script>
 
-<div class="border-hairline flex border-y" role="radiogroup">
+<div class="flex border-y border-hairline" role="radiogroup">
 	{#each options as opt, i (opt.value)}
 		{@const selected = value === opt.value}
 		<button
@@ -31,10 +31,10 @@
 			onclick={() => select(opt.value)}
 			class="flex flex-1 items-center justify-center gap-2 py-3 font-mono text-[11.5px] tracking-[0.10em] uppercase
 				{selected ? 'text-tea' : 'text-muted hover:text-ink'}
-				{i > 0 ? 'border-hairline border-l' : ''}"
+				{i > 0 ? 'border-l border-hairline' : ''}"
 		>
 			{#if selected}
-				<span class="bg-tea h-1 w-1 rounded-full" aria-hidden="true"></span>
+				<span class="h-1 w-1 rounded-full bg-tea" aria-hidden="true"></span>
 			{/if}
 			{opt.label}
 		</button>

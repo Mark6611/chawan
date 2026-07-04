@@ -256,28 +256,20 @@
 		{@const dimmed = brandFilter !== undefined && p.brand !== brandFilter}
 		{@const highlighted = highlightId === p.id}
 		{@const r = highlighted ? config.dot / 2 + 1 : config.dot / 2}
-		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<g
 			role={onSelect ? 'button' : undefined}
 			aria-label={onSelect ? `${p.name}, ${brand.shortName}` : undefined}
 			onclick={() => onSelect?.(p)}
-			style="cursor: {onSelect
-				? 'pointer'
-				: 'default'}; opacity: {dimmed ? 0.18 : 1}; transition: opacity 0.2s;"
+			style="cursor: {onSelect ? 'pointer' : 'default'}; opacity: {dimmed
+				? 0.18
+				: 1}; transition: opacity 0.2s;"
 		>
 			<title>{p.name} · {brand.shortName}</title>
 
 			{#if brand.glyph === 'disc'}
 				<circle {cx} {cy} r={r * 0.85} fill="var(--color-data)" />
 			{:else if brand.glyph === 'ring'}
-				<circle
-					{cx}
-					{cy}
-					r={r * 0.78}
-					fill="none"
-					stroke="var(--color-data)"
-					stroke-width="1.1"
-				/>
+				<circle {cx} {cy} r={r * 0.78} fill="none" stroke="var(--color-data)" stroke-width="1.1" />
 			{:else if brand.glyph === 'diamond'}
 				<polygon
 					points={`${cx},${cy - r * 0.95} ${cx + r * 0.95},${cy} ${cx},${cy + r * 0.95} ${cx - r * 0.95},${cy}`}
@@ -302,14 +294,7 @@
 
 			<!-- Highlight halo — tea green in BOTH themes (selection affordance) -->
 			{#if highlighted}
-				<circle
-					{cx}
-					{cy}
-					r={r + 2.5}
-					fill="none"
-					stroke="var(--color-tea)"
-					stroke-width="1"
-				/>
+				<circle {cx} {cy} r={r + 2.5} fill="none" stroke="var(--color-tea)" stroke-width="1" />
 			{/if}
 
 			<!-- "I've tried" overlay: tiny chawan-glyph at top-right of dot.
@@ -317,7 +302,13 @@
 			{#if size !== 'thumb' && ownedIds.includes(p.id)}
 				<g transform="translate({cx + r + 3} {cy - r - 3})" opacity={dimmed ? 0.4 : 1}>
 					<title>You have a tin of this</title>
-					<circle r="2.8" fill="none" stroke="var(--color-data)" stroke-width="0.5" opacity="0.55" />
+					<circle
+						r="2.8"
+						fill="none"
+						stroke="var(--color-data)"
+						stroke-width="0.5"
+						opacity="0.55"
+					/>
 					<circle r="2" fill="none" stroke="var(--color-data)" stroke-width="0.5" opacity="0.55" />
 					<circle r="1" fill="var(--color-data)" />
 				</g>

@@ -31,7 +31,7 @@
 	<main class="mx-auto max-w-md px-6 py-12 text-center">
 		<a
 			href="/sessions"
-			class="text-muted hover:text-ink font-mono text-[11px] tracking-[0.10em] uppercase"
+			class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink"
 		>
 			← back
 		</a>

@@ -96,7 +96,7 @@ function drawEnso(
 	ctx.lineCap = 'round';
 	ctx.strokeStyle = color;
 	const gapCenter = Math.PI / 4; // 45° lower-right (screen coords)
-	const half = ((54 * Math.PI) / 180) / 2;
+	const half = (54 * Math.PI) / 180 / 2;
 	ctx.beginPath();
 	ctx.arc(cx, cy, r, gapCenter + half, gapCenter - half + Math.PI * 2);
 	ctx.stroke();
@@ -199,8 +199,7 @@ function drawSessionCard(ctx: CanvasRenderingContext2D, data: SessionCardData): 
 	// Eyebrow
 	blocks.push({
 		height: 21,
-		draw: (top) =>
-			trackedText(ctx, eyebrow, SQ.left, top, `500 21px "${MONO}"`, P.tea, 0.22, 21)
+		draw: (top) => trackedText(ctx, eyebrow, SQ.left, top, `500 21px "${MONO}"`, P.tea, 0.22, 21)
 	});
 	// gap 22 baked as spacer below
 	blocks.push(spacer(22));

@@ -99,9 +99,7 @@
 			<div class="mt-6">
 				<Display size="m">No sessions yet.</Display>
 			</div>
-			<p class="text-muted mt-4 max-w-[26ch] text-[14px] italic">
-				Log your first bowl from Home.
-			</p>
+			<p class="mt-4 max-w-[26ch] text-[14px] text-muted italic">Log your first bowl from Home.</p>
 			<div class="mt-8 w-full">
 				<PrimaryButton href="/sessions/new">Begin a session</PrimaryButton>
 			</div>
@@ -109,7 +107,7 @@
 	{:else}
 		<!-- Filter rail -->
 		<nav
-			class="border-hairline -mx-6 mt-7 flex gap-5 border-b px-6 pb-3"
+			class="-mx-6 mt-7 flex gap-5 border-b border-hairline px-6 pb-3"
 			aria-label="Filter sessions"
 		>
 			{#each filters as f (f.value)}
@@ -132,7 +130,7 @@
 		{:else}
 			{#each groups as [day, daySessions] (day)}
 				<section class="mt-2">
-					<div class="bg-paper border-hairline -mx-6 sticky top-0 z-10 border-b px-6 py-3">
+					<div class="sticky top-0 z-10 -mx-6 border-b border-hairline bg-paper px-6 py-3">
 						<Eyebrow>{formatDayHeader(day)}</Eyebrow>
 					</div>
 					{#each daySessions as s (s.id)}

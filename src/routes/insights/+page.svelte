@@ -7,12 +7,7 @@
 
 	import { repository } from '$lib/db/repository';
 	import { syncState } from '$lib/sync.svelte';
-	import {
-		STYLE_LABELS,
-		WHISK_LABELS,
-		type Session,
-		type Tin
-	} from '$lib/db/types';
+	import { STYLE_LABELS, WHISK_LABELS, type Session, type Tin } from '$lib/db/types';
 	import { MATCHA_CATALOG } from '$lib/catalog/matcha-catalog';
 	import { formatPrice } from '$lib/sessions/currency';
 	import {
@@ -157,7 +152,7 @@
 			<div class="mt-6">
 				<Display size="m">Nothing to look back on yet.</Display>
 			</div>
-			<p class="text-muted mt-4 max-w-[28ch] text-[14px] italic">
+			<p class="mt-4 max-w-[28ch] text-[14px] text-muted italic">
 				Log a few sessions and your patterns will gather here — quietly, over time.
 			</p>
 		</div>
@@ -202,12 +197,13 @@
 			{#if season.count > 0}
 				<div class="mt-3 flex items-baseline justify-between">
 					<Mono size="meta" tone="muted">
-						This season · {season.count} {season.count === 1 ? 'bowl' : 'bowls'}
+						This season · {season.count}
+						{season.count === 1 ? 'bowl' : 'bowls'}
 					</Mono>
 					<button
 						type="button"
 						onclick={openSeasonShare}
-						class="text-tea hover:text-ink font-mono text-[10.5px] tracking-[0.14em] uppercase"
+						class="font-mono text-[10.5px] tracking-[0.14em] text-tea uppercase hover:text-ink"
 					>
 						share →
 					</button>
@@ -227,7 +223,7 @@
 							<button
 								type="button"
 								onclick={openPalateShare}
-								class="text-tea hover:text-ink font-mono text-[10.5px] tracking-[0.14em] uppercase"
+								class="font-mono text-[10.5px] tracking-[0.14em] text-tea uppercase hover:text-ink"
 							>
 								share →
 							</button>
@@ -238,7 +234,12 @@
 					<Display size="m" italic as="h2">Mostly {palatePhrase(centroid)}.</Display>
 				</div>
 				<div class="mt-4 flex justify-center">
-					<FlavorChart products={MATCHA_CATALOG} size="hero" ownedIds={owned} brandFilter={undefined} />
+					<FlavorChart
+						products={MATCHA_CATALOG}
+						size="hero"
+						ownedIds={owned}
+						brandFilter={undefined}
+					/>
 				</div>
 				{#if owned.length > centroid.mappedCount}
 					<div class="mt-2">
@@ -252,7 +253,7 @@
 			<Hairline class="my-7" />
 			<section>
 				<Eyebrow>Your palate</Eyebrow>
-				<p class="text-muted mt-2 text-[14px] italic">
+				<p class="mt-2 text-[14px] text-muted italic">
 					Add a tin from the catalog and your taste will start to map here.
 				</p>
 			</section>
@@ -270,9 +271,9 @@
 								<Mono size="meta" tone="muted">{STYLE_LABELS[row.key]}</Mono>
 								<Mono size="meta" tone="ink">{row.n}</Mono>
 							</div>
-							<div class="bg-hairline mt-1 h-[2px] w-full">
+							<div class="mt-1 h-[2px] w-full bg-hairline">
 								<div
-									class="bg-data h-[2px] transition-[width] duration-300"
+									class="h-[2px] bg-data transition-[width] duration-300"
 									style="width: {(row.n / styleMax) * 100}%"
 								></div>
 							</div>
@@ -312,7 +313,9 @@
 				</div>
 				{#if whisk}
 					<div class="mt-3">
-						<Mono size="meta" tone="muted">Usually a {WHISK_LABELS[whisk as keyof typeof WHISK_LABELS]}.</Mono>
+						<Mono size="meta" tone="muted"
+							>Usually a {WHISK_LABELS[whisk as keyof typeof WHISK_LABELS]}.</Mono
+						>
 					</div>
 				{/if}
 			</section>

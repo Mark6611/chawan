@@ -19,7 +19,7 @@
 </script>
 
 <div
-	class="field-wrapper flex flex-col gap-2 py-[14px] {hairline ? 'border-hairline border-b' : ''}"
+	class="field-wrapper flex flex-col gap-2 py-[14px] {hairline ? 'border-b border-hairline' : ''}"
 >
 	<div class="flex items-baseline justify-between gap-3">
 		<Eyebrow>{label}</Eyebrow>

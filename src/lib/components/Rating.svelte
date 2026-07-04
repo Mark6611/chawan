@@ -39,9 +39,9 @@
 	role={interactive ? 'group' : 'img'}
 	aria-label={ariaLabel ?? `Rating ${value} of ${max}`}
 >
-	{#each Array.from({ length: max }) as _, i}
+	{#each Array.from({ length: max }), i (i)}
 		<div
-			class="border-rule flex overflow-hidden rounded-full border-[0.5px]"
+			class="flex overflow-hidden rounded-full border-[0.5px] border-rule"
 			style="width: {size}px; height: {size}px;"
 		>
 			{#if interactive}

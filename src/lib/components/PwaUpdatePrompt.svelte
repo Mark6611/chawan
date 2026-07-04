@@ -27,22 +27,20 @@
 		role="status"
 	>
 		<div
-			class="bg-paper border-rule flex items-center gap-4 rounded-full border px-4 py-2 shadow-[0_6px_20px_rgba(0,0,0,0.12)]"
+			class="flex items-center gap-4 rounded-full border border-rule bg-paper px-4 py-2 shadow-[0_6px_20px_rgba(0,0,0,0.12)]"
 		>
-			<span class="text-ink font-mono text-[11px] tracking-[0.05em]">
-				A new version is ready
-			</span>
+			<span class="font-mono text-[11px] tracking-[0.05em] text-ink"> A new version is ready </span>
 			<button
 				type="button"
 				onclick={reload}
-				class="text-tea hover:text-ink font-mono text-[10.5px] font-medium tracking-[0.14em] uppercase"
+				class="font-mono text-[10.5px] font-medium tracking-[0.14em] text-tea uppercase hover:text-ink"
 			>
 				Reload
 			</button>
 			<button
 				type="button"
 				onclick={dismiss}
-				class="text-muted hover:text-ink font-mono text-[10.5px] tracking-[0.14em] uppercase"
+				class="font-mono text-[10.5px] tracking-[0.14em] text-muted uppercase hover:text-ink"
 			>
 				Later
 			</button>

@@ -19,6 +19,6 @@
 	{@render children()}
 {:else}
 	<main class="mx-auto max-w-md px-6 py-20 text-center">
-		<p class="text-muted font-mono text-[11px] tracking-[0.14em] uppercase">Redirecting…</p>
+		<p class="font-mono text-[11px] tracking-[0.14em] text-muted uppercase">Redirecting…</p>
 	</main>
 {/if}

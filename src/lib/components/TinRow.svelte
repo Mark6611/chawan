@@ -25,7 +25,7 @@
 
 <a
 	href="/tins/{tin.id}"
-	class="hover:bg-surface -mx-6 block px-6 py-4 transition-colors"
+	class="-mx-6 block px-6 py-4 transition-colors hover:bg-surface"
 	aria-label="Open {tin.name}"
 >
 	<div class="flex items-baseline justify-between gap-3">

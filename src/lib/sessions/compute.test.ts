@@ -81,14 +81,14 @@ describe('formatTimeAgo', () => {
 	});
 
 	it('shows days under a month', () => {
-		expect(
-			formatTimeAgo(new Date(now.getTime() - 5 * 24 * 60 * 60_000).toISOString(), now)
-		).toBe('5d ago');
+		expect(formatTimeAgo(new Date(now.getTime() - 5 * 24 * 60 * 60_000).toISOString(), now)).toBe(
+			'5d ago'
+		);
 	});
 
 	it('shows months over 30 days', () => {
-		expect(
-			formatTimeAgo(new Date(now.getTime() - 65 * 24 * 60 * 60_000).toISOString(), now)
-		).toBe('2mo ago');
+		expect(formatTimeAgo(new Date(now.getTime() - 65 * 24 * 60 * 60_000).toISOString(), now)).toBe(
+			'2mo ago'
+		);
 	});
 });

@@ -62,10 +62,7 @@
 	);
 
 	async function exportData() {
-		const [tins, sessions] = await Promise.all([
-			repository.listTins(),
-			repository.listSessions()
-		]);
+		const [tins, sessions] = await Promise.all([repository.listTins(), repository.listSessions()]);
 		const payload = {
 			app: 'chawan',
 			version: 'v0.1.0',
@@ -189,9 +186,7 @@
 				<Mono size="meta" tone="faint">{lastSaved}</Mono>
 			{/if}
 		</div>
-		<p class="text-muted mt-2 text-[14px] italic">
-			Applied when you open a new personal session.
-		</p>
+		<p class="mt-2 text-[14px] text-muted italic">Applied when you open a new personal session.</p>
 
 		<div class="mt-4">
 			<Field label="Default style">
@@ -217,7 +212,7 @@
 	<!-- ─── Theme ─────────────────────────────────────────── -->
 	<section>
 		<Eyebrow>Theme</Eyebrow>
-		<p class="text-muted mt-2 text-[14px] italic">
+		<p class="mt-2 text-[14px] text-muted italic">
 			Day is wood + white + ink. Night is deep earth with a tea-green accent.
 		</p>
 		<div class="mt-3">
@@ -234,7 +229,7 @@
 	<!-- ─── Chawan glyph ──────────────────────────────────── -->
 	<section>
 		<Eyebrow>Chawan glyph</Eyebrow>
-		<p class="text-muted mt-2 text-[14px] italic">
+		<p class="mt-2 text-[14px] text-muted italic">
 			Hide the bowl mark if you'd rather the layout speak for itself.
 		</p>
 		<div class="mt-3">
@@ -254,34 +249,33 @@
 
 		{#if !auth.enabled}
 			<div class="mt-3 flex items-baseline gap-3">
-				<span class="bg-muted h-2 w-2 rounded-full"></span>
+				<span class="h-2 w-2 rounded-full bg-muted"></span>
 				<Mono size="m" tone="muted">Not configured</Mono>
 			</div>
-			<p class="text-muted mt-3 text-[14px] italic">
-				Add VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY to .env.local (see
-				.env.example) and restart the dev server to enable sign-in.
+			<p class="mt-3 text-[14px] text-muted italic">
+				Add VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY to .env.local (see .env.example) and
+				restart the dev server to enable sign-in.
 			</p>
 		{:else if !auth.ready}
 			<div class="mt-3 flex items-baseline gap-3">
-				<span class="bg-muted h-2 w-2 rounded-full"></span>
+				<span class="h-2 w-2 rounded-full bg-muted"></span>
 				<Mono size="m" tone="muted">Checking…</Mono>
 			</div>
 		{:else if auth.user}
 			<div class="mt-3 flex items-baseline gap-3">
-				<span
-					class="{syncState.syncing ? 'bg-warn animate-pulse' : 'bg-data'} h-2 w-2 rounded-full"
+				<span class="{syncState.syncing ? 'animate-pulse bg-warn' : 'bg-data'} h-2 w-2 rounded-full"
 				></span>
 				<Mono size="m" tone="ink">
 					{syncState.syncing ? 'Syncing…' : 'Signed in'}
 				</Mono>
 			</div>
-			<p class="text-muted mt-3 text-[14px] italic break-all">{auth.user.email}</p>
+			<p class="mt-3 text-[14px] break-all text-muted italic">{auth.user.email}</p>
 			{#if syncState.lastError}
-				<div class="border-danger mt-3 rounded-[14px] border-[0.5px] px-4 py-3">
+				<div class="mt-3 rounded-[14px] border-[0.5px] border-danger px-4 py-3">
 					<Mono size="meta" tone="ink">{syncState.lastError}</Mono>
 				</div>
 			{:else if syncedAgoLabel}
-				<p class="text-muted mt-3 text-[14px] italic">{syncedAgoLabel}.</p>
+				<p class="mt-3 text-[14px] text-muted italic">{syncedAgoLabel}.</p>
 			{/if}
 			<div class="mt-4">
 				<PrimaryButton kind="line" onclick={handleSyncNow} disabled={syncState.syncing}>
@@ -293,19 +287,19 @@
 					type="button"
 					onclick={handleSignOut}
 					disabled={signingOut}
-					class="text-danger hover:opacity-80 font-mono text-[11px] tracking-[0.10em] uppercase disabled:opacity-40"
+					class="font-mono text-[11px] tracking-[0.10em] text-danger uppercase hover:opacity-80 disabled:opacity-40"
 				>
 					{signingOut ? 'Signing out…' : 'Sign out'}
 				</button>
 			</div>
 		{:else}
 			<div class="mt-3 flex items-baseline gap-3">
-				<span class="bg-data h-2 w-2 rounded-full"></span>
+				<span class="h-2 w-2 rounded-full bg-data"></span>
 				<Mono size="m" tone="ink">Local only</Mono>
 			</div>
-			<p class="text-muted mt-3 text-[14px] italic">
-				Sign in to enable cross-device sync (coming next). Your local data stays put — it'll
-				migrate to your account on first sign-in.
+			<p class="mt-3 text-[14px] text-muted italic">
+				Sign in to enable cross-device sync (coming next). Your local data stays put — it'll migrate
+				to your account on first sign-in.
 			</p>
 			<div class="mt-4">
 				<PrimaryButton kind="line" href="/auth">Sign in</PrimaryButton>
@@ -318,20 +312,20 @@
 	<!-- ─── Backup ────────────────────────────────────────── -->
 	<section>
 		<Eyebrow>Backup</Eyebrow>
-		<p class="text-muted mt-2 text-[14px] italic">
-			Download a JSON snapshot of every tin and session, or restore from a previous export.
-			Items with matching IDs are replaced; others are added.
+		<p class="mt-2 text-[14px] text-muted italic">
+			Download a JSON snapshot of every tin and session, or restore from a previous export. Items
+			with matching IDs are replaced; others are added.
 		</p>
 		<div class="mt-4 flex flex-col gap-3">
 			<button
 				type="button"
 				onclick={exportData}
-				class="border-rule text-ink hover:bg-surface w-full rounded-full border-[0.5px] py-3 font-mono text-[11px] tracking-[0.10em] uppercase transition-colors"
+				class="w-full rounded-full border-[0.5px] border-rule py-3 font-mono text-[11px] tracking-[0.10em] text-ink uppercase transition-colors hover:bg-surface"
 			>
 				Download backup
 			</button>
 			<label
-				class="border-rule text-ink hover:bg-surface w-full cursor-pointer rounded-full border-[0.5px] py-3 text-center font-mono text-[11px] tracking-[0.10em] uppercase transition-colors {importing
+				class="w-full cursor-pointer rounded-full border-[0.5px] border-rule py-3 text-center font-mono text-[11px] tracking-[0.10em] text-ink uppercase transition-colors hover:bg-surface {importing
 					? 'opacity-50'
 					: ''}"
 			>
@@ -364,7 +358,7 @@
 		<div class="mt-2">
 			<Display size="m">Chawan</Display>
 		</div>
-		<p class="text-muted mt-2 text-[14px] italic">A personal log for matcha sessions.</p>
+		<p class="mt-2 text-[14px] text-muted italic">A personal log for matcha sessions.</p>
 		<div class="mt-3">
 			<Mono size="meta" tone="muted">v0.2.0 · synced · Phase 2</Mono>
 		</div>

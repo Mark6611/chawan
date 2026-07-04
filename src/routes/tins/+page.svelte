@@ -45,7 +45,7 @@
 		</div>
 		<a
 			href="/tins/new"
-			class="text-tea hover:text-ink font-mono text-[11px] tracking-[0.10em] uppercase"
+			class="font-mono text-[11px] tracking-[0.10em] text-tea uppercase hover:text-ink"
 			aria-label="Add a new tin"
 		>
 			+ add
@@ -63,7 +63,7 @@
 			<div class="mt-6">
 				<Display size="m">No tins yet.</Display>
 			</div>
-			<p class="text-muted mt-4 max-w-[26ch] text-[14px] italic">
+			<p class="mt-4 max-w-[26ch] text-[14px] text-muted italic">
 				Add your first tin to start logging personal sessions.
 			</p>
 			<div class="mt-8 w-full">
@@ -76,7 +76,7 @@
 		{#if active.length}
 			<section>
 				<Eyebrow>Active · {active.length}</Eyebrow>
-				<div class="border-hairline mt-2 border-t">
+				<div class="mt-2 border-t border-hairline">
 					{#each active as t (t.id)}
 						<TinRow tin={t} {sessions} />
 						<Hairline />
@@ -89,7 +89,7 @@
 			{#if active.length}<Hairline rule class="my-7" />{/if}
 			<section>
 				<Eyebrow>Archived · {archived.length}</Eyebrow>
-				<div class="border-hairline mt-2 border-t opacity-70">
+				<div class="mt-2 border-t border-hairline opacity-70">
 					{#each archived as t (t.id)}
 						<TinRow tin={t} {sessions} />
 						<Hairline />

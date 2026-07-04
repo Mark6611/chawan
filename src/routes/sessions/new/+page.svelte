@@ -11,10 +11,7 @@
 </script>
 
 <main class="mx-auto max-w-md px-6 py-12 pb-28">
-	<a
-		href="/"
-		class="text-muted hover:text-ink font-mono text-[11px] tracking-[0.10em] uppercase"
-	>
+	<a href="/" class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink">
 		← back
 	</a>
 
@@ -29,15 +26,13 @@
 
 	<a
 		href="/sessions/new/personal"
-		class="hover:bg-surface -mx-6 block px-6 py-8 transition-colors"
+		class="-mx-6 block px-6 py-8 transition-colors hover:bg-surface"
 		aria-label="Log a personal session"
 	>
 		<div class="flex items-center justify-between gap-4">
 			<div>
 				<Display size="m" italic={false} as="h2">Personal</Display>
-				<p class="text-muted mt-2 text-[14px] italic">
-					You made it at home, from a tin you own.
-				</p>
+				<p class="mt-2 text-[14px] text-muted italic">You made it at home, from a tin you own.</p>
 			</div>
 			<Chawan size={56} />
 		</div>
@@ -47,13 +42,13 @@
 
 	<a
 		href="/sessions/new/cafe"
-		class="hover:bg-surface -mx-6 block px-6 py-8 transition-colors"
+		class="-mx-6 block px-6 py-8 transition-colors hover:bg-surface"
 		aria-label="Log a cafe session"
 	>
 		<div class="flex items-center justify-between gap-4">
 			<div>
 				<Display size="m" italic={false} as="h2">Cafe</Display>
-				<p class="text-muted mt-2 text-[14px] italic">You bought a cup somewhere.</p>
+				<p class="mt-2 text-[14px] text-muted italic">You bought a cup somewhere.</p>
 			</div>
 			<Chawan size={56} filled={false} />
 		</div>

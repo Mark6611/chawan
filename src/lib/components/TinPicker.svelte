@@ -59,9 +59,7 @@
 		const q = query.trim().toLowerCase();
 		if (!q) return activeTins.slice(0, 5);
 		return activeTins.filter(
-			(t) =>
-				t.name.toLowerCase().includes(q) ||
-				(t.maker?.toLowerCase().includes(q) ?? false)
+			(t) => t.name.toLowerCase().includes(q) || (t.maker?.toLowerCase().includes(q) ?? false)
 		);
 	});
 
@@ -99,18 +97,20 @@
 	<button
 		type="button"
 		onclick={clearSelection}
-		class="border-rule -mx-1 flex w-full items-baseline justify-between gap-3 rounded-[14px] border-[0.5px] px-3 py-3 text-left transition-colors hover:bg-surface"
+		class="-mx-1 flex w-full items-baseline justify-between gap-3 rounded-[14px] border-[0.5px] border-rule px-3 py-3 text-left transition-colors hover:bg-surface"
 		aria-label="Change tin"
 	>
 		<span class="min-w-0 flex-1">
-			<span class="text-ink block font-display text-[20px] italic">{selectedTin.name}</span>
-			<span class="text-muted mt-0.5 block font-mono text-[11px]">
+			<span class="block font-display text-[20px] text-ink italic">{selectedTin.name}</span>
+			<span class="mt-0.5 block font-mono text-[11px] text-muted">
 				{selectedTin.maker} · {selectedRem.toFixed(0)}g left{selectedTin.archived
 					? ' · archived'
 					: ''}
 			</span>
 		</span>
-		<span class="text-muted shrink-0 font-mono text-[10.5px] font-medium tracking-[0.14em] uppercase">
+		<span
+			class="shrink-0 font-mono text-[10.5px] font-medium tracking-[0.14em] text-muted uppercase"
+		>
 			change
 		</span>
 	</button>
@@ -118,7 +118,7 @@
 	<div class="relative">
 		<!-- Input -->
 		<div
-			class="border-hairline focus-within:border-tea flex items-center gap-2 rounded-[14px] border-[0.5px] px-3 py-2.5 transition-colors"
+			class="flex items-center gap-2 rounded-[14px] border-[0.5px] border-hairline px-3 py-2.5 transition-colors focus-within:border-tea"
 		>
 			<input
 				bind:this={inputEl}
@@ -126,10 +126,10 @@
 				onfocus={() => (isOpen = true)}
 				onblur={() => setTimeout(() => (isOpen = false), 200)}
 				placeholder={activeTins.length === 0 ? 'No tins yet — add one' : 'Search or add a tin…'}
-				class="text-ink placeholder:text-faint font-body w-full bg-transparent text-[15px] outline-none"
+				class="w-full bg-transparent font-body text-[15px] text-ink outline-none placeholder:text-faint"
 			/>
 			{#if hasQuery}
-				<span class="text-muted shrink-0 font-mono text-[10px] tracking-[0.14em] uppercase">
+				<span class="shrink-0 font-mono text-[10px] tracking-[0.14em] text-muted uppercase">
 					{filtered.length} match{filtered.length === 1 ? '' : 'es'}
 				</span>
 			{/if}
@@ -137,11 +137,11 @@
 
 		{#if isOpen}
 			<div
-				class="border-hairline bg-paper absolute top-full right-0 left-0 z-50 mt-1 overflow-hidden rounded-[14px] border-[0.5px] shadow-[0_10px_28px_rgba(0,0,0,0.10)]"
+				class="absolute top-full right-0 left-0 z-50 mt-1 overflow-hidden rounded-[14px] border-[0.5px] border-hairline bg-paper shadow-[0_10px_28px_rgba(0,0,0,0.10)]"
 			>
 				{#if filtered.length > 0}
 					<div
-						class="text-muted px-4 pt-3 pb-1 font-mono text-[10.5px] font-medium tracking-[0.14em] uppercase"
+						class="px-4 pt-3 pb-1 font-mono text-[10.5px] font-medium tracking-[0.14em] text-muted uppercase"
 					>
 						{hasQuery ? 'Matches' : 'Recent'}
 					</div>
@@ -154,18 +154,18 @@
 									e.preventDefault();
 									selectTin(t);
 								}}
-								class="hover:bg-surface block w-full px-4 py-2.5 text-left transition-colors"
+								class="block w-full px-4 py-2.5 text-left transition-colors hover:bg-surface"
 							>
 								<div class="flex items-baseline justify-between gap-3">
 									<span class="min-w-0 flex-1">
-										<span class="text-ink block font-display text-[17px] italic">{t.name}</span>
+										<span class="block font-display text-[17px] text-ink italic">{t.name}</span>
 										{#if t.maker}
-											<span class="text-muted mt-0.5 block font-mono text-[11px] truncate"
+											<span class="mt-0.5 block truncate font-mono text-[11px] text-muted"
 												>{t.maker}</span
 											>
 										{/if}
 									</span>
-									<span class="text-muted shrink-0 font-mono text-[11px] tabular-nums">
+									<span class="shrink-0 font-mono text-[11px] text-muted tabular-nums">
 										{remaining.toFixed(0)}g
 									</span>
 								</div>
@@ -174,7 +174,7 @@
 					</div>
 				{:else if hasQuery}
 					<div class="px-4 py-3">
-						<span class="text-muted font-mono text-[11px]">No matching tins.</span>
+						<span class="font-mono text-[11px] text-muted">No matching tins.</span>
 					</div>
 				{/if}
 
@@ -185,11 +185,11 @@
 						e.preventDefault();
 						createNew();
 					}}
-					class="border-hairline hover:bg-surface block w-full border-t px-4 py-3 text-left transition-colors"
+					class="block w-full border-t border-hairline px-4 py-3 text-left transition-colors hover:bg-surface"
 				>
 					<div class="flex items-center gap-3">
 						<div
-							class="bg-tea text-on-tea grid h-7 w-7 shrink-0 place-items-center rounded-full"
+							class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-tea text-on-tea"
 							aria-hidden="true"
 						>
 							<svg
@@ -205,15 +205,15 @@
 							</svg>
 						</div>
 						<div class="min-w-0 flex-1">
-							<div class="text-tea font-mono text-[11px] font-medium tracking-[0.10em] uppercase">
+							<div class="font-mono text-[11px] font-medium tracking-[0.10em] text-tea uppercase">
 								{hasQuery ? 'Create new tin' : 'Add a new tin'}
 							</div>
 							{#if hasQuery}
-								<div class="text-ink mt-0.5 truncate font-display text-[14px] italic">
+								<div class="mt-0.5 truncate font-display text-[14px] text-ink italic">
 									"{query}"
 								</div>
 							{:else}
-								<div class="text-muted mt-0.5 font-mono text-[11px]">Open the tin form →</div>
+								<div class="mt-0.5 font-mono text-[11px] text-muted">Open the tin form →</div>
 							{/if}
 						</div>
 					</div>
@@ -227,22 +227,20 @@
 							e.preventDefault();
 							browseCatalog();
 						}}
-						class="border-hairline hover:bg-surface block w-full border-t px-4 py-3 text-left transition-colors"
+						class="block w-full border-t border-hairline px-4 py-3 text-left transition-colors hover:bg-surface"
 					>
 						<div class="flex items-center gap-3">
 							<div
-								class="border-rule grid h-7 w-7 shrink-0 place-items-center rounded-full border-[0.5px]"
+								class="grid h-7 w-7 shrink-0 place-items-center rounded-full border-[0.5px] border-rule"
 								aria-hidden="true"
 							>
 								<Chawan size={16} />
 							</div>
 							<div class="min-w-0 flex-1">
-								<div
-									class="text-ink font-mono text-[11px] font-medium tracking-[0.10em] uppercase"
-								>
+								<div class="font-mono text-[11px] font-medium tracking-[0.10em] text-ink uppercase">
 									Browse catalog
 								</div>
-								<div class="text-muted mt-0.5 font-mono text-[11px]">
+								<div class="mt-0.5 font-mono text-[11px] text-muted">
 									Pick from the curated lineup →
 								</div>
 							</div>

@@ -18,8 +18,7 @@
 	onMount(() => {
 		if (!supabase) {
 			status = 'error';
-			errorMsg =
-				'Supabase is not configured. Add env vars and reload — see .env.example.';
+			errorMsg = 'Supabase is not configured. Add env vars and reload — see .env.example.';
 			return;
 		}
 		const {
@@ -81,12 +80,12 @@
 				<Display size="m">Could not verify.</Display>
 			</div>
 			{#if errorMsg}
-				<p class="text-muted mt-4 max-w-[36ch] mx-auto text-[14px] italic">{errorMsg}</p>
+				<p class="mx-auto mt-4 max-w-[36ch] text-[14px] text-muted italic">{errorMsg}</p>
 			{/if}
 			<div class="mt-6">
 				<a
 					href="/auth"
-					class="text-tea hover:text-ink font-mono text-[11px] tracking-[0.10em] uppercase"
+					class="font-mono text-[11px] tracking-[0.10em] text-tea uppercase hover:text-ink"
 				>
 					Try again
 				</a>

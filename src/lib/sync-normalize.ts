@@ -19,12 +19,7 @@ export const SESSION_NUMERIC_KEYS = new Set([
 	'priceCents',
 	'rating'
 ]);
-export const SESSION_TIMESTAMP_KEYS = new Set([
-	'brewedAt',
-	'createdAt',
-	'updatedAt',
-	'deletedAt'
-]);
+export const SESSION_TIMESTAMP_KEYS = new Set(['brewedAt', 'createdAt', 'updatedAt', 'deletedAt']);
 
 export function normalizeFromServer(
 	row: Record<string, unknown>,

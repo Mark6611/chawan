@@ -30,9 +30,7 @@ describe('MATCHA_CATALOG data integrity', () => {
 
 	it('Marukyu entries all have published taste coords', () => {
 		// Marukyu publishes a chart; any mk-* entry without taste is likely a typo.
-		const marukyuMissing = MATCHA_CATALOG.filter(
-			(e) => e.brand === 'marukyu' && !hasTaste(e)
-		);
+		const marukyuMissing = MATCHA_CATALOG.filter((e) => e.brand === 'marukyu' && !hasTaste(e));
 		expect(marukyuMissing, 'mk-* without taste coords').toEqual([]);
 	});
 

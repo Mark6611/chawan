@@ -99,20 +99,27 @@ describe('consumption rhythm', () => {
 
 describe('style + brew habits', () => {
 	it('styleSplit tallies all three styles', () => {
-		expect(styleSplit([p({ style: 'usucha' }), p({ style: 'koicha' }), c({ style: 'latte' })])).toEqual(
-			{ usucha: 1, koicha: 1, latte: 1 }
-		);
+		expect(
+			styleSplit([p({ style: 'usucha' }), p({ style: 'koicha' }), c({ style: 'latte' })])
+		).toEqual({ usucha: 1, koicha: 1, latte: 1 });
 	});
 
 	it('averageBrew averages personal params, null when no personal', () => {
-		const avg = averageBrew([p({ powderGrams: 2, waterGrams: 60, waterTempC: 76 }), p({ powderGrams: 4, waterGrams: 80, waterTempC: 80 })]);
+		const avg = averageBrew([
+			p({ powderGrams: 2, waterGrams: 60, waterTempC: 76 }),
+			p({ powderGrams: 4, waterGrams: 80, waterTempC: 80 })
+		]);
 		expect(avg).toEqual({ powderGrams: 3, waterGrams: 70, waterTempC: 78 });
 		expect(averageBrew([c()])).toBeNull();
 	});
 
 	it('whiskPreference returns the modal whisk, null when none set', () => {
 		expect(
-			whiskPreference([p({ whisk: 'chasen-100' }), p({ whisk: 'chasen-100' }), p({ whisk: 'electric' })])
+			whiskPreference([
+				p({ whisk: 'chasen-100' }),
+				p({ whisk: 'chasen-100' }),
+				p({ whisk: 'electric' })
+			])
 		).toBe('chasen-100');
 		expect(whiskPreference([c()])).toBeNull();
 	});
@@ -162,8 +169,11 @@ describe('cafe spend', () => {
 
 	it('mostVisitedCafe returns the modal cafe, null when none', () => {
 		expect(
-			mostVisitedCafe([c({ cafeName: 'Stonemill' }), c({ cafeName: 'Stonemill' }), c({ cafeName: 'Cha Cha' })])
-				?.name
+			mostVisitedCafe([
+				c({ cafeName: 'Stonemill' }),
+				c({ cafeName: 'Stonemill' }),
+				c({ cafeName: 'Cha Cha' })
+			])?.name
 		).toBe('Stonemill');
 		expect(mostVisitedCafe([p()])).toBeNull();
 	});
@@ -182,7 +192,10 @@ describe('catalog coverage + palate', () => {
 
 	it('palateCentroid averages mapped tins, null when none map', () => {
 		// mk-eiju taste { x: 0.55, y: 0.55 }, mk-tenju { x: 0.85, y: 0.7 }
-		const tins = [tin({ id: 't1', catalogId: 'mk-eiju' }), tin({ id: 't2', catalogId: 'mk-tenju' })];
+		const tins = [
+			tin({ id: 't1', catalogId: 'mk-eiju' }),
+			tin({ id: 't2', catalogId: 'mk-tenju' })
+		];
 		const centroid = palateCentroid(tins);
 		expect(centroid?.mappedCount).toBe(2);
 		expect(centroid?.x).toBeCloseTo(0.7, 5);

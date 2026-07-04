@@ -84,7 +84,7 @@
 <main class="mx-auto max-w-md px-6 py-12 pb-28">
 	<a
 		href="/settings"
-		class="text-muted hover:text-ink font-mono text-[11px] tracking-[0.10em] uppercase"
+		class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink"
 	>
 		← back
 	</a>
@@ -97,7 +97,7 @@
 	</div>
 
 	{#if !auth.enabled}
-		<p class="text-muted mt-4 max-w-[36ch] text-[14px] italic leading-relaxed">
+		<p class="mt-4 max-w-[36ch] text-[14px] leading-relaxed text-muted italic">
 			Supabase isn't configured for this install. Add
 			<code class="text-ink not-italic">VITE_SUPABASE_URL</code> and
 			<code class="text-ink not-italic">VITE_SUPABASE_PUBLISHABLE_KEY</code> to
@@ -105,9 +105,9 @@
 			<code class="text-ink not-italic">.env.example</code>) and restart the dev server.
 		</p>
 	{:else if phase === 'email'}
-		<p class="text-muted mt-4 max-w-[36ch] text-[14px] italic leading-relaxed">
-			Sign in to sync sessions across devices. Your local data stays put — it'll migrate to
-			your account on first sign-in.
+		<p class="mt-4 max-w-[36ch] text-[14px] leading-relaxed text-muted italic">
+			Sign in to sync sessions across devices. Your local data stays put — it'll migrate to your
+			account on first sign-in.
 		</p>
 
 		<Hairline class="my-7" />
@@ -120,12 +120,12 @@
 					required
 					autocomplete="email"
 					placeholder="you@example.com"
-					class="text-ink placeholder:text-faint font-body w-full text-[16px]"
+					class="w-full font-body text-[16px] text-ink placeholder:text-faint"
 				/>
 			</Field>
 
 			{#if error}
-				<div class="border-danger mt-4 rounded-[14px] border-[0.5px] px-4 py-3">
+				<div class="mt-4 rounded-[14px] border-[0.5px] border-danger px-4 py-3">
 					<Mono size="meta" tone="ink">{error}</Mono>
 				</div>
 			{/if}
@@ -137,9 +137,9 @@
 			</div>
 		</form>
 	{:else}
-		<p class="text-muted mt-4 max-w-[36ch] text-[14px] italic leading-relaxed">
-			A code went to <span class="text-ink not-italic">{email}</span>. Open the email and
-			either tap the link or paste the code below.
+		<p class="mt-4 max-w-[36ch] text-[14px] leading-relaxed text-muted italic">
+			A code went to <span class="text-ink not-italic">{email}</span>. Open the email and either tap
+			the link or paste the code below.
 		</p>
 
 		<Hairline class="my-7" />
@@ -158,21 +158,18 @@
 					pattern="[0-9]*"
 					maxlength="10"
 					placeholder="00000000"
-					class="text-ink placeholder:text-faint w-full text-center font-mono text-[24px] tracking-[0.25em] tabular-nums"
+					class="w-full text-center font-mono text-[24px] tracking-[0.25em] text-ink tabular-nums placeholder:text-faint"
 				/>
 			</Field>
 
 			{#if error}
-				<div class="border-danger mt-4 rounded-[14px] border-[0.5px] px-4 py-3">
+				<div class="mt-4 rounded-[14px] border-[0.5px] border-danger px-4 py-3">
 					<Mono size="meta" tone="ink">{error}</Mono>
 				</div>
 			{/if}
 
 			<div class="mt-8">
-				<PrimaryButton
-					type="submit"
-					disabled={verifying || otpCode.trim().length < 6}
-				>
+				<PrimaryButton type="submit" disabled={verifying || otpCode.trim().length < 6}>
 					{verifying ? 'Verifying…' : 'Verify'}
 				</PrimaryButton>
 			</div>
@@ -181,7 +178,7 @@
 				<button
 					type="button"
 					onclick={back}
-					class="text-muted hover:text-ink font-mono text-[11px] tracking-[0.10em] uppercase"
+					class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink"
 				>
 					← use a different email
 				</button>

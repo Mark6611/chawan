@@ -40,13 +40,7 @@
 	);
 </script>
 
-<svg
-	width={size}
-	height={size}
-	viewBox="0 0 200 200"
-	role="img"
-	aria-label={accessibleTitle}
->
+<svg width={size} height={size} viewBox="0 0 200 200" role="img" aria-label={accessibleTitle}>
 	<title>{accessibleTitle}</title>
 
 	<!-- Islands — simplified polygon approximation, hairline strokes -->

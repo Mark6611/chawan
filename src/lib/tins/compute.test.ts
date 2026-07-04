@@ -38,7 +38,7 @@ describe('tinRemaining', () => {
 		expect(tinRemaining(tin(), [])).toBe(30);
 	});
 
-	it('subtracts the powder used across this tin\'s sessions', () => {
+	it("subtracts the powder used across this tin's sessions", () => {
 		expect(tinRemaining(tin(), [ps({ powderGrams: 2 }), ps({ powderGrams: 2.5 })])).toBe(25.5);
 	});
 

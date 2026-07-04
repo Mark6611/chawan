@@ -11,10 +11,8 @@
 </script>
 
 {#if products.length > 0}
-	<div class="border-hairline mt-6 border-t pt-4">
-		<div
-			class="text-muted mb-3 font-mono text-[10.5px] font-medium tracking-[0.14em] uppercase"
-		>
+	<div class="mt-6 border-t border-hairline pt-4">
+		<div class="mb-3 font-mono text-[10.5px] font-medium tracking-[0.14em] text-muted uppercase">
 			Not plotted · {products.length}
 		</div>
 		<div class="flex flex-wrap gap-2">
@@ -22,12 +20,12 @@
 				{@const brand = BRANDS[p.brand]}
 				<a
 					href="/catalog/{p.id}"
-					class="border-hairline hover:bg-surface inline-flex items-center gap-2 rounded-full border-[0.5px] px-3 py-1.5 transition-colors"
+					class="inline-flex items-center gap-2 rounded-full border-[0.5px] border-hairline px-3 py-1.5 transition-colors hover:bg-surface"
 					aria-label="Open {p.name}"
 				>
 					<BrandGlyph brand={p.brand} size={10} />
-					<span class="text-ink font-display text-[13px] italic">{p.name}</span>
-					<span class="text-muted font-mono text-[10px]">{brand.shortName}</span>
+					<span class="font-display text-[13px] text-ink italic">{p.name}</span>
+					<span class="font-mono text-[10px] text-muted">{brand.shortName}</span>
 				</a>
 			{/each}
 		</div>

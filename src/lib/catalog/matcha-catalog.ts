@@ -38,7 +38,7 @@ export const MATCHA_CATALOG: readonly CatalogEntry[] = [
 		koichaSuitable: false,
 		tasteNotes: ['bright', 'grassy', 'sharp'],
 		description:
-			'The sharpest, most refreshing end of Marukyu Kōyamaen\'s lineup. An everyday matcha for cooking, lattes, and casual usucha.'
+			"The sharpest, most refreshing end of Marukyu Kōyamaen's lineup. An everyday matcha for cooking, lattes, and casual usucha."
 	},
 	{
 		id: 'mk-isuzu',
@@ -88,7 +88,7 @@ export const MATCHA_CATALOG: readonly CatalogEntry[] = [
 		koichaSuitable: true,
 		tasteNotes: ['balanced', 'mellow', 'gentle umami'],
 		description:
-			'The center of Marukyu Kōyamaen\'s flavor chart — a balanced ceremonial usucha that sits at the origin of sharp / mild and refreshing / full-body.'
+			"The center of Marukyu Kōyamaen's flavor chart — a balanced ceremonial usucha that sits at the origin of sharp / mild and refreshing / full-body."
 	},
 	{
 		id: 'mk-kinrin',
@@ -126,7 +126,7 @@ export const MATCHA_CATALOG: readonly CatalogEntry[] = [
 		koichaSuitable: true,
 		tasteNotes: ['mellow', 'umami', 'natural sweetness'],
 		description:
-			'One of Marukyu Kōyamaen\'s widely-loved ceremonial matchas — full-bodied, mellow, with a quiet natural sweetness.'
+			"One of Marukyu Kōyamaen's widely-loved ceremonial matchas — full-bodied, mellow, with a quiet natural sweetness."
 	},
 	{
 		id: 'mk-choan',
@@ -152,7 +152,7 @@ export const MATCHA_CATALOG: readonly CatalogEntry[] = [
 		koichaSuitable: true,
 		tasteNotes: ['deep umami', 'creamy', 'koicha-prized'],
 		description:
-			'The top-right corner of Marukyu\'s chart. Mild, deeply full-bodied, prized for koicha.'
+			"The top-right corner of Marukyu's chart. Mild, deeply full-bodied, prized for koicha."
 	},
 
 	// ─── Ippodo (no published taste chart; surface in NotPlottedRail) ──
@@ -221,7 +221,7 @@ export const MATCHA_CATALOG: readonly CatalogEntry[] = [
 		usuchaSuitable: false,
 		koichaSuitable: true,
 		tasteNotes: ['rich', 'thick', 'deep umami'],
-		description: 'Ippodo\'s flagship koicha-style matcha. Rich, thick, slowly grown.'
+		description: "Ippodo's flagship koicha-style matcha. Rich, thick, slowly grown."
 	},
 
 	// ─── Kanbayashi Shunsho (inferred coords) ─────────────────

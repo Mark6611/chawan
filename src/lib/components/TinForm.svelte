@@ -63,7 +63,11 @@
 	const urlReturnTo = untrack(() => page.url.searchParams.get('returnTo'));
 	const urlCatalogId = untrack(() => page.url.searchParams.get('catalogId') ?? undefined);
 	const catalogSnapshot = untrack(() =>
-		!initial && urlCatalogId ? (getCatalogEntry(urlCatalogId) ? snapshotForTin(getCatalogEntry(urlCatalogId)!) : null) : null
+		!initial && urlCatalogId
+			? getCatalogEntry(urlCatalogId)
+				? snapshotForTin(getCatalogEntry(urlCatalogId)!)
+				: null
+			: null
 	);
 
 	let name = $state(initial?.name ?? catalogSnapshot?.name ?? urlName);
@@ -248,7 +252,7 @@
 <main class="mx-auto max-w-md px-6 py-12 pb-28">
 	<a
 		href={!isEdit && urlReturnTo ? urlReturnTo : isEdit ? `/tins/${initial?.id}` : '/tins'}
-		class="text-muted hover:text-ink font-mono text-[11px] tracking-[0.10em] uppercase"
+		class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink"
 	>
 		← back
 	</a>
@@ -267,7 +271,7 @@
 			type="text"
 			bind:value={name}
 			placeholder="Eiju"
-			class="text-ink placeholder:text-faint w-full font-display text-[22px] italic"
+			class="w-full font-display text-[22px] text-ink italic placeholder:text-faint"
 		/>
 	</Field>
 
@@ -276,7 +280,7 @@
 			type="text"
 			bind:value={maker}
 			placeholder="Marukyu Kōyamaen"
-			class="text-ink placeholder:text-faint font-body w-full text-[16px]"
+			class="w-full font-body text-[16px] text-ink placeholder:text-faint"
 		/>
 	</Field>
 
@@ -300,14 +304,14 @@
 			type="text"
 			bind:value={cultivar}
 			placeholder="Yabukita, Asahi, …"
-			class="text-ink placeholder:text-faint font-body w-full text-[15px]"
+			class="w-full font-body text-[15px] text-ink placeholder:text-faint"
 		/>
 		<div class="mt-2 flex flex-wrap gap-2">
 			{#each SUGGESTED_CULTIVARS as c (c)}
 				<button
 					type="button"
 					onclick={() => (cultivar = c)}
-					class="border-rule text-muted hover:text-ink rounded-full border-[0.5px] px-2.5 py-1 font-mono text-[11px]"
+					class="rounded-full border-[0.5px] border-rule px-2.5 py-1 font-mono text-[11px] text-muted hover:text-ink"
 				>
 					{c}
 				</button>
@@ -336,7 +340,7 @@
 		{#snippet action()}
 			<select
 				bind:value={currencyCode}
-				class="text-muted hover:text-ink bg-transparent font-mono text-[10.5px] font-medium tracking-[0.14em] uppercase"
+				class="bg-transparent font-mono text-[10.5px] font-medium tracking-[0.14em] text-muted uppercase hover:text-ink"
 				aria-label="Currency"
 			>
 				{#each CURRENCIES as c (c.code)}
@@ -345,14 +349,14 @@
 			</select>
 		{/snippet}
 		<div class="flex items-baseline gap-2">
-			<span class="text-faint font-mono text-[32px] leading-none">{currency.symbol}</span>
+			<span class="font-mono text-[32px] leading-none text-faint">{currency.symbol}</span>
 			<input
 				type="text"
 				inputmode="decimal"
 				bind:value={priceText}
 				placeholder={currency.decimals === 0 ? '0' : '0.00'}
 				autocomplete="off"
-				class="text-ink placeholder:text-faint w-full font-mono text-[32px] leading-none tabular-nums"
+				class="w-full font-mono text-[32px] leading-none text-ink tabular-nums placeholder:text-faint"
 			/>
 		</div>
 	</Field>
@@ -363,7 +367,7 @@
 				<button
 					type="button"
 					onclick={clearOpened}
-					class="text-muted hover:text-ink font-mono text-[11px] tracking-[0.10em] uppercase"
+					class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink"
 				>
 					clear
 				</button>
@@ -371,7 +375,7 @@
 				<button
 					type="button"
 					onclick={setOpenedNow}
-					class="text-tea font-mono text-[11px] tracking-[0.10em] uppercase"
+					class="font-mono text-[11px] tracking-[0.10em] text-tea uppercase"
 				>
 					open now
 				</button>
@@ -388,7 +392,7 @@
 			bind:value={notes}
 			rows="3"
 			placeholder="Source, first impressions, provenance…"
-			class="text-ink placeholder:text-faint font-body w-full text-[15px] italic"
+			class="w-full font-body text-[15px] text-ink italic placeholder:text-faint"
 		></textarea>
 	</Field>
 
@@ -399,7 +403,7 @@
 				<button
 					type="button"
 					onclick={removePhoto}
-					class="text-muted hover:text-ink font-mono text-[11px] tracking-[0.10em] uppercase"
+					class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink"
 				>
 					remove
 				</button>
@@ -426,7 +430,7 @@
 				<img
 					src={photoPreview}
 					alt="{name || 'Tin'} photo"
-					class="border-hairline aspect-[4/3] w-full rounded-[14px] border-[0.5px] object-cover"
+					class="aspect-[4/3] w-full rounded-[14px] border-[0.5px] border-hairline object-cover"
 				/>
 			</button>
 		{:else}
@@ -434,7 +438,7 @@
 				type="button"
 				onclick={() => fileInput?.click()}
 				disabled={photoBusy}
-				class="border-rule text-muted hover:text-ink w-full rounded-[14px] border-[0.5px] py-6 text-center font-mono text-[11px] tracking-[0.10em] uppercase transition-colors disabled:opacity-50"
+				class="w-full rounded-[14px] border-[0.5px] border-rule py-6 text-center font-mono text-[11px] tracking-[0.10em] text-muted uppercase transition-colors hover:text-ink disabled:opacity-50"
 			>
 				{photoBusy ? 'Reading…' : '+ Add a photo'}
 			</button>
@@ -442,7 +446,7 @@
 	</Field>
 
 	{#if error}
-		<div class="bg-tea-wash border-danger mt-6 rounded-[14px] border-[0.5px] px-4 py-3">
+		<div class="mt-6 rounded-[14px] border-[0.5px] border-danger bg-tea-wash px-4 py-3">
 			<Mono size="meta" tone="ink">{error}</Mono>
 		</div>
 	{/if}

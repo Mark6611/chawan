@@ -33,7 +33,7 @@
 
 <a
 	href="/sessions/{session.id}"
-	class="hover:bg-surface border-hairline -mx-6 block border-b px-6 py-3 transition-colors"
+	class="-mx-6 block border-b border-hairline px-6 py-3 transition-colors hover:bg-surface"
 >
 	<div class="flex items-baseline justify-between gap-3">
 		<Mono size="meta" tone="muted">
@@ -47,14 +47,16 @@
 	<div class="mt-1">
 		{#if isPersonal(session)}
 			{@const tinName = tinsById[session.tinId]?.name ?? '—'}
-			<span class="text-ink font-display text-[18px]">{tinName}</span>
-			<span class="text-muted ml-1 font-mono text-[11px]">
+			<span class="font-display text-[18px] text-ink">{tinName}</span>
+			<span class="ml-1 font-mono text-[11px] text-muted">
 				· {session.powderGrams}g · {session.waterGrams}g · {session.waterTempC}°C
 			</span>
 		{:else}
-			<span class="text-ink font-display text-[18px] italic">{session.cafeName}</span>
-			<span class="text-muted ml-1 font-mono text-[11px]">
-				· {REGION_LABELS[session.region]}{#if session.milk} · {MILK_LABELS[session.milk]} milk{/if}{#if session.priceCents != null} · {formatPrice(session.priceCents, session.priceCurrency ?? 'USD')}{/if}
+			<span class="font-display text-[18px] text-ink italic">{session.cafeName}</span>
+			<span class="ml-1 font-mono text-[11px] text-muted">
+				· {REGION_LABELS[session.region]}{#if session.milk}
+					· {MILK_LABELS[session.milk]} milk{/if}{#if session.priceCents != null}
+					· {formatPrice(session.priceCents, session.priceCurrency ?? 'USD')}{/if}
 			</span>
 		{/if}
 	</div>
