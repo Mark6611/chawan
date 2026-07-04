@@ -45,6 +45,19 @@
 		// app.html already did this synchronously before paint, but this
 		// guarantees consistency after preferences.setTheme() calls).
 		preferences.init();
+
+		// Native shell (Capacitor): the splash is configured with
+		// launchAutoHide=false and released here, after first paint — no
+		// white gap between splash and app. Dynamic import so the web
+		// bundle doesn't pay for the plugin; isNativePlatform() is false
+		// in browsers so this whole branch no-ops on the web.
+		void (async () => {
+			const { Capacitor } = await import('@capacitor/core');
+			if (Capacitor.isNativePlatform()) {
+				const { SplashScreen } = await import('@capacitor/splash-screen');
+				await SplashScreen.hide();
+			}
+		})();
 	});
 
 	let { children } = $props();

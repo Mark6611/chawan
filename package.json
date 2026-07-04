@@ -14,9 +14,15 @@
 		"format": "prettier --write .",
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"icons": "node scripts/icons.mjs"
+		"icons": "node scripts/icons.mjs",
+		"native:build": "vite build && cap sync ios",
+		"native:open": "cap open ios",
+		"native:assets": "capacitor-assets generate --ios --iconBackgroundColor '#161b16' --splashBackgroundColor '#161b16' --splashBackgroundColorDark '#161b16'"
 	},
 	"devDependencies": {
+		"@capacitor/assets": "^3.0.5",
+		"@capacitor/cli": "^8.4.1",
+		"@capacitor/ios": "^8.4.1",
 		"@eslint/compat": "^2.0.4",
 		"@eslint/js": "^10.0.1",
 		"@fontsource/cormorant-garamond": "^5.2.5",
@@ -46,6 +52,8 @@
 		"vitest": "^4.1.7"
 	},
 	"dependencies": {
+		"@capacitor/core": "^8.4.1",
+		"@capacitor/splash-screen": "^8.0.1",
 		"@supabase/supabase-js": "^2.106.1",
 		"dexie": "^4.4.2",
 		"zod": "^4.4.3"
