@@ -6,6 +6,7 @@
 
 import type { User } from '@supabase/supabase-js';
 import { supabase, supabaseEnabled } from './supabase';
+import { clearLocalCache } from './sync.svelte';
 
 let userState = $state<User | null>(null);
 let ready = $state(false);
@@ -42,4 +43,9 @@ if (typeof window !== 'undefined') {
 export async function signOut() {
 	if (!supabase) return;
 	await supabase.auth.signOut();
+	// Wipe the local cache before this resolves so a subsequent sign-in on the
+	// same device can't re-upload the signed-out user's rows. The SIGNED_OUT
+	// listener in sync.svelte also fires, but awaiting here guarantees the wipe
+	// completes before the UI navigates on.
+	await clearLocalCache();
 }

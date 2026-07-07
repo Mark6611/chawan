@@ -9,13 +9,18 @@
 // Offline behavior: pushes that happen while navigator.onLine is false are
 // silently skipped (no spurious "failed" errors). The 'online' event fires
 // fullSync(), which pushes every local row and so catches up any writes
-// that happened while disconnected. Last-write-wins via updatedAt keeps
-// this safe.
+// that happened while disconnected.
 //
-// Conflict resolution: last-write-wins via updatedAt on upsert. The
-// matcha_* Postgres tables use the same primary key (id) as Dexie, so
-// upsert handles "new on server" and "newer on server" both as a put.
+// Conflict resolution — last-write-wins via updatedAt, enforced on BOTH sides:
+//   • Server: a BEFORE UPDATE trigger (migration 0006) ignores any write whose
+//     "updatedAt" is older than the stored row, so a stale device's push can
+//     never clobber a newer edit or resurrect a tombstoned (deletedAt) row.
+//   • Client: mergeNewer() writes a pulled server row into Dexie only when it
+//     is newer-or-equal to the local copy, so an unsynced local edit is never
+//     overwritten by an older server row.
+// Without both, a plain upsert / bulkPut silently rolls back cross-device edits.
 
+import type { Table } from 'dexie';
 import { supabase, supabaseEnabled } from './supabase';
 import { auth } from './auth.svelte';
 import { db } from './db/dexie';
@@ -53,6 +58,28 @@ function withUserId<T>(row: T, userId: string): T & { userId: string } {
 	return { ...row, userId };
 }
 
+// Merge pulled server rows into Dexie, keeping the newer copy per id. A server
+// row is written only when it is newer-or-equal to the local row (or the row is
+// new locally). This is the client half of last-write-wins: it stops a pull from
+// clobbering an unsynced local edit that is newer than what the server returned
+// (e.g. a write whose background push failed, or an edit made mid-sync).
+async function mergeNewer<T extends { id: string; updatedAt: string }>(
+	table: Table<T, string>,
+	incoming: T[]
+): Promise<void> {
+	if (incoming.length === 0) return;
+	const locals = await table.bulkGet(incoming.map((r) => r.id));
+	const localTimeById = new Map<string, number>();
+	for (const row of locals) {
+		if (row) localTimeById.set(row.id, new Date(row.updatedAt).getTime());
+	}
+	const fresher = incoming.filter((r) => {
+		const localTime = localTimeById.get(r.id);
+		return localTime === undefined || new Date(r.updatedAt).getTime() >= localTime;
+	});
+	if (fresher.length > 0) await table.bulkPut(fresher);
+}
+
 // ─── Push helpers — called by repository on each write ────────────────
 // Fire-and-forget; failures only log + set lastError. The next fullSync
 // re-uploads any rows that failed.
@@ -80,6 +107,11 @@ export function pushTin(tin: Tin): void {
 			if (error) {
 				console.warn('[sync] pushTin failed:', error.message);
 				syncState.lastError = error.message;
+			} else {
+				// A later successful push heals a stuck error indicator from an
+				// earlier transient failure (otherwise the red dot sticks until
+				// the next fullSync, which a perpetually-online user rarely hits).
+				syncState.lastError = null;
 			}
 		});
 }
@@ -105,6 +137,8 @@ export function pushSession(session: Session): void {
 			if (error) {
 				console.warn('[sync] pushSession failed:', error.message);
 				syncState.lastError = error.message;
+			} else {
+				syncState.lastError = null;
 			}
 		});
 }
@@ -187,12 +221,13 @@ export async function fullSync(): Promise<void> {
 			.map((r) => parseSessionFromServer(r as Record<string, unknown>))
 			.filter((s): s is Session => s !== null);
 
-		// 3) Merge into local cache. bulkPut upserts by primary key — newer
-		//    server rows replace older locals, new server rows get added.
-		//    We never bulkDelete here; soft-delete tombstones do the job.
+		// 3) Merge into local cache, keeping the newer copy per id (mergeNewer).
+		//    New server rows get added; a server row that is OLDER than the local
+		//    copy is skipped so an unsynced local edit survives the pull. We never
+		//    bulkDelete here; soft-delete tombstones do the job.
 		await db.transaction('rw', db.tins, db.sessions, async () => {
-			if (serverTins.length > 0) await db.tins.bulkPut(serverTins);
-			if (serverSessions.length > 0) await db.sessions.bulkPut(serverSessions);
+			await mergeNewer(db.tins, serverTins);
+			await mergeNewer(db.sessions, serverSessions);
 		});
 
 		syncState.lastSyncAt = new Date().toISOString();
@@ -210,12 +245,31 @@ export async function fullSync(): Promise<void> {
 	}
 }
 
+// ─── Sign-out: wipe the local cache ───────────────────────────────────
+// The Dexie cache is device-global, not per-user. If it survived sign-out,
+// the next user on a shared device would (a) see the previous user's tins and
+// sessions locally, and (b) have fullSync stamp those residual rows with THEIR
+// user id and upload them into THEIR Supabase account. Clearing on sign-out
+// closes that cross-user leak. Photos are device-local too, so they go as well.
+export async function clearLocalCache(): Promise<void> {
+	await db.transaction('rw', db.tins, db.sessions, db.tinPhotos, async () => {
+		await Promise.all([db.tins.clear(), db.sessions.clear(), db.tinPhotos.clear()]);
+	});
+	syncState.lastSyncAt = null;
+	syncState.lastError = null;
+	syncState.signal();
+}
+
 // ─── Auth + online listeners ─────────────────────────────────────────
 
 if (typeof window !== 'undefined' && supabase) {
 	supabase.auth.onAuthStateChange((event, session) => {
 		if (session && (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')) {
 			void fullSync();
+		} else if (event === 'SIGNED_OUT') {
+			// Covers implicit sign-outs too (token expiry, sign-out in another
+			// tab) — not just the explicit Settings button.
+			void clearLocalCache();
 		}
 	});
 
