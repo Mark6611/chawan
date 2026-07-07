@@ -32,9 +32,11 @@
 	import Hairline from '$lib/components/Hairline.svelte';
 	import Rating from '$lib/components/Rating.svelte';
 	import ShareSheet from '$lib/components/ShareSheet.svelte';
+	import LoadError from '$lib/components/LoadError.svelte';
 
 	let session = $state<Session | null | undefined>(undefined);
 	let tin = $state<Tin | null>(null);
+	let loadError = $state<string | null>(null);
 
 	const id = $derived(page.params.id);
 
@@ -62,10 +64,15 @@
 
 	async function load() {
 		if (!id) return;
-		const s = await repository.getSession(id);
-		session = s ?? null;
-		if (s && isPersonal(s)) {
-			tin = (await repository.getTin(s.tinId)) ?? null;
+		try {
+			loadError = null;
+			const s = await repository.getSession(id);
+			session = s ?? null;
+			if (s && isPersonal(s)) {
+				tin = (await repository.getTin(s.tinId)) ?? null;
+			}
+		} catch (e) {
+			loadError = e instanceof Error ? e.message : 'Could not load this session.';
 		}
 	}
 	// Re-fetch on mount, on route-param change, and after a sync pull.
@@ -100,7 +107,9 @@
 		← back
 	</a>
 
-	{#if session === undefined}
+	{#if loadError}
+		<LoadError onretry={load} message="Couldn't load this session — local storage may be blocked." />
+	{:else if session === undefined}
 		<div class="mt-16 text-center">
 			<Mono size="meta" tone="muted">Loading…</Mono>
 		</div>

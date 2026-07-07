@@ -12,19 +12,27 @@
 	import Chawan from '$lib/components/Chawan.svelte';
 	import TinRow from '$lib/components/TinRow.svelte';
 	import PrimaryButton from '$lib/components/PrimaryButton.svelte';
+	import LoadError from '$lib/components/LoadError.svelte';
 
 	let tins = $state<Tin[]>([]);
 	let sessions = $state<PersonalSession[]>([]);
 	let loaded = $state(false);
+	let loadError = $state<string | null>(null);
 
 	async function load() {
-		const [allTins, allSessions] = await Promise.all([
-			repository.listTins(),
-			repository.listSessions()
-		]);
-		tins = allTins;
-		sessions = allSessions.filter(isPersonal);
-		loaded = true;
+		try {
+			loadError = null;
+			const [allTins, allSessions] = await Promise.all([
+				repository.listTins(),
+				repository.listSessions()
+			]);
+			tins = allTins;
+			sessions = allSessions.filter(isPersonal);
+		} catch (e) {
+			loadError = e instanceof Error ? e.message : 'Could not load your tins.';
+		} finally {
+			loaded = true;
+		}
 	}
 	$effect(() => {
 		void syncState.tick;
@@ -52,7 +60,9 @@
 		</a>
 	</div>
 
-	{#if !loaded}
+	{#if loadError}
+		<LoadError onretry={load} message="Couldn't load your tins — local storage may be blocked." />
+	{:else if !loaded}
 		<div class="mt-16 text-center">
 			<Mono size="meta" tone="muted">Loading…</Mono>
 		</div>

@@ -208,9 +208,16 @@
 			if (priceCents > 0) writeCurrency(currencyCode); // sticky for next time
 
 			// Photo persists locally, keyed by the tin id (new mode gets the
-			// freshly generated id here).
+			// freshly generated id here). The tin itself is already saved above,
+			// so a photo-storage failure (e.g. IndexedDB QuotaExceededError on a
+			// near-full device) must NOT be reported as a total save failure —
+			// swallow it and carry on to the saved tin, photo-less.
 			if (photoBlob && !photoRemoved) {
-				await repository.setTinPhoto(next.id, photoBlob);
+				try {
+					await repository.setTinPhoto(next.id, photoBlob);
+				} catch (photoErr) {
+					console.warn('[tin] photo not stored (tin was saved):', photoErr);
+				}
 			} else if (photoRemoved && isEdit) {
 				await repository.deleteTinPhoto(next.id);
 			}

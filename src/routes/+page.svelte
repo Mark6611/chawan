@@ -21,15 +21,23 @@
 	import Hairline from '$lib/components/Hairline.svelte';
 	import ConsumptionRail from '$lib/components/ConsumptionRail.svelte';
 	import PrimaryButton from '$lib/components/PrimaryButton.svelte';
+	import LoadError from '$lib/components/LoadError.svelte';
 
 	let sessions = $state<Session[]>([]);
 	let tins = $state<Tin[]>([]);
 	let loaded = $state(false);
+	let loadError = $state<string | null>(null);
 
 	async function load() {
-		sessions = await repository.listSessions();
-		tins = await repository.listTins();
-		loaded = true;
+		try {
+			loadError = null;
+			sessions = await repository.listSessions();
+			tins = await repository.listTins();
+		} catch (e) {
+			loadError = e instanceof Error ? e.message : 'Could not load your sessions.';
+		} finally {
+			loaded = true;
+		}
 	}
 
 	// Initial load + re-fetch after a sync pull (syncState.tick increments).
@@ -83,7 +91,9 @@
 		<Display size="l">Today</Display>
 	</div>
 
-	{#if !loaded}
+	{#if loadError}
+		<LoadError onretry={load} message="Couldn't load your sessions — local storage may be blocked." />
+	{:else if !loaded}
 		<div class="mt-16 text-center">
 			<Mono size="meta" tone="muted">Loading…</Mono>
 		</div>

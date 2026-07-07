@@ -44,16 +44,24 @@
 	import Rating from '$lib/components/Rating.svelte';
 	import FlavorChart from '$lib/components/FlavorChart.svelte';
 	import ShareSheet from '$lib/components/ShareSheet.svelte';
+	import LoadError from '$lib/components/LoadError.svelte';
 
 	let sessions = $state<Session[]>([]);
 	let tins = $state<Tin[]>([]);
 	let loaded = $state(false);
+	let loadError = $state<string | null>(null);
 
 	async function load() {
-		const [s, t] = await Promise.all([repository.listSessions(), repository.listTins()]);
-		sessions = s;
-		tins = t;
-		loaded = true;
+		try {
+			loadError = null;
+			const [s, t] = await Promise.all([repository.listSessions(), repository.listTins()]);
+			sessions = s;
+			tins = t;
+		} catch (e) {
+			loadError = e instanceof Error ? e.message : 'Could not load your insights.';
+		} finally {
+			loaded = true;
+		}
 	}
 	$effect(() => {
 		void syncState.tick;
@@ -140,7 +148,9 @@
 		<Display size="l">Insights</Display>
 	</div>
 
-	{#if !loaded}
+	{#if loadError}
+		<LoadError onretry={load} message="Couldn't load your insights — local storage may be blocked." />
+	{:else if !loaded}
 		<div class="mt-16 text-center">
 			<Mono size="meta" tone="muted">Loading…</Mono>
 		</div>

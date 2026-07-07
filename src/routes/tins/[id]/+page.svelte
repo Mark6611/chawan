@@ -27,26 +27,33 @@
 	import ConsumptionRail from '$lib/components/ConsumptionRail.svelte';
 	import Rating from '$lib/components/Rating.svelte';
 	import PrimaryButton from '$lib/components/PrimaryButton.svelte';
+	import LoadError from '$lib/components/LoadError.svelte';
 
 	// `undefined` = still loading; `null` = lookup completed and tin doesn't exist.
 	let tin = $state<Tin | null | undefined>(undefined);
 	let sessions = $state<PersonalSession[]>([]);
 	let photoBlob = $state<Blob | null>(null);
 	let photoUrl = $state<string | null>(null);
+	let loadError = $state<string | null>(null);
 
 	const id = $derived(page.params.id);
 
 	async function load() {
 		if (!id) return;
-		const [t, s, photo] = await Promise.all([
-			repository.getTin(id),
-			repository.listSessionsByTin(id),
-			repository.getTinPhoto(id)
-		]);
-		tin = t ?? null;
-		// Newest first for the history list.
-		sessions = s.slice().sort((a, b) => b.brewedAt.localeCompare(a.brewedAt));
-		photoBlob = photo ?? null;
+		try {
+			loadError = null;
+			const [t, s, photo] = await Promise.all([
+				repository.getTin(id),
+				repository.listSessionsByTin(id),
+				repository.getTinPhoto(id)
+			]);
+			tin = t ?? null;
+			// Newest first for the history list.
+			sessions = s.slice().sort((a, b) => b.brewedAt.localeCompare(a.brewedAt));
+			photoBlob = photo ?? null;
+		} catch (e) {
+			loadError = e instanceof Error ? e.message : 'Could not load this tin.';
+		}
 	}
 	$effect(() => {
 		void syncState.tick;
@@ -116,7 +123,9 @@
 		← back
 	</a>
 
-	{#if tin === undefined}
+	{#if loadError}
+		<LoadError onretry={load} message="Couldn't load this tin — local storage may be blocked." />
+	{:else if tin === undefined}
 		<div class="mt-16 text-center">
 			<Mono size="meta" tone="muted">Loading…</Mono>
 		</div>
