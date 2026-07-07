@@ -6,10 +6,20 @@
 	// a lucky double force-quit. Pattern from the coffee app (82082e1),
 	// restyled to chawan's vocabulary (mono + hairline + tea).
 
+	import { Capacitor } from '@capacitor/core';
 	import { useRegisterSW } from 'virtual:pwa-register/svelte';
+	import { writable } from 'svelte/store';
 	import { slide } from 'svelte/transition';
 
-	const { needRefresh, updateServiceWorker } = useRegisterSW({});
+	// Inside the Capacitor WKWebView the service-worker update lifecycle is
+	// meaningless (assets are bundled in the app, not server-fetched) and a
+	// registered Workbox SW can cache-trap the native app on stale bundled
+	// assets — the recurring "SW stale-cache" bug across the PWA-family apps.
+	// App Store builds deliver updates on native, so skip SW registration there.
+	// On the web isNativePlatform() is false, so this is the exact original path.
+	const { needRefresh, updateServiceWorker } = Capacitor.isNativePlatform()
+		? { needRefresh: writable(false), updateServiceWorker: async (_?: boolean) => {} }
+		: useRegisterSW({});
 
 	function reload() {
 		void updateServiceWorker(true);
