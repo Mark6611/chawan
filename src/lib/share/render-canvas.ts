@@ -870,8 +870,7 @@ export async function drawShareCard(
 	// ~2.78×, still 3000×5333 — plenty for a social card.
 	const MAX_CANVAS_AREA = 16_000_000;
 	const requestedArea = W * H * scale * scale;
-	const effScale =
-		requestedArea > MAX_CANVAS_AREA ? Math.sqrt(MAX_CANVAS_AREA / (W * H)) : scale;
+	const effScale = requestedArea > MAX_CANVAS_AREA ? Math.sqrt(MAX_CANVAS_AREA / (W * H)) : scale;
 	canvas.width = Math.floor(W * effScale);
 	canvas.height = Math.floor(H * effScale);
 

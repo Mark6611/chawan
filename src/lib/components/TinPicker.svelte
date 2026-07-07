@@ -43,6 +43,26 @@
 	let query = $state('');
 	let isOpen = $state(false);
 	let inputEl: HTMLInputElement | undefined = $state();
+	let containerEl: HTMLDivElement | undefined = $state();
+	let optionEls = $state<HTMLButtonElement[]>([]);
+
+	// Close only when focus leaves the whole picker (input + dropdown), so a
+	// keyboard user Tabbing from the input into the options keeps it open. This
+	// replaces the old input-blur timeout, which closed the dropdown ~200ms
+	// after focus left the input — before Tab could reach the option buttons,
+	// making the whole picker inoperable without a pointer.
+	function onFocusOut(e: FocusEvent) {
+		if (!containerEl?.contains(e.relatedTarget as Node | null)) isOpen = false;
+	}
+
+	function onInputKeydown(e: KeyboardEvent) {
+		if (e.key === 'Escape') {
+			isOpen = false;
+		} else if (e.key === 'ArrowDown' && isOpen) {
+			e.preventDefault();
+			optionEls[0]?.focus();
+		}
+	}
 
 	// Selected tin may be archived (edit mode); the dropdown only ever
 	// surfaces active tins.
@@ -115,7 +135,7 @@
 		</span>
 	</button>
 {:else}
-	<div class="relative">
+	<div class="relative" bind:this={containerEl} onfocusout={onFocusOut}>
 		<!-- Input -->
 		<div
 			class="flex items-center gap-2 rounded-[14px] border-[0.5px] border-hairline px-3 py-2.5 transition-colors focus-within:border-tea"
@@ -124,7 +144,7 @@
 				bind:this={inputEl}
 				bind:value={query}
 				onfocus={() => (isOpen = true)}
-				onblur={() => setTimeout(() => (isOpen = false), 200)}
+				onkeydown={onInputKeydown}
 				placeholder={activeTins.length === 0 ? 'No tins yet — add one' : 'Search or add a tin…'}
 				class="w-full bg-transparent font-body text-[15px] text-ink outline-none placeholder:text-faint"
 			/>
@@ -146,14 +166,13 @@
 						{hasQuery ? 'Matches' : 'Recent'}
 					</div>
 					<div class="max-h-[40vh] overflow-y-auto">
-						{#each filtered as t (t.id)}
+						{#each filtered as t, i (t.id)}
 							{@const remaining = tinRemaining(t, sessionsFor(t))}
 							<button
 								type="button"
-								onmousedown={(e) => {
-									e.preventDefault();
-									selectTin(t);
-								}}
+								bind:this={optionEls[i]}
+								onmousedown={(e) => e.preventDefault()}
+								onclick={() => selectTin(t)}
 								class="block w-full px-4 py-2.5 text-left transition-colors hover:bg-surface"
 							>
 								<div class="flex items-baseline justify-between gap-3">
@@ -181,10 +200,8 @@
 				<!-- "Create new" footer (always present) -->
 				<button
 					type="button"
-					onmousedown={(e) => {
-						e.preventDefault();
-						createNew();
-					}}
+					onmousedown={(e) => e.preventDefault()}
+					onclick={createNew}
 					class="block w-full border-t border-hairline px-4 py-3 text-left transition-colors hover:bg-surface"
 				>
 					<div class="flex items-center gap-3">
@@ -223,10 +240,8 @@
 				{#if onbrowsecatalog}
 					<button
 						type="button"
-						onmousedown={(e) => {
-							e.preventDefault();
-							browseCatalog();
-						}}
+						onmousedown={(e) => e.preventDefault()}
+						onclick={browseCatalog}
 						class="block w-full border-t border-hairline px-4 py-3 text-left transition-colors hover:bg-surface"
 					>
 						<div class="flex items-center gap-3">

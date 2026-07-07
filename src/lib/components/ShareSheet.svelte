@@ -66,6 +66,49 @@
 		open = false;
 	}
 
+	// ─── Dialog focus management ─────────────────────────────
+	// The sheet is a modal: move focus in on open, trap Tab inside it, close on
+	// Escape, and restore focus to the trigger on close. Without this a keyboard
+	// user's focus stayed on the (now-hidden) trigger behind the scrim and Tab
+	// walked the page underneath.
+	let sheetEl = $state<HTMLDivElement>();
+	let previouslyFocused: HTMLElement | null = null;
+	const titleId = 'sharesheet-title';
+	const FOCUSABLE =
+		'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+	$effect(() => {
+		if (open) {
+			previouslyFocused = document.activeElement as HTMLElement | null;
+			queueMicrotask(() => sheetEl?.querySelector<HTMLElement>(FOCUSABLE)?.focus());
+		} else if (previouslyFocused) {
+			previouslyFocused.focus();
+			previouslyFocused = null;
+		}
+	});
+
+	function onKeydown(e: KeyboardEvent) {
+		if (!open) return;
+		if (e.key === 'Escape') {
+			e.preventDefault();
+			close();
+			return;
+		}
+		if (e.key === 'Tab' && sheetEl) {
+			const nodes = Array.from(sheetEl.querySelectorAll<HTMLElement>(FOCUSABLE));
+			if (nodes.length === 0) return;
+			const first = nodes[0];
+			const last = nodes[nodes.length - 1];
+			if (e.shiftKey && document.activeElement === first) {
+				e.preventDefault();
+				last.focus();
+			} else if (!e.shiftKey && document.activeElement === last) {
+				e.preventDefault();
+				first.focus();
+			}
+		}
+	}
+
 	async function render(): Promise<Blob | null> {
 		if (!effective) return null;
 		return renderShareCard(effective, 3, theme);
@@ -126,13 +169,19 @@
 
 		<!-- sheet -->
 		<div
+			bind:this={sheetEl}
+			role="dialog"
+			aria-modal="true"
+			aria-labelledby={titleId}
+			tabindex="-1"
+			onkeydown={onKeydown}
 			transition:slide={{ duration: 220 }}
 			class="relative w-full max-w-md rounded-t-[22px] border-t border-rule bg-paper px-6 pt-3 pb-[calc(env(safe-area-inset-bottom)+24px)]"
 		>
 			<div class="mx-auto mb-4 h-1 w-10 rounded-full bg-rule"></div>
 
 			<Eyebrow>{eyebrow}</Eyebrow>
-			<div class="mt-1">
+			<div class="mt-1" id={titleId}>
 				<Display size="m">{heading}</Display>
 			</div>
 

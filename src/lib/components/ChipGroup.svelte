@@ -34,14 +34,16 @@
 	}
 </script>
 
-<div class="flex flex-wrap gap-2" role={multi ? 'group' : 'radiogroup'}>
+<!-- role="group" + aria-pressed toggle buttons for BOTH modes: single-select is
+     tap-to-clear (deselectable), which is toggle behavior, not radio — so a
+     radiogroup role would advertise arrow-key nav + always-one-selected that
+     this control doesn't implement. aria-pressed matches what actually happens. -->
+<div class="flex flex-wrap gap-2" role="group">
 	{#each options as opt (opt.value)}
 		{@const sel = isSelected(opt.value)}
 		<button
 			type="button"
-			role={multi ? undefined : 'radio'}
-			aria-checked={multi ? undefined : sel}
-			aria-pressed={multi ? sel : undefined}
+			aria-pressed={sel}
 			onclick={() => toggle(opt.value)}
 			class="rounded-full border-[0.5px] px-2.5 py-1 font-mono text-[11px]
 				{sel ? 'border-tea bg-tea-wash text-tea' : 'border-rule text-muted hover:text-ink'}"

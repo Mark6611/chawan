@@ -49,9 +49,7 @@
 		sending = true;
 		const { error: err } = await supabase.auth.signInWithOtp({
 			email: email.trim(),
-			options: isNative
-				? undefined
-				: { emailRedirectTo: `${window.location.origin}/auth/callback` }
+			options: isNative ? undefined : { emailRedirectTo: `${window.location.origin}/auth/callback` }
 		});
 		if (err) {
 			error = err.message;

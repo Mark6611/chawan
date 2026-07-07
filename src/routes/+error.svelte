@@ -25,10 +25,7 @@
 			: 'An unexpected error interrupted the app. Reloading usually clears it.'}
 	</p>
 	<div class="mt-8">
-		<a
-			href="/"
-			class="font-mono text-[11px] tracking-[0.10em] text-tea uppercase hover:text-ink"
-		>
+		<a href="/" class="font-mono text-[11px] tracking-[0.10em] text-tea uppercase hover:text-ink">
 			← back to today
 		</a>
 	</div>

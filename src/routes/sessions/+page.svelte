@@ -109,7 +109,10 @@
 	</div>
 
 	{#if loadError}
-		<LoadError onretry={load} message="Couldn't load your sessions — local storage may be blocked." />
+		<LoadError
+			onretry={load}
+			message="Couldn't load your sessions — local storage may be blocked."
+		/>
 	{:else if !loaded}
 		<div class="mt-16 text-center">
 			<Mono size="meta" tone="muted">Loading…</Mono>

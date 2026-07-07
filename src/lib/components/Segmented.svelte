@@ -15,9 +15,31 @@
 		onchange?: (v: string) => void;
 	} = $props();
 
+	// Roving tabindex: exactly one option is a Tab stop (the selected one, or the
+	// first if nothing is selected). Arrow keys move + select, matching the
+	// radiogroup contract this control advertises to assistive tech.
+	let btns = $state<HTMLButtonElement[]>([]);
+	const focusIndex = $derived(
+		Math.max(
+			0,
+			options.findIndex((o) => o.value === value)
+		)
+	);
+
 	function select(v: string) {
 		value = v;
 		onchange?.(v);
+	}
+
+	function onkeydown(e: KeyboardEvent, i: number) {
+		const last = options.length - 1;
+		let next: number;
+		if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = i === last ? 0 : i + 1;
+		else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = i === 0 ? last : i - 1;
+		else return;
+		e.preventDefault();
+		select(options[next].value);
+		btns[next]?.focus();
 	}
 </script>
 
@@ -28,7 +50,10 @@
 			type="button"
 			role="radio"
 			aria-checked={selected}
+			tabindex={i === focusIndex ? 0 : -1}
+			bind:this={btns[i]}
 			onclick={() => select(opt.value)}
+			onkeydown={(e) => onkeydown(e, i)}
 			class="flex flex-1 items-center justify-center gap-2 py-3 font-mono text-[11.5px] tracking-[0.10em] uppercase
 				{selected ? 'text-tea' : 'text-muted hover:text-ink'}
 				{i > 0 ? 'border-l border-hairline' : ''}"

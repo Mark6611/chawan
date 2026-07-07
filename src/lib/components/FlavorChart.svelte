@@ -256,10 +256,24 @@
 		{@const dimmed = brandFilter !== undefined && p.brand !== brandFilter}
 		{@const highlighted = highlightId === p.id}
 		{@const r = highlighted ? config.dot / 2 + 1 : config.dot / 2}
+		<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+		<!-- role and tabindex are both gated on onSelect: when tabindex is 0 the
+		     role is always 'button', so the dot is an interactive control. The
+		     linter can't correlate the two ternaries. -->
 		<g
 			role={onSelect ? 'button' : undefined}
 			aria-label={onSelect ? `${p.name}, ${brand.shortName}` : undefined}
+			tabindex={onSelect ? 0 : undefined}
+			class={onSelect ? 'chart-dot' : undefined}
 			onclick={() => onSelect?.(p)}
+			onkeydown={onSelect
+				? (e) => {
+						if (e.key === 'Enter' || e.key === ' ') {
+							e.preventDefault();
+							onSelect(p);
+						}
+					}
+				: undefined}
 			style="cursor: {onSelect ? 'pointer' : 'default'}; opacity: {dimmed
 				? 0.18
 				: 1}; transition: opacity 0.2s;"
@@ -351,6 +365,16 @@
 </svg>
 
 <style>
+	/* Keyboard focus ring for the interactive plotted dots (they carry
+	   role="button" + tabindex when selectable). */
+	.chart-dot {
+		outline: none;
+	}
+	.chart-dot:focus-visible {
+		outline: 2px solid var(--color-tea);
+		outline-offset: 2px;
+		border-radius: 2px;
+	}
 	@media (prefers-reduced-motion: reduce) {
 		svg g {
 			transition: none !important;

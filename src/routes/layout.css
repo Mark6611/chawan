@@ -21,7 +21,7 @@
 	/* — Ink (warm off-white scale) — */
 	--color-ink: oklch(0.94 0.01 95); /* primary */
 	--color-ink-70: oklch(0.74 0.01 95); /* secondary */
-	--color-muted: oklch(0.55 0.01 95); /* labels, eyebrows */
+	--color-muted: oklch(0.62 0.01 95); /* labels, eyebrows — WCAG AA on night paper (5.2:1) */
 	--color-faint: oklch(0.38 0.01 95); /* very low emphasis */
 
 	/* — Structure — */
@@ -69,7 +69,7 @@
 	/* — Ink — */
 	--color-ink: oklch(0.18 0.01 70); /* near-black warm */
 	--color-ink-70: oklch(0.42 0.012 75);
-	--color-muted: oklch(0.58 0.01 75);
+	--color-muted: oklch(0.5 0.01 75); /* WCAG AA on day paper/surface (4.5:1) */
 	--color-faint: oklch(0.74 0.008 75);
 
 	/* — Structure — */
