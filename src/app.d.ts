@@ -5,6 +5,9 @@
 /// <reference types="vite-plugin-pwa/info" />
 
 declare global {
+	// Injected by Vite `define` from package.json — see vite.config.ts.
+	const __APP_VERSION__: string;
+
 	namespace App {
 		// interface Error {}
 		// interface Locals {}
