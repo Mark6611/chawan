@@ -145,6 +145,12 @@ export function pushSession(session: Session): void {
 
 // ─── Full sync — push local, pull server, merge ───────────────────────
 
+// Bumped by clearLocalCache() (sign-out). fullSync snapshots it and bails
+// before writing to Dexie if it changed mid-flight, so a sync that was already
+// in its network pull when the user signed out can't re-populate the cache with
+// the signed-out user's rows — which would silently defeat the sign-out wipe.
+let cacheGeneration = 0;
+
 export async function fullSync(): Promise<void> {
 	if (!supabase) return;
 	const user = auth.user;
@@ -157,6 +163,7 @@ export async function fullSync(): Promise<void> {
 
 	syncState.syncing = true;
 	syncState.lastError = null;
+	const gen = cacheGeneration;
 
 	try {
 		// 1) Push everything local up. This handles the "first sign-in"
@@ -221,6 +228,11 @@ export async function fullSync(): Promise<void> {
 			.map((r) => parseSessionFromServer(r as Record<string, unknown>))
 			.filter((s): s is Session => s !== null);
 
+		// Bail if the cache was cleared (sign-out) or the user changed while we
+		// were awaiting the pull — otherwise we'd re-populate the just-cleared
+		// Dexie tables with the signed-out user's server rows, defeating the wipe.
+		if (gen !== cacheGeneration || auth.user?.id !== user.id) return;
+
 		// 3) Merge into local cache, keeping the newer copy per id (mergeNewer).
 		//    New server rows get added; a server row that is OLDER than the local
 		//    copy is skipped so an unsynced local edit survives the pull. We never
@@ -252,6 +264,9 @@ export async function fullSync(): Promise<void> {
 // user id and upload them into THEIR Supabase account. Clearing on sign-out
 // closes that cross-user leak. Photos are device-local too, so they go as well.
 export async function clearLocalCache(): Promise<void> {
+	// Invalidate any in-flight fullSync so its pending merge can't re-populate
+	// the tables we're about to clear (see cacheGeneration).
+	cacheGeneration++;
 	await db.transaction('rw', db.tins, db.sessions, db.tinPhotos, async () => {
 		await Promise.all([db.tins.clear(), db.sessions.clear(), db.tinPhotos.clear()]);
 	});

@@ -256,25 +256,27 @@
 		{@const dimmed = brandFilter !== undefined && p.brand !== brandFilter}
 		{@const highlighted = highlightId === p.id}
 		{@const r = highlighted ? config.dot / 2 + 1 : config.dot / 2}
+		{@const interactive = !!onSelect && !dimmed}
 		<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-		<!-- role and tabindex are both gated on onSelect: when tabindex is 0 the
-		     role is always 'button', so the dot is an interactive control. The
-		     linter can't correlate the two ternaries. -->
+		<!-- role and tabindex are both gated on `interactive`: when tabindex is 0
+		     the role is always 'button'. A brand-filtered (dimmed) dot is not
+		     interactive, so it's neither focusable nor activatable — a keyboard
+		     user never lands on an effectively-invisible point. -->
 		<g
-			role={onSelect ? 'button' : undefined}
-			aria-label={onSelect ? `${p.name}, ${brand.shortName}` : undefined}
-			tabindex={onSelect ? 0 : undefined}
-			class={onSelect ? 'chart-dot' : undefined}
-			onclick={() => onSelect?.(p)}
-			onkeydown={onSelect
+			role={interactive ? 'button' : undefined}
+			aria-label={interactive ? `${p.name}, ${brand.shortName}` : undefined}
+			tabindex={interactive ? 0 : undefined}
+			class={interactive ? 'chart-dot' : undefined}
+			onclick={interactive ? () => onSelect?.(p) : undefined}
+			onkeydown={interactive
 				? (e) => {
 						if (e.key === 'Enter' || e.key === ' ') {
 							e.preventDefault();
-							onSelect(p);
+							onSelect?.(p);
 						}
 					}
 				: undefined}
-			style="cursor: {onSelect ? 'pointer' : 'default'}; opacity: {dimmed
+			style="cursor: {interactive ? 'pointer' : 'default'}; opacity: {dimmed
 				? 0.18
 				: 1}; transition: opacity 0.2s;"
 		>
