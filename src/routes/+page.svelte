@@ -184,7 +184,7 @@
 			>
 				<span class="flex flex-col gap-0.5">
 					<span class="font-mono text-[10.5px] font-medium tracking-[0.14em] text-tea uppercase">
-						Again? · {Math.max(1, Math.floor(usual.hoursAgo))}h ago
+						Again? · {usual.hoursAgo < 1 ? 'just now' : `${Math.floor(usual.hoursAgo)}h ago`}
 					</span>
 					<span class="font-mono text-[12px] text-ink">
 						{usual.session.style} · {usual.session.powderGrams}g · {usual.session.waterTempC}°C

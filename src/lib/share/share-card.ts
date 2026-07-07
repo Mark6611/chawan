@@ -116,7 +116,7 @@ export function buildCafeCard(s: CafeSession, format: ShareFormat = 'square'): S
 	if (s.priceCents != null) {
 		metrics.push({
 			label: 'Price',
-			value: formatPrice(s.priceCents, s.priceCurrency ?? 'USD'),
+			value: formatPrice(s.priceCents, s.priceCurrency ?? 'THB'),
 			accent: true
 		});
 	} else {

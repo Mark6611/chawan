@@ -50,7 +50,7 @@
 	// Format the initial price as "7.50" / "600" so the input shows it.
 	const initialPriceText =
 		initial?.priceCents != null
-			? formatPrice(initial.priceCents, initial.priceCurrency ?? 'USD').replace(/^[^\d]+/, '')
+			? formatPrice(initial.priceCents, initial.priceCurrency ?? 'THB').replace(/^[^\d]+/, '')
 			: '';
 
 	let cafeName = $state(initial?.cafeName ?? '');
@@ -59,7 +59,7 @@
 	let style = $state<string>(initial?.style ?? 'usucha');
 	let milk = $state<string>(initial?.milk ?? '');
 	let priceText = $state(initialPriceText);
-	let currencyCode = $state<string>(initial?.priceCurrency ?? 'USD');
+	let currencyCode = $state<string>(initial?.priceCurrency ?? 'THB');
 	let rating = $state(initial?.rating ?? 0);
 	let notes = $state(initial?.notes ?? '');
 	let brewedAt = $state(initial?.brewedAt ?? nowIso());

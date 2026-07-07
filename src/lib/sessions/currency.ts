@@ -1,13 +1,13 @@
-// Sticky currency code for cafe sessions. Defaults to USD.
-// Per-device preference, not synced — same shape as defaults.ts.
-// When Session 9 ships Settings, "default currency" can move into the
-// UserDefaults schema; for now, a small dedicated module keeps the
-// cafe form self-contained.
+// Sticky currency code for cafe sessions + tins. Defaults to THB.
+// Per-device preference, not synced. The picker remembers the last
+// currency used (writeCurrency on save), so a THB-first user never
+// re-picks; the fallback only applies on a fresh device.
 
 const KEY = 'chawan:currency';
-const FALLBACK: Currency = 'USD';
+const FALLBACK: Currency = 'THB';
 
-export const SUPPORTED_CURRENCIES = ['USD', 'JPY', 'EUR', 'GBP', 'AUD', 'CAD', 'THB'] as const;
+// THB first — the default currency leads the picker.
+export const SUPPORTED_CURRENCIES = ['THB', 'USD', 'JPY', 'EUR', 'GBP', 'AUD', 'CAD'] as const;
 export type Currency = (typeof SUPPORTED_CURRENCIES)[number];
 
 export interface CurrencyInfo {
@@ -17,13 +17,13 @@ export interface CurrencyInfo {
 }
 
 export const CURRENCIES: CurrencyInfo[] = [
+	{ code: 'THB', symbol: '฿', decimals: 2 },
 	{ code: 'USD', symbol: '$', decimals: 2 },
 	{ code: 'JPY', symbol: '¥', decimals: 0 },
 	{ code: 'EUR', symbol: '€', decimals: 2 },
 	{ code: 'GBP', symbol: '£', decimals: 2 },
 	{ code: 'AUD', symbol: 'A$', decimals: 2 },
-	{ code: 'CAD', symbol: 'C$', decimals: 2 },
-	{ code: 'THB', symbol: '฿', decimals: 2 }
+	{ code: 'CAD', symbol: 'C$', decimals: 2 }
 ];
 
 export function isCurrency(s: string): s is Currency {

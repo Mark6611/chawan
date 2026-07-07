@@ -49,12 +49,24 @@
 		filter === 'all' ? sessions : sessions.filter((s) => s.kind === filter)
 	);
 
-	// Group by YYYY-MM-DD; insertion order is desc-by-brewedAt because the
-	// repository returns sessions sorted that way.
+	// Group by LOCAL calendar day; insertion order is desc-by-brewedAt because
+	// the repository returns sessions sorted that way.
+	//
+	// UAT bug fix: this used to slice the ISO string (UTC date). In UTC+7 a
+	// bowl logged at 01:12 local filed under "yesterday" — anything before
+	// 07:00 grouped to the wrong day and never earned the TODAY header.
+	// formatDayHeader below parses this key as local midnight, so the key
+	// must be built from local date parts.
+	const localDayKey = (iso: string): string => {
+		const d = new Date(iso);
+		const pad = (n: number) => String(n).padStart(2, '0');
+		return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+	};
+
 	const groups = $derived.by(() => {
 		const byDay = new Map<string, Session[]>();
 		for (const s of filtered) {
-			const day = s.brewedAt.slice(0, 10);
+			const day = localDayKey(s.brewedAt);
 			if (!byDay.has(day)) byDay.set(day, []);
 			byDay.get(day)!.push(s);
 		}
@@ -83,7 +95,7 @@
 </script>
 
 <main class="mx-auto max-w-md px-6 py-12 pb-28">
-	<Eyebrow>Inventory</Eyebrow>
+	<Eyebrow>Log</Eyebrow>
 	<div class="mt-2">
 		<Display size="l">Sessions</Display>
 	</div>

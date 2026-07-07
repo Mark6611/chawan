@@ -78,7 +78,11 @@
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement('a');
 		a.href = url;
-		const stamp = new Date().toISOString().slice(0, 10);
+		// Local date for the filename (UTC slice would stamp "yesterday" for
+		// any export before 07:00 in UTC+7).
+		const now = new Date();
+		const pad = (n: number) => String(n).padStart(2, '0');
+		const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 		a.download = `chawan-backup-${stamp}.json`;
 		document.body.appendChild(a);
 		a.click();

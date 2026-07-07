@@ -41,8 +41,8 @@ describe('readCurrency / writeCurrency', () => {
 	beforeEach(stubLocalStorage);
 	afterEach(() => vi.unstubAllGlobals());
 
-	it('reads USD when nothing has been saved', () => {
-		expect(readCurrency()).toBe('USD');
+	it('reads THB when nothing has been saved (app default)', () => {
+		expect(readCurrency()).toBe('THB');
 	});
 
 	it('persists a supported code and reads it back', () => {
@@ -50,9 +50,9 @@ describe('readCurrency / writeCurrency', () => {
 		expect(readCurrency()).toBe('JPY');
 	});
 
-	it('falls back to USD when stored code is unsupported', () => {
+	it('falls back to THB when stored code is unsupported', () => {
 		localStorage.setItem('chawan:currency', 'MXN');
-		expect(readCurrency()).toBe('USD');
+		expect(readCurrency()).toBe('THB');
 	});
 
 	it('writeCurrency silently ignores unsupported codes', () => {
@@ -68,8 +68,8 @@ describe('getCurrency', () => {
 		}
 	});
 
-	it('falls back to USD info on unknown code', () => {
-		expect(getCurrency('MXN').code).toBe('USD');
+	it('falls back to THB info on unknown code (first in CURRENCIES)', () => {
+		expect(getCurrency('MXN').code).toBe('THB');
 	});
 });
 

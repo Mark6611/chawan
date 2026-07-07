@@ -140,7 +140,7 @@ export function cafeSpendByCurrency(sessions: readonly Session[]): Record<string
 	const totals: Record<string, number> = {};
 	for (const s of sessions.filter(isCafe)) {
 		if (s.priceCents == null) continue;
-		const cur = s.priceCurrency ?? 'USD';
+		const cur = s.priceCurrency ?? 'THB';
 		totals[cur] = (totals[cur] ?? 0) + s.priceCents;
 	}
 	return totals;

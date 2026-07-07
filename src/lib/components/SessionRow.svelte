@@ -56,7 +56,7 @@
 			<span class="ml-1 font-mono text-[11px] text-muted">
 				· {REGION_LABELS[session.region]}{#if session.milk}
 					· {MILK_LABELS[session.milk]} milk{/if}{#if session.priceCents != null}
-					· {formatPrice(session.priceCents, session.priceCurrency ?? 'USD')}{/if}
+					· {formatPrice(session.priceCents, session.priceCurrency ?? 'THB')}{/if}
 			</span>
 		{/if}
 	</div>

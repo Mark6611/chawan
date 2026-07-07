@@ -85,7 +85,7 @@
 	// input + sticky currency select in the field's action slot.
 	const initialPriceText = untrack(() =>
 		initial?.priceCents != null
-			? formatPrice(initial.priceCents, initial.priceCurrency ?? 'USD').replace(/^[^\d]+/, '')
+			? formatPrice(initial.priceCents, initial.priceCurrency ?? 'THB').replace(/^[^\d]+/, '')
 			: ''
 	);
 	let priceText = $state(initialPriceText);

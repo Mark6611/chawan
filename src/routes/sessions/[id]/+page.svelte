@@ -217,7 +217,7 @@
 					<Eyebrow>Price</Eyebrow>
 					<div class="mt-2">
 						<Mono size="xl" weight="light" tone="ink">
-							{formatPrice(session.priceCents, session.priceCurrency ?? 'USD')}
+							{formatPrice(session.priceCents, session.priceCurrency ?? 'THB')}
 						</Mono>
 					</div>
 				</section>

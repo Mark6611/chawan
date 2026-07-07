@@ -158,7 +158,7 @@
 			{/if}
 			{#if tin.priceCents != null}
 				<Mono size="meta" tone="muted">
-					· {formatPrice(tin.priceCents, tin.priceCurrency ?? 'USD')}
+					· {formatPrice(tin.priceCents, tin.priceCurrency ?? 'THB')}
 				</Mono>
 			{/if}
 			{#if tin.archived}
