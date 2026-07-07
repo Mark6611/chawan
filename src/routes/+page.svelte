@@ -9,7 +9,7 @@
 
 	import { repository } from '$lib/db/repository';
 	import { syncState } from '$lib/sync.svelte';
-	import { isPersonal, newId, nowIso, type Session, type Tin } from '$lib/db/types';
+	import { STYLE_LABELS, isPersonal, newId, nowIso, type Session, type Tin } from '$lib/db/types';
 	import { bowlsThisWeek, formatTimeAgo } from '$lib/sessions/compute';
 	import { detectUsual } from '$lib/sessions/again';
 	import { tinFreshness, tinRemaining } from '$lib/tins/compute';
@@ -127,14 +127,17 @@
 					<Display size="m" italic={false} as="h2">{tinName}</Display>
 					<div class="mt-1">
 						<Mono size="meta" tone="muted">
-							{lastSession.style} · {lastSession.powderGrams}g · {lastSession.waterGrams}g · {lastSession.waterTempC}°C
+							{STYLE_LABELS[lastSession.style]} · {lastSession.powderGrams}g · {lastSession.waterGrams}g
+							· {lastSession.waterTempC}°C
 						</Mono>
 					</div>
 				{:else}
 					<Display size="m" italic={false} as="h2">{lastSession.cafeName}</Display>
 					<div class="mt-1">
 						<Mono size="meta" tone="muted">
-							cafe · {lastSession.style}{lastSession.maker ? ' · ' + lastSession.maker : ''}
+							cafe · {STYLE_LABELS[lastSession.style]}{lastSession.maker
+								? ' · ' + lastSession.maker
+								: ''}
 						</Mono>
 					</div>
 				{/if}
@@ -200,7 +203,8 @@
 						Again? · {usual.hoursAgo < 1 ? 'just now' : `${Math.floor(usual.hoursAgo)}h ago`}
 					</span>
 					<span class="font-mono text-[12px] text-ink">
-						{usual.session.style} · {usual.session.powderGrams}g · {usual.session.waterTempC}°C
+						{STYLE_LABELS[usual.session.style]} · {usual.session.powderGrams}g · {usual.session
+							.waterTempC}°C
 					</span>
 				</span>
 				<span class="font-mono text-[14px] text-tea">→</span>

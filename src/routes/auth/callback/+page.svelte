@@ -18,7 +18,7 @@
 	onMount(() => {
 		if (!supabase) {
 			status = 'error';
-			errorMsg = 'Supabase is not configured. Add env vars and reload — see .env.example.';
+			errorMsg = 'Sign-in is temporarily unavailable. Please try again later.';
 			return;
 		}
 		const {
@@ -95,7 +95,7 @@
 
 	{#if status === 'loading'}
 		<div class="mt-6">
-			<Mono size="meta" tone="faint">Hold while Supabase verifies the link…</Mono>
+			<Mono size="meta" tone="faint">Verifying your link…</Mono>
 		</div>
 	{/if}
 </main>

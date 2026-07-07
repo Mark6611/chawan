@@ -65,7 +65,7 @@
 		const [tins, sessions] = await Promise.all([repository.listTins(), repository.listSessions()]);
 		const payload = {
 			app: 'chawan',
-			version: 'v0.1.0',
+			version: __APP_VERSION__,
 			exportedAt: nowIso(),
 			tinsCount: tins.length,
 			sessionsCount: sessions.length,
@@ -302,8 +302,8 @@
 				<Mono size="m" tone="ink">Local only</Mono>
 			</div>
 			<p class="mt-3 text-[14px] text-muted italic">
-				Sign in to enable cross-device sync (coming next). Your local data stays put — it'll migrate
-				to your account on first sign-in.
+				Sign in to turn on cross-device sync. Your local data stays put — it'll migrate to your
+				account on first sign-in.
 			</p>
 			<div class="mt-4">
 				<PrimaryButton kind="line" href="/auth">Sign in</PrimaryButton>

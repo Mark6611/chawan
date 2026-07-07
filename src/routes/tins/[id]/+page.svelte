@@ -70,6 +70,18 @@
 		photoUrl = null;
 	});
 
+	// harvestDate is stored as "YYYY-MM-01". new Date("YYYY-MM-DD") parses as UTC
+	// midnight, which in a negative-UTC-offset zone shifts to the previous local
+	// day — and since it's always day-01, that lands in the previous month. Parse
+	// the parts and build a LOCAL date so the harvest month is always right.
+	function harvestLabel(iso: string): string {
+		const [y, m] = iso.split('-').map(Number);
+		return new Date(y, m - 1, 1).toLocaleDateString(undefined, {
+			month: 'short',
+			year: 'numeric'
+		});
+	}
+
 	const remaining = $derived(tin ? tinRemaining(tin, sessions) : 0);
 	const pct = $derived(tin ? 1 - remaining / tin.weightGrams : 0);
 	const fresh = $derived(tin ? tinFreshness(tin, sessions) : null);
@@ -158,11 +170,7 @@
 			{#if tin.cultivar}<Mono size="meta" tone="muted">· {tin.cultivar}</Mono>{/if}
 			{#if tin.harvestDate}
 				<Mono size="meta" tone="muted">
-					·
-					{new Date(tin.harvestDate).toLocaleDateString(undefined, {
-						month: 'short',
-						year: 'numeric'
-					})}
+					· {harvestLabel(tin.harvestDate)}
 				</Mono>
 			{/if}
 			{#if tin.priceCents != null}
