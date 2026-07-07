@@ -47,5 +47,11 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Chawan uses the camera so you can photograph a matcha tin for its label.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Chawan lets you attach a photo of a matcha tin from your library.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Chawan can save a matcha share card to your photo library.</string>
 </dict>
 </plist>

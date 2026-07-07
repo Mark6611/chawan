@@ -860,12 +860,24 @@ export async function drawShareCard(
 
 	const W = 1080;
 	const H = story ? 1920 : 1080;
-	canvas.width = W * scale;
-	canvas.height = H * scale;
+
+	// WebKit (iOS Safari + the Capacitor WKWebView) caps a canvas backing store
+	// at 16,777,216 px (4096²); over that it silently drops the backing store so
+	// drawing no-ops and toBlob() returns null. Story at 3× is 3240×5760 =
+	// 18.66M px — over the cap — so the story share export failed on iOS with
+	// "Could not create the image." Clamp the effective scale to keep the area
+	// under a safe ceiling. Square at 3× (10.5M) is unaffected; story clamps to
+	// ~2.78×, still 3000×5333 — plenty for a social card.
+	const MAX_CANVAS_AREA = 16_000_000;
+	const requestedArea = W * H * scale * scale;
+	const effScale =
+		requestedArea > MAX_CANVAS_AREA ? Math.sqrt(MAX_CANVAS_AREA / (W * H)) : scale;
+	canvas.width = Math.floor(W * effScale);
+	canvas.height = Math.floor(H * effScale);
 
 	const ctx = canvas.getContext('2d');
 	if (!ctx) throw new Error('2D canvas context unavailable.');
-	ctx.scale(scale, scale);
+	ctx.scale(effScale, effScale);
 
 	// Background
 	ctx.fillStyle = P.paper;

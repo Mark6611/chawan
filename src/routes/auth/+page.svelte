@@ -7,9 +7,17 @@
 	// from in the common case).
 
 	import { onMount } from 'svelte';
+	import { Capacitor } from '@capacitor/core';
 	import { goto } from '$app/navigation';
 	import { supabase } from '$lib/supabase';
 	import { auth } from '$lib/auth.svelte';
+
+	// In the native app window.location.origin is capacitor://localhost, so a
+	// magic link built from it can never sign the app in (it opens Safari on a
+	// dead origin). On native we omit emailRedirectTo — Supabase then points the
+	// link at its configured Site URL — and steer the user to the numeric code,
+	// which verifyOtp handles entirely in-app.
+	const isNative = Capacitor.isNativePlatform();
 
 	// If Supabase isn't configured, surface a friendly "not configured"
 	// state instead of pretending the form will do something.
@@ -41,7 +49,9 @@
 		sending = true;
 		const { error: err } = await supabase.auth.signInWithOtp({
 			email: email.trim(),
-			options: { emailRedirectTo: `${window.location.origin}/auth/callback` }
+			options: isNative
+				? undefined
+				: { emailRedirectTo: `${window.location.origin}/auth/callback` }
 		});
 		if (err) {
 			error = err.message;
@@ -138,8 +148,12 @@
 		</form>
 	{:else}
 		<p class="mt-4 max-w-[36ch] text-[14px] leading-relaxed text-muted italic">
-			A code went to <span class="text-ink not-italic">{email}</span>. Open the email and either tap
-			the link or paste the code below.
+			A code went to <span class="text-ink not-italic">{email}</span>.
+			{#if isNative}
+				Enter the code below to finish signing in.
+			{:else}
+				Open the email and either tap the link or paste the code below.
+			{/if}
 		</p>
 
 		<Hairline class="my-7" />

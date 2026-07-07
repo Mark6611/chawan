@@ -166,10 +166,24 @@ export function shareFilename(title: string, date: string): string {
 	return `${base}.png`;
 }
 
-/** Hand the PNG to the platform: Web Share API level 2 if files are
- *  supported (iOS Safari 16.4+, Android Chrome); else trigger a download.
+/** Hand the PNG to the platform.
+ *  • Native (Capacitor/WKWebView): the native share sheet via @capacitor/share.
+ *    Web Share with files is unreliable in WKWebView and a programmatic blob
+ *    download has no download manager there, so the card would never reach
+ *    Photos/Messages/AirDrop — route through the plugin (writing a temp file).
+ *  • Web: Web Share API level 2 if files are supported (iOS Safari 16.4+,
+ *    Android Chrome); else a direct download.
  *  NO upload, NO hosted link. */
 export async function shareOrDownload(blob: Blob, filename: string): Promise<void> {
+	const { Capacitor } = await import('@capacitor/core');
+	if (Capacitor.isNativePlatform()) {
+		// On native we do NOT fall back to the web download path — it doesn't
+		// work in WKWebView. A genuine failure surfaces to the caller; a user
+		// cancel is swallowed inside shareNative.
+		await shareNative(blob, filename);
+		return;
+	}
+
 	const file = new File([blob], filename, { type: 'image/png' });
 	const nav = navigator as Navigator & {
 		canShare?: (data?: ShareData) => boolean;
@@ -190,4 +204,41 @@ export async function shareOrDownload(blob: Blob, filename: string): Promise<voi
 	a.download = filename;
 	a.click();
 	setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/** Native share: write the PNG to the cache dir, then hand its file URI to the
+ *  OS share sheet. A user-cancelled sheet resolves quietly. */
+async function shareNative(blob: Blob, filename: string): Promise<void> {
+	const [{ Filesystem, Directory }, { Share }] = await Promise.all([
+		import('@capacitor/filesystem'),
+		import('@capacitor/share')
+	]);
+	const base64 = await blobToBase64(blob);
+	const { uri } = await Filesystem.writeFile({
+		path: filename,
+		data: base64,
+		directory: Directory.Cache
+	});
+	try {
+		await Share.share({ files: [uri] });
+	} catch (e) {
+		// The plugin rejects with a "canceled" message when the user dismisses
+		// the sheet — that's not an error worth surfacing.
+		const msg = e instanceof Error ? e.message.toLowerCase() : '';
+		if (msg.includes('cancel')) return;
+		throw e;
+	}
+}
+
+/** Blob → bare base64 (no data: prefix), for Filesystem.writeFile. */
+function blobToBase64(blob: Blob): Promise<string> {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onloadend = () => {
+			const result = typeof reader.result === 'string' ? reader.result : '';
+			resolve(result.slice(result.indexOf(',') + 1));
+		};
+		reader.onerror = () => reject(reader.error ?? new Error('Could not read the image.'));
+		reader.readAsDataURL(blob);
+	});
 }

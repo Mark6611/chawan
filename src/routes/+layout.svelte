@@ -60,13 +60,32 @@
 		})();
 	});
 
+	// Native status bar: track the in-app day/night theme so the clock/battery
+	// glyphs stay legible against the app background. The toggle is decoupled
+	// from the iOS system appearance, so without this a phone in system Light
+	// mode with the app in Night renders dark glyphs on dark paper. No-ops on
+	// the web (isNativePlatform() is false, so the plugin is never imported).
+	$effect(() => {
+		const night = preferences.theme === 'night'; // tracked dependency
+		void (async () => {
+			const { Capacitor } = await import('@capacitor/core');
+			if (!Capacitor.isNativePlatform()) return;
+			const { StatusBar, Style } = await import('@capacitor/status-bar');
+			try {
+				await StatusBar.setStyle({ style: night ? Style.Dark : Style.Light });
+			} catch {
+				// StatusBar plugin unavailable — ignore.
+			}
+		})();
+	});
+
 	let { children } = $props();
 </script>
 
 <button
 	type="button"
 	onclick={() => preferences.toggleTheme()}
-	class="fixed top-3 right-3 z-50 grid h-9 w-9 place-items-center rounded-full border border-rule bg-transparent text-ink transition-colors hover:bg-surface"
+	class="fixed top-[calc(env(safe-area-inset-top)+0.75rem)] right-3 z-50 grid h-9 w-9 place-items-center rounded-full border border-rule bg-transparent text-ink transition-colors hover:bg-surface"
 	aria-label="Toggle theme (current: {preferences.theme})"
 	title="Theme: {preferences.theme}"
 >
@@ -109,7 +128,7 @@
 {#if auth.user && (syncState.syncing || syncState.lastError)}
 	<a
 		href="/settings"
-		class="fixed top-3 right-14 z-50 grid h-9 w-9 place-items-center rounded-full border border-rule bg-paper transition-colors hover:bg-surface"
+		class="fixed top-[calc(env(safe-area-inset-top)+0.75rem)] right-14 z-50 grid h-9 w-9 place-items-center rounded-full border border-rule bg-paper transition-colors hover:bg-surface"
 		aria-label={syncState.syncing ? 'Syncing in progress' : 'Sync error — tap for details'}
 		title={syncState.syncing ? 'Syncing…' : 'Sync error'}
 	>
