@@ -77,8 +77,6 @@
 	let cultivar = $state(initial?.cultivar ?? catalogSnapshot?.cultivar ?? '');
 	let weightGrams = $state(initial?.weightGrams ?? 30);
 	let openedAt = $state(initial?.openedAt ?? '');
-	let harvestMonth = $state(initial?.harvestDate?.slice(5, 7) ?? '');
-	let harvestYear = $state(initial?.harvestDate?.slice(0, 4) ?? '');
 	let notes = $state(initial?.notes ?? '');
 
 	// Price — same vocabulary as the cafe session form: symbol + decimal
@@ -157,27 +155,6 @@
 	const gradeOpts = Object.entries(GRADE_LABELS).map(([value, label]) => ({ value, label }));
 	const regionOpts = Object.entries(REGION_LABELS).map(([value, label]) => ({ value, label }));
 
-	const monthOpts = [
-		{ value: '01', label: 'Jan' },
-		{ value: '02', label: 'Feb' },
-		{ value: '03', label: 'Mar' },
-		{ value: '04', label: 'Apr' },
-		{ value: '05', label: 'May' },
-		{ value: '06', label: 'Jun' },
-		{ value: '07', label: 'Jul' },
-		{ value: '08', label: 'Aug' },
-		{ value: '09', label: 'Sep' },
-		{ value: '10', label: 'Oct' },
-		{ value: '11', label: 'Nov' },
-		{ value: '12', label: 'Dec' }
-	];
-
-	const currentYear = new Date().getFullYear();
-	const yearOpts = Array.from({ length: 6 }, (_, i) => {
-		const y = String(currentYear - i);
-		return { value: y, label: y };
-	});
-
 	const canSave = $derived(name.trim().length > 0 && weightGrams > 0);
 
 	async function save() {
@@ -187,8 +164,6 @@
 		try {
 			const now = nowIso();
 			const finalCultivar = cultivar.trim() || undefined;
-			const finalHarvest =
-				harvestMonth && harvestYear ? `${harvestYear}-${harvestMonth}-01` : undefined;
 
 			// Catalog soft link: carry through on edit (don't drop it),
 			// stamp on first save when the user came from the catalog.
@@ -201,7 +176,9 @@
 				grade: grade as Grade,
 				region: region as Region,
 				cultivar: finalCultivar,
-				harvestDate: finalHarvest,
+				// Harvest date is no longer collected (often unknown); preserve any
+				// value an existing tin already had so editing doesn't wipe it.
+				harvestDate: initial?.harvestDate,
 				weightGrams,
 				openedAt: openedAt || undefined,
 				archived: initial?.archived ?? false,
@@ -333,16 +310,6 @@
 					{c}
 				</button>
 			{/each}
-		</div>
-	</Field>
-
-	<Field label="Harvest">
-		{#snippet action()}
-			<Mono size="meta" tone="faint">optional</Mono>
-		{/snippet}
-		<div class="mt-2 space-y-3">
-			<ChipGroup options={monthOpts} bind:value={harvestMonth} />
-			<ChipGroup options={yearOpts} bind:value={harvestYear} />
 		</div>
 	</Field>
 
