@@ -89,7 +89,17 @@
 			: ''
 	);
 	let priceText = $state(initialPriceText);
-	let currencyCode = $state<string>(initial?.priceCurrency ?? readCurrency());
+	// Tins are priced in THB or Yen only (the two currencies actually used).
+	// Preserve any other currency an existing tin was saved with, so editing an
+	// older record never silently rewrites its currency.
+	const tinCurrencies = (() => {
+		const codes = new Set(['THB', 'JPY']);
+		if (initial?.priceCurrency) codes.add(initial.priceCurrency);
+		return CURRENCIES.filter((c) => codes.has(c.code));
+	})();
+	let currencyCode = $state<string>(
+		initial?.priceCurrency ?? (['THB', 'JPY'].includes(readCurrency()) ? readCurrency() : 'THB')
+	);
 	const currency = $derived(getCurrency(currencyCode));
 	const priceCents = $derived(parsePrice(priceText, currencyCode));
 
@@ -350,7 +360,7 @@
 				class="bg-transparent font-mono text-[10.5px] font-medium tracking-[0.14em] text-muted uppercase hover:text-ink"
 				aria-label="Currency"
 			>
-				{#each CURRENCIES as c (c.code)}
+				{#each tinCurrencies as c (c.code)}
 					<option value={c.code}>{c.code}</option>
 				{/each}
 			</select>
