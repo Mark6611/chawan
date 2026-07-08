@@ -7,3 +7,12 @@ bun.lockb
 
 # Miscellaneous
 /static/
+
+# Build output + framework-generated
+build/
+.svelte-kit/
+
+# Capacitor native shells — hold synced web-build assets + generated project files
+# (eslint ignores these too; see eslint.config.js)
+ios/
+android/
