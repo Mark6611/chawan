@@ -9,9 +9,12 @@
 # signing works headlessly before a real ship.
 #
 # Adapted from Buffy's scripts/ship.sh, but SIMPLER: Chawan has no special
-# entitlements (no App Groups / HealthKit / CloudKit), so automatic signing archives
-# headlessly and there is no entitlement-verification step. The App Store Connect API
-# key is account-level, so this reuses the same key Buffy uses — no new key needed.
+# entitlements (no App Groups / HealthKit / CloudKit), so there is no
+# entitlement-verification step. Like Buffy it archives with MANUAL distribution
+# signing (the "Chawan App Store" profile + the account's Apple Distribution cert),
+# because headless automatic signing wants a device-bound Development profile and the
+# team has no registered devices. The App Store Connect API key is account-level, so
+# this reuses the same key Buffy ships with — no new key needed.
 #
 # Gates are never piped (a piped `test | tail` reads tail's exit code and can ship a
 # red build). Commit feature work BEFORE running — on success only the build-number
@@ -67,23 +70,15 @@ echo "   building 1.0 (${BUILD_NUM})"
 echo "══ Web bundle + native sync"
 npm run native:build > /tmp/chawan-iossync.log 2>&1 || { tail -30 /tmp/chawan-iossync.log; exit 1; }
 
-echo "══ Signed archive (automatic signing via ASC key)"
+echo "══ Signed archive (manual distribution signing — 'Chawan App Store' profile)"
 rm -rf "$(dirname "$ARCHIVE")" "$EXPORT"
 xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
-	-destination 'generic/platform=iOS' -archivePath "$ARCHIVE" \
-	-allowProvisioningUpdates \
-	-authenticationKeyPath "$ASC_KEY_PATH" \
-	-authenticationKeyID "$ASC_KEY_ID" \
-	-authenticationKeyIssuerID "$ASC_ISSUER" \
-	archive > /tmp/chawan-archive.log 2>&1 || { tail -40 /tmp/chawan-archive.log; exit 1; }
+	-destination 'generic/platform=iOS' -archivePath "$ARCHIVE" archive \
+	> /tmp/chawan-archive.log 2>&1 || { tail -40 /tmp/chawan-archive.log; exit 1; }
 
 echo "══ Export"
 xcodebuild -exportArchive -archivePath "$ARCHIVE" -exportPath "$EXPORT" \
 	-exportOptionsPlist ios/ExportOptions.plist \
-	-allowProvisioningUpdates \
-	-authenticationKeyPath "$ASC_KEY_PATH" \
-	-authenticationKeyID "$ASC_KEY_ID" \
-	-authenticationKeyIssuerID "$ASC_ISSUER" \
 	> /tmp/chawan-export.log 2>&1 || { tail -40 /tmp/chawan-export.log; exit 1; }
 
 echo "══ Sanity: IPA build number"
