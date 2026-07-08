@@ -53,5 +53,9 @@
 	<string>Chawan lets you attach a photo of a matcha tin from your library.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Chawan can save a matcha share card to your photo library.</string>
+	<!-- Chawan uses only standard HTTPS (exempt) encryption — declare it so
+	     TestFlight/App Store builds skip the export-compliance prompt. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>
