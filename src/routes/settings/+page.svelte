@@ -366,5 +366,13 @@
 		<div class="mt-3">
 			<Mono size="meta" tone="muted">v{__APP_VERSION__} · beta</Mono>
 		</div>
+		<div class="mt-4">
+			<a
+				href="/privacy"
+				class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink"
+			>
+				Privacy Policy
+			</a>
+		</div>
 	</section>
 </main>
