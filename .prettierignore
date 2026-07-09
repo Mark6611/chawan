@@ -16,3 +16,6 @@ build/
 # (eslint ignores these too; see eslint.config.js)
 ios/
 android/
+
+# Standalone privacy policy hosted via GitHub Pages (not part of the app build)
+docs/
