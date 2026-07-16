@@ -38,6 +38,30 @@
 	let verifying = $state(false);
 	let error = $state<string | null>(null);
 
+	// Password sign-in: secondary path for accounts that have a password set
+	// (e.g. the App Review demo account — OTP-to-email can't be reviewed).
+	// OTP stays the primary flow; this is a small visible toggle, not a
+	// hidden backdoor.
+	let usePassword = $state(false);
+	let password = $state('');
+
+	async function signInPassword(e: SubmitEvent) {
+		e.preventDefault();
+		if (!supabase) return;
+		error = null;
+		verifying = true;
+		const { error: err } = await supabase.auth.signInWithPassword({
+			email: email.trim(),
+			password
+		});
+		if (err) {
+			error = err.message;
+			verifying = false;
+		} else {
+			await goto('/');
+		}
+	}
+
 	onMount(() => {
 		if (auth.user) goto('/settings');
 	});
@@ -120,7 +144,7 @@
 
 		<Hairline class="my-7" />
 
-		<form onsubmit={sendCode}>
+		<form onsubmit={usePassword ? signInPassword : sendCode}>
 			<Field label="Email">
 				<input
 					type="email"
@@ -132,6 +156,21 @@
 				/>
 			</Field>
 
+			{#if usePassword}
+				<div class="mt-5">
+					<Field label="Password">
+						<input
+							type="password"
+							bind:value={password}
+							required
+							autocomplete="current-password"
+							placeholder="••••••••"
+							class="w-full font-body text-[16px] text-ink placeholder:text-faint"
+						/>
+					</Field>
+				</div>
+			{/if}
+
 			{#if error}
 				<div class="mt-4 rounded-[14px] border-[0.5px] border-danger px-4 py-3">
 					<Mono size="meta" tone="ink">{error}</Mono>
@@ -139,9 +178,28 @@
 			{/if}
 
 			<div class="mt-8">
-				<PrimaryButton type="submit" disabled={sending || !email.trim()}>
-					{sending ? 'Sending…' : 'Send code'}
-				</PrimaryButton>
+				{#if usePassword}
+					<PrimaryButton type="submit" disabled={verifying || !email.trim() || !password}>
+						{verifying ? 'Signing in…' : 'Sign in'}
+					</PrimaryButton>
+				{:else}
+					<PrimaryButton type="submit" disabled={sending || !email.trim()}>
+						{sending ? 'Sending…' : 'Send code'}
+					</PrimaryButton>
+				{/if}
+			</div>
+
+			<div class="mt-6 text-center">
+				<button
+					type="button"
+					onclick={() => {
+						usePassword = !usePassword;
+						error = null;
+					}}
+					class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink"
+				>
+					{usePassword ? '← use email code instead' : 'sign in with password'}
+				</button>
 			</div>
 		</form>
 	{:else}

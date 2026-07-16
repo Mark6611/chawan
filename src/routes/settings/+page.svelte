@@ -364,7 +364,7 @@
 		</div>
 		<p class="mt-2 text-[14px] text-muted italic">A personal log for matcha sessions.</p>
 		<div class="mt-3">
-			<Mono size="meta" tone="muted">v{__APP_VERSION__} · beta</Mono>
+			<Mono size="meta" tone="muted">v{__APP_VERSION__}</Mono>
 		</div>
 		<div class="mt-4">
 			<a
