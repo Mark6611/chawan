@@ -41,14 +41,14 @@ src/
 
 Supporting directories:
 
-| Path | What it is |
-|---|---|
-| `ios/` | Capacitor-generated Xcode project (the iOS app) |
-| `supabase/` | SQL migrations for the sync backend |
-| `scripts/` | `ship.sh` (build + deploy pipeline), icon generation |
-| `docs/` | Design briefs and product/design handoff docs |
-| [ROADMAP.md](ROADMAP.md) | What's planned next |
-| [CLAUDE.md](CLAUDE.md) | Project conventions for AI-assisted work |
+| Path                     | What it is                                           |
+| ------------------------ | ---------------------------------------------------- |
+| `ios/`                   | Capacitor-generated Xcode project (the iOS app)      |
+| `supabase/`              | SQL migrations for the sync backend                  |
+| `scripts/`               | `ship.sh` (build + deploy pipeline), icon generation |
+| `docs/`                  | Design briefs and product/design handoff docs        |
+| [ROADMAP.md](ROADMAP.md) | What's planned next                                  |
+| [CLAUDE.md](CLAUDE.md)   | Project conventions for AI-assisted work             |
 
 ## Develop
 
@@ -58,15 +58,15 @@ cp .env.example .env   # Supabase URL + anon key
 npm run dev
 ```
 
-| Command | Purpose |
-|---|---|
-| `npm run dev` | Dev server |
-| `npm test` | Unit tests (Vitest) |
-| `npm run check` | Type-check (svelte-check) |
-| `npm run lint` / `format` | Prettier + ESLint |
-| `npm run build` | Production web build (deployed on Vercel) |
-| `npm run native:build` | Capacitor build + sync for iOS |
-| `npm run native:open` | Open the Xcode project |
+| Command                   | Purpose                                   |
+| ------------------------- | ----------------------------------------- |
+| `npm run dev`             | Dev server                                |
+| `npm test`                | Unit tests (Vitest)                       |
+| `npm run check`           | Type-check (svelte-check)                 |
+| `npm run lint` / `format` | Prettier + ESLint                         |
+| `npm run build`           | Production web build (deployed on Vercel) |
+| `npm run native:build`    | Capacitor build + sync for iOS            |
+| `npm run native:open`     | Open the Xcode project                    |
 
 ## Sibling projects
 
