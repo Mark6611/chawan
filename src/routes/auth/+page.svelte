@@ -63,7 +63,8 @@
 	}
 
 	onMount(() => {
-		if (auth.user) goto('/settings');
+		// Local-only mode: the app has no accounts — nothing to see here.
+		if (!auth.enabled || auth.user) goto('/settings');
 	});
 
 	async function sendCode(e: SubmitEvent) {

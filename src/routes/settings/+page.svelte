@@ -253,12 +253,12 @@
 
 		{#if !auth.enabled}
 			<div class="mt-3 flex items-baseline gap-3">
-				<span class="h-2 w-2 rounded-full bg-muted"></span>
-				<Mono size="m" tone="muted">Not configured</Mono>
+				<span class="h-2 w-2 rounded-full bg-data"></span>
+				<Mono size="m" tone="ink">On this device</Mono>
 			</div>
-			<p class="mt-3 text-[14px] text-muted italic">
-				Add VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY to .env.local (see .env.example) and
-				restart the dev server to enable sign-in.
+			<p class="mt-3 max-w-[38ch] text-[14px] text-muted italic">
+				Your matcha log lives entirely on this device — nothing is collected or sent anywhere. Use
+				Backup below to save or move it.
 			</p>
 		{:else if !auth.ready}
 			<div class="mt-3 flex items-baseline gap-3">

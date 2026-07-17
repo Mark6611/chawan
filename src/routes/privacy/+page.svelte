@@ -1,8 +1,8 @@
 <script lang="ts">
 	// Privacy policy — required by App Review 5.1.1 (a URL in App Store Connect AND
 	// an in-app link, from Settings). Prerendered (see +page.ts) so it reads without
-	// JS. Written to match Chawan's actual data model: local-first, optional sync to
-	// the user's OWN account, no analytics, no health data, no tracking.
+	// JS. Written to match Chawan's actual data model: LOCAL-ONLY (no accounts, no
+	// sync, nothing collected), no analytics, no health data, no tracking.
 	const updated = 'July 2026';
 	const CONTACT = 'kornkranmarwin@gmail.com';
 </script>
@@ -17,35 +17,28 @@
 	<p class="muted">Last updated: {updated}</p>
 
 	<p>
-		Chawan is a personal log for matcha sessions. It is built to be private by default: your data
-		lives on your device, and — only if you choose to sign in — in your own private account. The
-		developer of Chawan cannot see your data.
+		Chawan is a personal log for matcha sessions. It is private by design: everything you record
+		stays on your device. Chawan has no accounts, no sign-in, and no servers of its own — the
+		developer cannot see your data because it never leaves your device.
 	</p>
 
 	<h2>What Chawan stores, and where</h2>
 	<ul>
 		<li>
 			<strong>Your sessions and tins</strong> (matcha brands, grades, amounts, ratings, prices,
-			free-text notes, dates) and app <strong>settings</strong> are stored on your device.
+			free-text notes, dates) and app <strong>settings</strong> are stored on your device only.
 		</li>
 		<li>
 			<strong>Tin photos</strong> stay on your device only. They are never uploaded and never leave the
 			device through Chawan.
 		</li>
-		<li>
-			<strong>Cloud sync (optional, off until you sign in):</strong> if you sign in, your sessions
-			and tins are mirrored to your own <em>private</em> database so your devices stay in sync. Access
-			is scoped to your account by row-level security; other users cannot read it, and the developer does
-			not access it.
-		</li>
 	</ul>
 
-	<h2>Account &amp; email</h2>
+	<h2>No accounts, nothing collected</h2>
 	<p>
-		Signing in is optional and only needed for cross-device sync. It uses a one-time code sent to
-		your email address (magic-link sign-in). Your email is used solely to send that code and to
-		identify your account — never for marketing, advertising, or profiling. If you never sign in,
-		Chawan collects no personal information at all.
+		Chawan does not offer account creation and does not collect, transmit, or store any personal
+		information — no email address, no identifiers, nothing. There is no data about you for the
+		developer to hold, sell, or lose.
 	</p>
 
 	<h2>Analytics &amp; tracking</h2>
@@ -63,15 +56,11 @@
 
 	<h2>Your control &amp; data deletion</h2>
 	<ul>
-		<li>
-			Delete any session or tin inside the app; deletions propagate to your other devices if you're
-			signed in.
-		</li>
-		<li>Sign out at any time — this wipes Chawan's local copy of your data from that device.</li>
+		<li>Delete any session or tin inside the app at any time.</li>
 		<li>Export a full backup (JSON) of your sessions and tins from Settings whenever you like.</li>
 		<li>
-			To delete all of your synced account data, email us at the address below and we will remove
-			it.
+			Deleting the app deletes your data with it — nothing remains anywhere else, because nothing
+			was ever sent anywhere else.
 		</li>
 	</ul>
 
