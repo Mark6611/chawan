@@ -64,7 +64,11 @@ export function formatPrice(cents: number, code: string): string {
  *  param is kept so call sites read naturally and the signature can grow
  *  currency-aware later without churn. */
 export function parsePrice(text: string, _code: string): number {
-	const trimmed = text.trim();
+	// Strip thousands separators before parsing: parseFloat("1,200") stops at
+	// the comma and yields 1, silently saving ฿1 for a ฿1,200 tea. Our display
+	// layer never emits grouping separators and inputs are dot-decimal, so a
+	// comma here is always a thousands separator — safe to remove.
+	const trimmed = text.trim().replace(/,/g, '');
 	if (!trimmed) return 0;
 	const n = Number.parseFloat(trimmed);
 	if (Number.isNaN(n) || n < 0) return 0;

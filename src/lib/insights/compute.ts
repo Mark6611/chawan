@@ -178,9 +178,15 @@ export interface PalateCentroid {
 /** Average taste position of the user's mapped tins, or null if none map
  *  to a catalog entry with published coords. */
 export function palateCentroid(tins: readonly Tin[]): PalateCentroid | null {
+	// Dedupe by catalogId (mirror palateProducts): repeat purchases stamp the
+	// same catalogId on multiple tins by design, so counting per-tin would
+	// pull the centroid toward duplicated teas and make mappedCount disagree
+	// with the chart + share card (which plot distinct products).
+	const seen = new Set<string>();
 	const coords: { x: number; y: number }[] = [];
 	for (const t of tins) {
-		if (!t.catalogId) continue;
+		if (!t.catalogId || seen.has(t.catalogId)) continue;
+		seen.add(t.catalogId);
 		const entry = getCatalogEntry(t.catalogId);
 		if (entry && hasTaste(entry)) coords.push(entry.taste);
 	}

@@ -101,6 +101,20 @@
 		font-family: var(--font-body);
 	}
 
+	/* Native-app touch feel: remove the grey iOS tap-flash and the 300ms
+	   double-tap-zoom delay on everything interactive. */
+	button,
+	a,
+	input,
+	select,
+	textarea,
+	label,
+	[role='radio'],
+	[role='button'] {
+		-webkit-tap-highlight-color: transparent;
+		touch-action: manipulation;
+	}
+
 	/* Headings — Cormorant; oldstyle italic is the Chawan voice. */
 	h1,
 	h2,
@@ -193,5 +207,48 @@ html.theming *::after {
 		letter-spacing: 0.14em;
 		text-transform: uppercase;
 		color: var(--color-muted);
+	}
+
+	/* iOS press physics: compress on touch-down, release with a soft spring
+	   overshoot — the tactile "buttons are physical" feel. .press for CTAs and
+	   list rows, .press-sm (deeper) for chips and small controls. Reduced-motion
+	   is collapsed globally by the media query above. */
+	.press,
+	.press-sm {
+		transition:
+			transform 0.32s cubic-bezier(0.34, 1.4, 0.64, 1),
+			background-color 0.2s ease,
+			border-color 0.2s ease,
+			color 0.2s ease,
+			opacity 0.2s ease,
+			box-shadow 0.2s ease;
+	}
+	.press:active {
+		transform: scale(0.97);
+		transition-duration: 0.08s;
+	}
+	.press-sm:active {
+		transform: scale(0.93);
+		transition-duration: 0.08s;
+	}
+	.press:disabled,
+	.press-sm:disabled,
+	.press[aria-disabled='true'] {
+		transform: none;
+	}
+
+	/* Liquid-glass treatment for the filled tea CTA: a specular top edge + a
+	   soft vertical sheen, and an ambient shadow tinted in the accent's own
+	   hue (adapts to the day/night --color-tea automatically). */
+	.glass-cta {
+		background-image: linear-gradient(
+			to bottom,
+			rgba(255, 255, 255, 0.14),
+			rgba(255, 255, 255, 0.01) 55%
+		);
+		box-shadow:
+			inset 0 1px 0 rgba(255, 255, 255, 0.18),
+			0 6px 18px color-mix(in srgb, var(--color-tea) 32%, transparent),
+			0 1px 3px rgba(0, 0, 0, 0.12);
 	}
 }

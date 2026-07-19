@@ -203,6 +203,21 @@ describe('catalog coverage + palate', () => {
 		expect(palateCentroid([tin({ id: 't9' })])).toBeNull();
 	});
 
+	it('palateCentroid dedupes by catalogId (repeat purchases count once)', () => {
+		// Two tins of mk-eiju + one mk-tenju → centroid over the 2 DISTINCT
+		// products, not pulled toward the duplicated tea. mappedCount must
+		// agree with the chart/share card (which plot distinct products).
+		const tins = [
+			tin({ id: 't1', catalogId: 'mk-eiju' }),
+			tin({ id: 't2', catalogId: 'mk-eiju' }),
+			tin({ id: 't3', catalogId: 'mk-tenju' })
+		];
+		const centroid = palateCentroid(tins);
+		expect(centroid?.mappedCount).toBe(2);
+		expect(centroid?.x).toBeCloseTo(0.7, 5);
+		expect(centroid?.y).toBeCloseTo(0.625, 5);
+	});
+
 	it('palatePhrase bands each axis at ±0.33', () => {
 		expect(palatePhrase({ x: 0.6, y: 0.6, mappedCount: 1 })).toBe('mild + full-body');
 		expect(palatePhrase({ x: -0.6, y: -0.6, mappedCount: 1 })).toBe('sharp + refreshing');

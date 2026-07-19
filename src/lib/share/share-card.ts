@@ -184,7 +184,9 @@ export async function shareOrDownload(blob: Blob, filename: string): Promise<voi
 		return;
 	}
 
-	const file = new File([blob], filename, { type: 'image/png' });
+	// Use the blob's own MIME (PNG for share cards, application/json for a
+	// backup) so a shared file is labelled correctly on the receiving side.
+	const file = new File([blob], filename, { type: blob.type || 'image/png' });
 	const nav = navigator as Navigator & {
 		canShare?: (data?: ShareData) => boolean;
 	};

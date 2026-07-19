@@ -116,4 +116,9 @@ describe('parsePrice', () => {
 		expect(parsePrice('7.501', 'USD')).toBe(750);
 		expect(parsePrice('7.509', 'USD')).toBe(751);
 	});
+
+	it('strips thousands separators ("1,200" is ฿1,200, not ฿1)', () => {
+		expect(parsePrice('1,200', 'THB')).toBe(120000);
+		expect(parsePrice('12,345.67', 'USD')).toBe(1234567);
+	});
 });

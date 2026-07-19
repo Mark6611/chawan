@@ -75,8 +75,15 @@ class DexieRepository implements Repository {
 	}
 
 	async listSessionsByTin(tinId: string): Promise<PersonalSession[]> {
+		// Sort newest-first here so the ordering guarantee lives with the data
+		// access: the `where('tinId')` index yields rows in tinId order (ties
+		// broken by random-UUID pk), and the cumulative-consumption math in the
+		// tin detail page depends on chronological order.
 		const matched = await db.sessions.where('tinId').equals(tinId).toArray();
-		return matched.filter(isPersonal).filter(isLive);
+		return matched
+			.filter(isPersonal)
+			.filter(isLive)
+			.sort((a, b) => b.brewedAt.localeCompare(a.brewedAt));
 	}
 
 	async getSession(id: string): Promise<Session | undefined> {

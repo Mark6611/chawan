@@ -34,8 +34,6 @@
 	import LinkRail from '$lib/components/LinkRail.svelte';
 	import PwaUpdatePrompt from '$lib/components/PwaUpdatePrompt.svelte';
 	import { preferences } from '$lib/preferences.svelte';
-	import { auth } from '$lib/auth.svelte';
-	import { syncState } from '$lib/sync.svelte';
 
 	import { onMount } from 'svelte';
 
@@ -46,16 +44,27 @@
 		// guarantees consistency after preferences.setTheme() calls).
 		preferences.init();
 
-		// Native shell (Capacitor): the splash is configured with
-		// launchAutoHide=false and released here, after first paint — no
-		// white gap between splash and app. Dynamic import so the web
-		// bundle doesn't pay for the plugin; isNativePlatform() is false
-		// in browsers so this whole branch no-ops on the web.
+		// Ask the browser to make our IndexedDB persistent. Chawan is
+		// local-only — IndexedDB is the SOLE copy of every tin, session, and
+		// photo. Without this, WebKit can evict a non-persisted origin under
+		// storage pressure or after ~7 days idle, silently wiping all data.
+		// Installed PWAs are often granted silently; harmless where unsupported.
+		void navigator.storage?.persist?.().catch(() => {});
+
+		// Native shell (Capacitor): the splash is launchAutoHide=false and
+		// released here after first paint — no white gap. Guarded so a plugin
+		// import/hide rejection can't strand the app on the splash forever;
+		// a timeout is the backstop if hide() never resolves.
 		void (async () => {
-			const { Capacitor } = await import('@capacitor/core');
-			if (Capacitor.isNativePlatform()) {
+			try {
+				const { Capacitor } = await import('@capacitor/core');
+				if (!Capacitor.isNativePlatform()) return;
 				const { SplashScreen } = await import('@capacitor/splash-screen');
+				const safety = setTimeout(() => void SplashScreen.hide().catch(() => {}), 3000);
 				await SplashScreen.hide();
+				clearTimeout(safety);
+			} catch {
+				// Splash plugin unavailable or hide() failed — nothing to release on web.
 			}
 		})();
 	});
@@ -122,20 +131,6 @@
 		</svg>
 	{/if}
 </button>
-
-<!-- Sync indicator — only surfaces when actively syncing OR an error
-     is current. Subtle by design: silence when everything's fine. -->
-{#if auth.user && (syncState.syncing || syncState.lastError)}
-	<a
-		href="/settings"
-		class="fixed top-[calc(env(safe-area-inset-top)+0.75rem)] right-14 z-50 grid h-9 w-9 place-items-center rounded-full border border-rule bg-paper transition-colors hover:bg-surface"
-		aria-label={syncState.syncing ? 'Syncing in progress' : 'Sync error — tap for details'}
-		title={syncState.syncing ? 'Syncing…' : 'Sync error'}
-	>
-		<span class="h-2 w-2 rounded-full {syncState.syncing ? 'animate-pulse bg-warn' : 'bg-danger'}"
-		></span>
-	</a>
-{/if}
 
 <PwaUpdatePrompt />
 

@@ -29,16 +29,16 @@
 		children: Snippet;
 	} = $props();
 
+	// The filled CTA gets the liquid-glass sheen; outline/ghost stay flat.
 	const kindClass: Record<Kind, string> = {
-		tea: 'bg-tea text-on-tea',
+		tea: 'bg-tea text-on-tea glass-cta',
 		line: 'border-rule text-ink border bg-transparent',
 		ghost: 'text-ink bg-transparent'
 	};
 
 	const baseClass =
-		'block w-full rounded-full px-5 py-4 text-center font-mono text-[11.5px] font-medium ' +
-		'tracking-[0.10em] uppercase transition-opacity duration-150 ' +
-		'disabled:pointer-events-none disabled:opacity-40';
+		'press block w-full rounded-full px-5 py-4 text-center font-mono text-[11.5px] font-medium ' +
+		'tracking-[0.10em] uppercase disabled:pointer-events-none disabled:opacity-40';
 </script>
 
 {#if href && !disabled}

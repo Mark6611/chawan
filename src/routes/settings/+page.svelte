@@ -6,19 +6,9 @@
 	import { onMount } from 'svelte';
 	import { readDefaults, writeDefaults } from '$lib/sessions/defaults';
 	import { preferences } from '$lib/preferences.svelte';
-	import { repository } from '$lib/db/repository';
-	import { auth, signOut } from '$lib/auth.svelte';
-	import { fullSync, syncState } from '$lib/sync.svelte';
-	import { formatTimeAgo } from '$lib/sessions/compute';
-	import {
-		SessionSchema,
-		STYLE_LABELS,
-		TinSchema,
-		WHISK_LABELS,
-		nowIso,
-		type Style,
-		type Whisk
-	} from '$lib/db/types';
+	import { buildBackup, restoreBackup, QuotaError } from '$lib/db/backup';
+	import { shareOrDownload } from '$lib/share/share-card';
+	import { STYLE_LABELS, WHISK_LABELS, type Style, type Whisk } from '$lib/db/types';
 
 	import Eyebrow from '$lib/components/Eyebrow.svelte';
 	import Display from '$lib/components/Display.svelte';
@@ -28,7 +18,6 @@
 	import Segmented from '$lib/components/Segmented.svelte';
 	import ChipGroup from '$lib/components/ChipGroup.svelte';
 	import Stepper from '$lib/components/Stepper.svelte';
-	import PrimaryButton from '$lib/components/PrimaryButton.svelte';
 
 	// Defaults state — populated on mount.
 	let style = $state<string>('usucha');
@@ -38,56 +27,27 @@
 	let lastSaved = $state<string | null>(null);
 
 	// Backup / restore state
+	let exporting = $state(false);
 	let importing = $state(false);
 	let importStatus = $state<{ text: string; ok: boolean } | null>(null);
 
-	// Sign-out state
-	let signingOut = $state(false);
-
-	async function handleSignOut() {
-		signingOut = true;
-		try {
-			await signOut();
-		} finally {
-			signingOut = false;
-		}
-	}
-
-	async function handleSyncNow() {
-		await fullSync();
-	}
-
-	const syncedAgoLabel = $derived(
-		syncState.lastSyncAt ? `Last synced ${formatTimeAgo(syncState.lastSyncAt)}` : null
-	);
-
 	async function exportData() {
-		const [tins, sessions] = await Promise.all([repository.listTins(), repository.listSessions()]);
-		const payload = {
-			app: 'chawan',
-			version: __APP_VERSION__,
-			exportedAt: nowIso(),
-			tinsCount: tins.length,
-			sessionsCount: sessions.length,
-			tins,
-			sessions
-		};
-		const blob = new Blob([JSON.stringify(payload, null, 2)], {
-			type: 'application/json'
-		});
-		const url = URL.createObjectURL(blob);
-		const a = document.createElement('a');
-		a.href = url;
-		// Local date for the filename (UTC slice would stamp "yesterday" for
-		// any export before 07:00 in UTC+7).
-		const now = new Date();
-		const pad = (n: number) => String(n).padStart(2, '0');
-		const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-		a.download = `chawan-backup-${stamp}.json`;
-		document.body.appendChild(a);
-		a.click();
-		document.body.removeChild(a);
-		URL.revokeObjectURL(url);
+		exporting = true;
+		importStatus = null;
+		try {
+			const payload = await buildBackup(__APP_VERSION__);
+			const now = new Date();
+			const pad = (n: number) => String(n).padStart(2, '0');
+			const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+			const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+			// shareOrDownload handles the iOS WKWebView (Filesystem + Share) as
+			// well as the web download — a raw <a download> no-ops on native.
+			await shareOrDownload(blob, `chawan-backup-${stamp}.json`);
+		} catch {
+			importStatus = { text: 'Could not create the backup file.', ok: false };
+		} finally {
+			exporting = false;
+		}
 	}
 
 	async function importData(e: Event) {
@@ -97,39 +57,27 @@
 		importStatus = null;
 		importing = true;
 		try {
-			const text = await file.text();
-			const data = JSON.parse(text);
-			if (data?.app !== 'chawan') {
-				importStatus = { text: 'Not a Chawan backup file.', ok: false };
-				return;
-			}
-			const tinList: unknown[] = Array.isArray(data.tins) ? data.tins : [];
-			const sessionList: unknown[] = Array.isArray(data.sessions) ? data.sessions : [];
-			let tinsOk = 0;
-			let sessionsOk = 0;
-			for (const t of tinList) {
-				const parsed = TinSchema.safeParse(t);
-				if (parsed.success) {
-					await repository.saveTin(parsed.data);
-					tinsOk++;
-				}
-			}
-			for (const s of sessionList) {
-				const parsed = SessionSchema.safeParse(s);
-				if (parsed.success) {
-					await repository.saveSession(parsed.data);
-					sessionsOk++;
-				}
-			}
-			importStatus = {
-				text: `Restored ${tinsOk}/${tinList.length} tins · ${sessionsOk}/${sessionList.length} sessions.`,
-				ok: true
-			};
-		} catch {
-			importStatus = {
-				text: 'Could not parse the file — is it a valid Chawan backup?',
-				ok: false
-			};
+			const data = JSON.parse(await file.text());
+			const r = await restoreBackup(data);
+			const skipped = r.tinsInvalid + r.sessionsInvalid;
+			const parts = [
+				`${r.tinsAdded} tin${r.tinsAdded === 1 ? '' : 's'}`,
+				`${r.sessionsAdded} session${r.sessionsAdded === 1 ? '' : 's'}`
+			];
+			if (r.photos) parts.push(`${r.photos} photo${r.photos === 1 ? '' : 's'}`);
+			let text = `Restored ${parts.join(' · ')}.`;
+			if (r.tinsKept + r.sessionsKept > 0)
+				text += ` Kept ${r.tinsKept + r.sessionsKept} newer local item(s).`;
+			if (skipped > 0) text += ` Skipped ${skipped} invalid.`;
+			importStatus = { text, ok: true };
+		} catch (err) {
+			const text =
+				err instanceof QuotaError
+					? err.message
+					: err instanceof Error && err.message === 'Not a Chawan backup file.'
+						? err.message
+						: 'Could not read the file — is it a valid Chawan backup?';
+			importStatus = { text, ok: false };
 		} finally {
 			importing = false;
 			target.value = ''; // allow re-picking the same file
@@ -247,68 +195,17 @@
 
 	<Hairline class="my-7" />
 
-	<!-- ─── Sync / account ─────────────────────────────────── -->
+	<!-- ─── Storage ────────────────────────────────────────── -->
 	<section>
-		<Eyebrow>Sync</Eyebrow>
-
-		{#if !auth.enabled}
-			<div class="mt-3 flex items-baseline gap-3">
-				<span class="h-2 w-2 rounded-full bg-data"></span>
-				<Mono size="m" tone="ink">On this device</Mono>
-			</div>
-			<p class="mt-3 max-w-[38ch] text-[14px] text-muted italic">
-				Your matcha log lives entirely on this device — nothing is collected or sent anywhere. Use
-				Backup below to save or move it.
-			</p>
-		{:else if !auth.ready}
-			<div class="mt-3 flex items-baseline gap-3">
-				<span class="h-2 w-2 rounded-full bg-muted"></span>
-				<Mono size="m" tone="muted">Checking…</Mono>
-			</div>
-		{:else if auth.user}
-			<div class="mt-3 flex items-baseline gap-3">
-				<span class="{syncState.syncing ? 'animate-pulse bg-warn' : 'bg-data'} h-2 w-2 rounded-full"
-				></span>
-				<Mono size="m" tone="ink">
-					{syncState.syncing ? 'Syncing…' : 'Signed in'}
-				</Mono>
-			</div>
-			<p class="mt-3 text-[14px] break-all text-muted italic">{auth.user.email}</p>
-			{#if syncState.lastError}
-				<div class="mt-3 rounded-[14px] border-[0.5px] border-danger px-4 py-3">
-					<Mono size="meta" tone="ink">{syncState.lastError}</Mono>
-				</div>
-			{:else if syncedAgoLabel}
-				<p class="mt-3 text-[14px] text-muted italic">{syncedAgoLabel}.</p>
-			{/if}
-			<div class="mt-4">
-				<PrimaryButton kind="line" onclick={handleSyncNow} disabled={syncState.syncing}>
-					{syncState.syncing ? 'Syncing…' : 'Sync now'}
-				</PrimaryButton>
-			</div>
-			<div class="mt-6 text-center">
-				<button
-					type="button"
-					onclick={handleSignOut}
-					disabled={signingOut}
-					class="font-mono text-[11px] tracking-[0.10em] text-danger uppercase hover:opacity-80 disabled:opacity-40"
-				>
-					{signingOut ? 'Signing out…' : 'Sign out'}
-				</button>
-			</div>
-		{:else}
-			<div class="mt-3 flex items-baseline gap-3">
-				<span class="h-2 w-2 rounded-full bg-data"></span>
-				<Mono size="m" tone="ink">Local only</Mono>
-			</div>
-			<p class="mt-3 text-[14px] text-muted italic">
-				Sign in to turn on cross-device sync. Your local data stays put — it'll migrate to your
-				account on first sign-in.
-			</p>
-			<div class="mt-4">
-				<PrimaryButton kind="line" href="/auth">Sign in</PrimaryButton>
-			</div>
-		{/if}
+		<Eyebrow>Storage</Eyebrow>
+		<div class="mt-3 flex items-baseline gap-3">
+			<span class="h-2 w-2 rounded-full bg-data"></span>
+			<Mono size="m" tone="ink">On this device</Mono>
+		</div>
+		<p class="mt-3 max-w-[38ch] text-[14px] text-muted italic">
+			Your matcha log lives entirely on this device — nothing is collected or sent anywhere. Back it
+			up below to keep a copy or move it to a new phone.
+		</p>
 	</section>
 
 	<Hairline class="my-7" />
@@ -317,19 +214,20 @@
 	<section>
 		<Eyebrow>Backup</Eyebrow>
 		<p class="mt-2 text-[14px] text-muted italic">
-			Download a JSON snapshot of every tin and session, or restore from a previous export. Items
-			with matching IDs are replaced; others are added.
+			Save a snapshot of every tin, session, and photo — or restore from one. Restoring keeps
+			whichever copy of a matching item was edited more recently.
 		</p>
 		<div class="mt-4 flex flex-col gap-3">
 			<button
 				type="button"
 				onclick={exportData}
-				class="w-full rounded-full border-[0.5px] border-rule py-3 font-mono text-[11px] tracking-[0.10em] text-ink uppercase transition-colors hover:bg-surface"
+				disabled={exporting}
+				class="press-sm w-full rounded-full border-[0.5px] border-rule py-3 font-mono text-[11px] tracking-[0.10em] text-ink uppercase hover:bg-surface disabled:opacity-50"
 			>
-				Download backup
+				{exporting ? 'Preparing…' : 'Download backup'}
 			</button>
 			<label
-				class="w-full cursor-pointer rounded-full border-[0.5px] border-rule py-3 text-center font-mono text-[11px] tracking-[0.10em] text-ink uppercase transition-colors hover:bg-surface {importing
+				class="press-sm w-full cursor-pointer rounded-full border-[0.5px] border-rule py-3 text-center font-mono text-[11px] tracking-[0.10em] text-ink uppercase hover:bg-surface {importing
 					? 'opacity-50'
 					: ''}"
 			>
@@ -345,6 +243,8 @@
 		</div>
 		{#if importStatus}
 			<div
+				role="status"
+				aria-live="polite"
 				class="mt-3 rounded-[14px] border-[0.5px] px-4 py-3 {importStatus.ok
 					? 'border-tea bg-tea-wash'
 					: 'border-danger'}"
