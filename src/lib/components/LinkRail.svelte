@@ -48,7 +48,7 @@
 					href={link.href}
 					class="press-sm flex h-11 flex-1 items-center justify-center rounded-full px-1
 						font-mono text-[10px] tracking-[0.08em] uppercase
-						{active ? 'glass-tinted glass-sm text-ink' : 'text-ink-70 hover:text-ink'}"
+						{active ? 'glass glass-sm glass-tinted text-ink' : 'text-ink-70 hover:text-ink'}"
 					aria-current={active ? 'page' : undefined}
 				>
 					{link.label}

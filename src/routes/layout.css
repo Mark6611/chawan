@@ -17,6 +17,12 @@
 	); /* deep earth-dark with a barely-perceptible green undertone */
 	--color-surface: oklch(0.205 0.008 145); /* raised content */
 	--color-card: oklch(0.235 0.008 145); /* cards / tiles */
+	/* Raw sRGB channels for the two colours the glass material composites at
+	   partial alpha. The material can't use color-mix() (WebKit 16.2, and the
+	   iOS deployment target is 15.0), and rgb(<channels> / <alpha>) needs the
+	   channels separately. Keep in step with --color-card / --color-tea. */
+	--color-card-rgb: 28 31 28;
+	--color-tea-rgb: 90 150 107;
 
 	/* — Ink (warm off-white scale) — */
 	--color-ink: oklch(0.94 0.01 95); /* primary */
@@ -65,6 +71,7 @@
 	--color-paper: oklch(0.905 0.022 78); /* warm pale-oak wood */
 	--color-surface: oklch(0.945 0.018 78); /* lighter wood */
 	--color-card: #ffffff; /* pure white for raised content */
+	--color-card-rgb: 255 255 255;
 
 	/* — Ink — */
 	--color-ink: oklch(0.18 0.01 70); /* near-black warm */
@@ -78,6 +85,7 @@
 
 	/* — Accent — */
 	--color-tea: oklch(0.45 0.1 152);
+	--color-tea-rgb: 31 101 56;
 	--color-tea-soft: oklch(0.55 0.08 152);
 	--color-tea-wash: oklch(0.45 0.1 152 / 0.08);
 	--color-on-tea: #ffffff;
@@ -248,7 +256,7 @@ html.theming *::after {
 		);
 		box-shadow:
 			inset 0 1px 0 rgba(255, 255, 255, 0.18),
-			0 6px 18px color-mix(in srgb, var(--color-tea) 32%, transparent),
+			0 6px 18px rgb(var(--color-tea-rgb) / 0.32),
 			0 1px 3px rgba(0, 0, 0, 0.12);
 	}
 
@@ -265,14 +273,16 @@ html.theming *::after {
 
 	   Rendered in Chawan's wood/earth + tea palette, not the kit's system
 	   grays — the structure is what's borrowed, never the hue.
+
+	   Built on rgb(<channels> / <alpha>) rather than color-mix(): the iOS
+	   deployment target is 15.0 and color-mix needs WebKit 16.2, where a single
+	   unsupported value invalidates the whole declaration — which would take out
+	   an entire box-shadow list, or the bar's only fill. Safari 12+ handles the
+	   channel form. (Same reasoning, same fix as the coffee sibling.)
 	   --------------------------------------------------------------------- */
 	.glass {
 		position: relative;
-		background-color: color-mix(
-			in srgb,
-			var(--color-card) calc(var(--glass-opacity) * 100%),
-			transparent
-		);
+		background-color: rgb(var(--color-card-rgb) / var(--glass-opacity));
 		backdrop-filter: blur(var(--glass-blur)) saturate(180%);
 		-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
 		box-shadow:
@@ -282,7 +292,7 @@ html.theming *::after {
 				rgba(255, 255, 255, calc(var(--glass-specular) * 0.4)),
 			/* refraction rim separating glass from what's behind */ inset 0 0 0 0.5px
 				rgba(255, 255, 255, calc(var(--glass-specular) * 0.5)),
-			0 0 0 0.5px color-mix(in srgb, var(--color-ink) 8%, transparent),
+			0 0 0 0.5px rgba(0, 0, 0, 0.08),
 			0 1px 2px rgba(0, 0, 0, 0.04),
 			0 6px 16px rgba(0, 0, 0, 0.06);
 	}
@@ -305,12 +315,15 @@ html.theming *::after {
 		--glass-blur: 8px;
 		--glass-specular: 0.45;
 	}
-	/* Accent-tinted glass: secondary emphasis without a second filled CTA. */
+	/* Accent-tinted glass: secondary emphasis without a second filled CTA. The
+	   tint rides as a flat gradient layer over .glass's card fill, since
+	   background-color is already carrying the material and only one can be set.
+	   This is also what keeps the selected tab's capsule visible on iOS 15 — it
+	   is the active state's only non-colour affordance. */
 	.glass-tinted {
-		background-color: color-mix(
-			in srgb,
-			var(--color-tea) calc(var(--glass-opacity) * 22%),
-			color-mix(in srgb, var(--color-card) calc(var(--glass-opacity) * 78%), transparent)
+		background-image: linear-gradient(
+			rgb(var(--color-tea-rgb) / 0.22),
+			rgb(var(--color-tea-rgb) / 0.22)
 		);
 	}
 }
