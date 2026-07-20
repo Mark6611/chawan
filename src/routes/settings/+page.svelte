@@ -18,6 +18,7 @@
 	import Segmented from '$lib/components/Segmented.svelte';
 	import ChipGroup from '$lib/components/ChipGroup.svelte';
 	import Stepper from '$lib/components/Stepper.svelte';
+	import Button from '$lib/components/Button.svelte';
 
 	// Defaults state — populated on mount.
 	let style = $state<string>('usucha');
@@ -30,6 +31,7 @@
 	let exporting = $state(false);
 	let importing = $state(false);
 	let importStatus = $state<{ text: string; ok: boolean } | null>(null);
+	let fileInput = $state<HTMLInputElement | null>(null);
 
 	async function exportData() {
 		exporting = true;
@@ -217,29 +219,31 @@
 			Save a snapshot of every tin, session, and photo — or restore from one. Restoring keeps
 			whichever copy of a matching item was edited more recently.
 		</p>
+		<!-- Both actions go through the shared Button, so the backup pair inherits
+		     the same size ladder and press physics as every other control. The
+		     restore side drives a hidden file input rather than wrapping one in a
+		     <label>: a label can't carry `disabled`, so mid-import it stayed
+		     clickable and only looked greyed out. -->
+		<input
+			bind:this={fileInput}
+			type="file"
+			accept="application/json,.json"
+			onchange={importData}
+			class="hidden"
+		/>
 		<div class="mt-4 flex flex-col gap-3">
-			<button
-				type="button"
-				onclick={exportData}
-				disabled={exporting}
-				class="press-sm w-full rounded-full border-[0.5px] border-rule py-3 font-mono text-[11px] tracking-[0.10em] text-ink uppercase hover:bg-surface disabled:opacity-50"
-			>
+			<Button size="large" variant="bordered" full onclick={exportData} disabled={exporting}>
 				{exporting ? 'Preparing…' : 'Download backup'}
-			</button>
-			<label
-				class="press-sm w-full cursor-pointer rounded-full border-[0.5px] border-rule py-3 text-center font-mono text-[11px] tracking-[0.10em] text-ink uppercase hover:bg-surface {importing
-					? 'opacity-50'
-					: ''}"
+			</Button>
+			<Button
+				size="large"
+				variant="bordered"
+				full
+				onclick={() => fileInput?.click()}
+				disabled={importing}
 			>
 				{importing ? 'Restoring…' : 'Restore from file'}
-				<input
-					type="file"
-					accept="application/json,.json"
-					onchange={importData}
-					disabled={importing}
-					class="hidden"
-				/>
-			</label>
+			</Button>
 		</div>
 		{#if importStatus}
 			<div
@@ -266,13 +270,10 @@
 		<div class="mt-3">
 			<Mono size="meta" tone="muted">v{__APP_VERSION__}</Mono>
 		</div>
-		<div class="mt-4">
-			<a
-				href="/privacy"
-				class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink"
-			>
-				Privacy Policy
-			</a>
+		<!-- -ms-3 pulls the button's own padding back so the label still lines up
+		     with the column edge; the hit box keeps the full 36pt. -->
+		<div class="-ms-3 mt-3">
+			<Button size="regular" variant="plain" href="/privacy">Privacy Policy</Button>
 		</div>
 	</section>
 </main>
