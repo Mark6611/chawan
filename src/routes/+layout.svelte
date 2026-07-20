@@ -38,11 +38,27 @@
 	import { onMount } from 'svelte';
 
 	onMount(() => {
+		// The splash backstop is armed FIRST, before anything that can throw.
+		// It used to be created inside the async block below, after two dynamic
+		// imports — so any earlier failure (see preferences.init() next) aborted
+		// onMount before the timer existed, and with launchAutoHide=false the
+		// app sat on the splash forever with no OS fallback.
+		const safety = setTimeout(() => {
+			void import('@capacitor/splash-screen').then((m) => m.SplashScreen.hide()).catch(() => {});
+		}, 3000);
+
 		// Re-read in case SSR gave us the day fallback before localStorage
 		// was available. Also applies the theme attribute (boot script in
 		// app.html already did this synchronously before paint, but this
 		// guarantees consistency after preferences.setTheme() calls).
-		preferences.init();
+		// Wrapped: the `typeof localStorage === 'undefined'` guard inside init()
+		// doesn't catch a THROWING accessor, which is what WKWebView does when
+		// storage access is blocked. Theme is cosmetic; booting is not.
+		try {
+			preferences.init();
+		} catch {
+			// Keep whatever the app.html boot script already applied.
+		}
 
 		// Ask the browser to make our IndexedDB persistent. Chawan is
 		// local-only — IndexedDB is the SOLE copy of every tin, session, and
@@ -52,19 +68,23 @@
 		void navigator.storage?.persist?.().catch(() => {});
 
 		// Native shell (Capacitor): the splash is launchAutoHide=false and
-		// released here after first paint — no white gap. Guarded so a plugin
-		// import/hide rejection can't strand the app on the splash forever;
-		// a timeout is the backstop if hide() never resolves.
+		// released here after first paint — no white gap. The `safety` timer
+		// armed at the top of onMount is the backstop for every failure mode
+		// here, including an import that never resolves.
 		void (async () => {
 			try {
 				const { Capacitor } = await import('@capacitor/core');
-				if (!Capacitor.isNativePlatform()) return;
+				if (!Capacitor.isNativePlatform()) {
+					clearTimeout(safety);
+					return;
+				}
 				const { SplashScreen } = await import('@capacitor/splash-screen');
-				const safety = setTimeout(() => void SplashScreen.hide().catch(() => {}), 3000);
 				await SplashScreen.hide();
 				clearTimeout(safety);
 			} catch {
-				// Splash plugin unavailable or hide() failed — nothing to release on web.
+				// Splash plugin unavailable or hide() failed — leave `safety`
+				// armed; hide() is idempotent, so a redundant call is harmless
+				// and a stranded splash is not.
 			}
 		})();
 	});

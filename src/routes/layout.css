@@ -283,8 +283,16 @@ html.theming *::after {
 	.glass {
 		position: relative;
 		background-color: rgb(var(--color-card-rgb) / var(--glass-opacity));
-		backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+		/* Order is load-bearing, do not "tidy" it. Lightning CSS treats the
+		   prefixed and unprefixed forms as one property and keeps only the LAST
+		   one written. With unprefixed first, the bundle shipped -webkit- alone
+		   — which Chrome and Firefox reject outright, so every glass surface
+		   lost its blur on the web build (verified in Chrome 148: the shipped
+		   declaration computed to "none"). Worst here, where page content
+		   scrolls under a 55%-opaque tab bar. Prefixed first keeps both, and
+		   also covers `vite dev`, where Lightning CSS doesn't run at all. */
 		-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+		backdrop-filter: blur(var(--glass-blur)) saturate(180%);
 		box-shadow:
 			/* specular top edge — the light source sits above */
 			inset 0 1px 0.5px rgba(255, 255, 255, var(--glass-specular)),

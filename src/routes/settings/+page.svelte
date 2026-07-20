@@ -71,7 +71,10 @@
 			if (r.tinsKept + r.sessionsKept > 0)
 				text += ` Kept ${r.tinsKept + r.sessionsKept} newer local item(s).`;
 			if (skipped > 0) text += ` Skipped ${skipped} invalid.`;
-			importStatus = { text, ok: true };
+			if (r.photosFailed > 0)
+				text += ` ${r.photosFailed} photo${r.photosFailed === 1 ? '' : 's'} could not be saved.`;
+			// A failed photo isn't a success, even if every tin landed.
+			importStatus = { text, ok: r.photosFailed === 0 };
 		} catch (err) {
 			const text =
 				err instanceof QuotaError

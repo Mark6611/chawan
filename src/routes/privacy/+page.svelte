@@ -83,7 +83,13 @@
 	.policy {
 		max-width: 46ch;
 		margin: 0 auto;
-		padding: 3rem 1.5rem 5rem;
+		/* Bottom clearance for the floating LinkRail: 52px bar + 8px lift +
+		   safe-area inset ≈ 94px on a home-indicator iPhone. The old 5rem (80px)
+		   cleared the previous full-bleed bar by 4px and no longer does — it was
+		   cutting the contact address in half, which is the line an App Review
+		   reviewer scrolls to. Every other page uses pb-28; this matches it and
+		   adds the inset, since chawan has no body-level safe-area padding. */
+		padding: 3rem 1.5rem calc(env(safe-area-inset-bottom, 0px) + 7rem);
 		font-family:
 			-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 		line-height: 1.6;

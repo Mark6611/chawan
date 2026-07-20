@@ -16,6 +16,7 @@
 
 import { repository } from './repository';
 import { SessionSchema, TinSchema, nowIso, type Session, type Tin } from './types';
+import { isQuota } from './quota';
 
 export interface BackupPhoto {
 	tinId: string;
@@ -42,6 +43,9 @@ export interface RestoreResult {
 	sessionsKept: number;
 	sessionsInvalid: number;
 	photos: number;
+	/** Photos that couldn't be written. Counted rather than swallowed: a photo
+	 *  is the one part of a tin that exists nowhere else once restored. */
+	photosFailed: number;
 }
 
 export class QuotaError extends Error {
@@ -63,13 +67,6 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 async function dataUrlToBlob(dataUrl: string): Promise<Blob> {
 	// fetch() decodes a data: URL without any manual base64 juggling.
 	return await (await fetch(dataUrl)).blob();
-}
-
-function isQuota(err: unknown): boolean {
-	return (
-		err instanceof DOMException &&
-		(err.name === 'QuotaExceededError' || err.name === 'NS_ERROR_DOM_QUOTA_REACHED')
-	);
 }
 
 /** Gather everything (tins, sessions, and every tin photo) into one payload. */
@@ -125,7 +122,8 @@ export async function restoreBackup(data: unknown): Promise<RestoreResult> {
 		sessionsAdded: 0,
 		sessionsKept: 0,
 		sessionsInvalid: 0,
-		photos: 0
+		photos: 0,
+		photosFailed: 0
 	};
 
 	for (const raw of tinList) {
@@ -176,7 +174,10 @@ export async function restoreBackup(data: unknown): Promise<RestoreResult> {
 			res.photos++;
 		} catch (err) {
 			if (isQuota(err)) throw new QuotaError();
-			// A single unreadable photo shouldn't abort the whole restore.
+			// A single unreadable photo shouldn't abort the whole restore — but
+			// it must still be reported. Silently dropping it told the user the
+			// restore succeeded while their photos were gone.
+			res.photosFailed++;
 		}
 	}
 
