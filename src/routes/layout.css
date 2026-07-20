@@ -251,4 +251,66 @@ html.theming *::after {
 			0 6px 18px color-mix(in srgb, var(--color-tea) 32%, transparent),
 			0 1px 3px rgba(0, 0, 0, 0.12);
 	}
+
+	/* ---------------------------------------------------------------------
+	   Liquid Glass — modelled on the Apple iOS 27 UI Kit's material styles,
+	   matching the system already shipped in the coffee sibling so the family
+	   reads as one hand.
+
+	   The kit defines the material at three scales rather than one recipe: a
+	   large surface stays mostly transparent with a pronounced specular rim,
+	   while a small one goes near-opaque because there isn't enough area to
+	   read a blur through. The --glass-* properties carry that scale; .glass
+	   consumes them, so a size class is only three numbers.
+
+	   Rendered in Chawan's wood/earth + tea palette, not the kit's system
+	   grays — the structure is what's borrowed, never the hue.
+	   --------------------------------------------------------------------- */
+	.glass {
+		position: relative;
+		background-color: color-mix(
+			in srgb,
+			var(--color-card) calc(var(--glass-opacity) * 100%),
+			transparent
+		);
+		backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+		-webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+		box-shadow:
+			/* specular top edge — the light source sits above */
+			inset 0 1px 0.5px rgba(255, 255, 255, var(--glass-specular)),
+			/* bounce light off the bottom inner wall */ inset 0 -1px 0.5px
+				rgba(255, 255, 255, calc(var(--glass-specular) * 0.4)),
+			/* refraction rim separating glass from what's behind */ inset 0 0 0 0.5px
+				rgba(255, 255, 255, calc(var(--glass-specular) * 0.5)),
+			0 0 0 0.5px color-mix(in srgb, var(--color-ink) 8%, transparent),
+			0 1px 2px rgba(0, 0, 0, 0.04),
+			0 6px 16px rgba(0, 0, 0, 0.06);
+	}
+
+	/* Large: sheets, hero CTAs, floating actions. */
+	.glass-lg {
+		--glass-opacity: 0.55;
+		--glass-blur: 20px;
+		--glass-specular: 0.75;
+	}
+	/* Medium: inline buttons, pills, section headers. */
+	.glass-md {
+		--glass-opacity: 0.7;
+		--glass-blur: 14px;
+		--glass-specular: 0.6;
+	}
+	/* Small: icon buttons and chips — nearly solid, faint rim. */
+	.glass-sm {
+		--glass-opacity: 0.85;
+		--glass-blur: 8px;
+		--glass-specular: 0.45;
+	}
+	/* Accent-tinted glass: secondary emphasis without a second filled CTA. */
+	.glass-tinted {
+		background-color: color-mix(
+			in srgb,
+			var(--color-tea) calc(var(--glass-opacity) * 22%),
+			color-mix(in srgb, var(--color-card) calc(var(--glass-opacity) * 78%), transparent)
+		);
+	}
 }

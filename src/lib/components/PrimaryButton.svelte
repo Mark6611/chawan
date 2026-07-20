@@ -1,13 +1,15 @@
 <script lang="ts">
-	// Full-width pill button. Three kinds:
-	//   tea   — filled accent; the primary CTA on a screen
-	//   line  — hairline outline; the secondary action
-	//   ghost — no border, ink text; the tertiary or "back" affordance
+	// Full-width CTA. Kept as a named wrapper because it reads well at the call
+	// sites (a form's submit is a "primary button", not a "large tea button"),
+	// but the styling now comes entirely from the iOS 27 button system in
+	// Button.svelte — one place owns shape, material, and press physics.
 	//
-	// Pass `href` to render a navigation anchor styled identically. Avoids
-	// the invalid `<a><button>` nesting when the CTA is really a link.
+	//   tea   → filled accent, the primary CTA on a screen
+	//   line  → hairline outline, the secondary action
+	//   ghost → no border, ink text, the tertiary / "back" affordance
 
 	import type { Snippet } from 'svelte';
+	import Button from './Button.svelte';
 
 	type Kind = 'tea' | 'line' | 'ghost';
 
@@ -29,24 +31,18 @@
 		children: Snippet;
 	} = $props();
 
-	// The filled CTA gets the liquid-glass sheen; outline/ghost stay flat.
-	const kindClass: Record<Kind, string> = {
-		tea: 'bg-tea text-on-tea glass-cta',
-		line: 'border-rule text-ink border bg-transparent',
-		ghost: 'text-ink bg-transparent'
-	};
-
-	const baseClass =
-		'press block w-full rounded-full px-5 py-4 text-center font-mono text-[11.5px] font-medium ' +
-		'tracking-[0.10em] uppercase disabled:pointer-events-none disabled:opacity-40';
+	const VARIANT = { tea: 'tea', line: 'bordered', ghost: 'plain' } as const;
 </script>
 
-{#if href && !disabled}
-	<a {href} aria-label={ariaLabel} class="{baseClass} {kindClass[kind]}">
-		{@render children()}
-	</a>
-{:else}
-	<button {type} {onclick} {disabled} aria-label={ariaLabel} class="{baseClass} {kindClass[kind]}">
-		{@render children()}
-	</button>
-{/if}
+<Button
+	size="large"
+	variant={VARIANT[kind]}
+	full
+	{type}
+	{href}
+	{onclick}
+	{disabled}
+	label={ariaLabel}
+>
+	{@render children()}
+</Button>

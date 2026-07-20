@@ -13,6 +13,7 @@
 	import Stepper from '$lib/components/Stepper.svelte';
 	import ChipGroup from '$lib/components/ChipGroup.svelte';
 	import PrimaryButton from '$lib/components/PrimaryButton.svelte';
+	import Button from '$lib/components/Button.svelte';
 	import ConsumptionRail from '$lib/components/ConsumptionRail.svelte';
 	// LinkRail is now mounted globally in +layout.svelte; no need to import here.
 
@@ -227,13 +228,62 @@
 
 	<Hairline class="my-7" />
 
-	<!-- PrimaryButton -->
+	<!-- PrimaryButton — thin wrapper over Button, kept for call-site readability -->
 	<section class="space-y-3">
 		<Eyebrow>PrimaryButton</Eyebrow>
 		<PrimaryButton>Begin a session</PrimaryButton>
 		<PrimaryButton kind="line">Save changes</PrimaryButton>
 		<PrimaryButton kind="ghost">Cancel</PrimaryButton>
 		<PrimaryButton disabled>Disabled</PrimaryButton>
+	</section>
+
+	<Hairline class="my-7" />
+
+	<!-- Button — the iOS 27 size x variant matrix. Glass variants need something
+	     behind them to read as a material, so the row sits on a photo-ish wash. -->
+	<section class="space-y-4">
+		<Eyebrow>Button · size × variant</Eyebrow>
+
+		<div class="space-y-2">
+			<Mono size="meta" tone="faint">SIZES (variant=tea)</Mono>
+			<div class="flex flex-wrap items-center gap-2">
+				<Button size="large">Large</Button>
+				<Button size="medium">Medium</Button>
+				<Button size="regular">Regular</Button>
+				<Button size="small">Small</Button>
+			</div>
+		</div>
+
+		<div class="space-y-2">
+			<Mono size="meta" tone="faint">VARIANTS (size=medium)</Mono>
+			<div class="flex flex-wrap items-center gap-2">
+				<Button size="medium" variant="tea">Tea</Button>
+				<Button size="medium" variant="bordered">Bordered</Button>
+				<Button size="medium" variant="plain">Plain</Button>
+				<Button size="medium" variant="destructive">Delete</Button>
+			</div>
+		</div>
+
+		<div class="space-y-2">
+			<Mono size="meta" tone="faint">GLASS — over a tinted wash so the blur reads</Mono>
+			<div
+				class="flex flex-wrap items-center gap-2 rounded-[14px] bg-gradient-to-br from-tea/30 via-tea-wash to-transparent p-4"
+			>
+				<Button size="medium" variant="glass">Glass</Button>
+				<Button size="medium" variant="glassTinted">Tinted</Button>
+				<Button size="small" variant="glass">Small</Button>
+				<Button size="regular" variant="glass" iconOnly label="Close">✕</Button>
+			</div>
+		</div>
+
+		<div class="space-y-2">
+			<Mono size="meta" tone="faint">STATES</Mono>
+			<div class="flex flex-wrap items-center gap-2">
+				<Button size="medium" disabled>Disabled</Button>
+				<Button size="medium" variant="bordered" href="/dev/kit">As link</Button>
+				<Button size="medium" variant="tea" full>Full width</Button>
+			</div>
+		</div>
 	</section>
 
 	<Hairline class="my-7" />
