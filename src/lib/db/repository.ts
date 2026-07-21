@@ -9,7 +9,7 @@
 import { db } from './dexie';
 import { isPersonal, nowIso } from './types';
 import type { Repository } from './repository.types';
-import type { PersonalSession, Session, Tin } from './types';
+import type { PersonalSession, Session, Tin, TinPhoto } from './types';
 import { pushSession, pushTin } from '../sync.svelte';
 
 const isLive = <T extends { deletedAt?: string }>(row: T) => !row.deletedAt;
@@ -119,6 +119,42 @@ class DexieRepository implements Repository {
 	async lastNSessions(n: number): Promise<Session[]> {
 		const all = await db.sessions.orderBy('brewedAt').reverse().toArray();
 		return all.filter(isLive).slice(0, n);
+	}
+
+	// ─── Backup access (tombstone- and timestamp-aware) ─────────
+	// These bypass the isLive filter every other read applies. Kept together and
+	// explicitly named so the exception is obvious: only db/backup.ts calls them,
+	// and only because a backup must carry deletions and merge by timestamp.
+
+	async listTinsWithDeleted(): Promise<Tin[]> {
+		return db.tins.orderBy('createdAt').reverse().toArray();
+	}
+
+	async listSessionsWithDeleted(): Promise<Session[]> {
+		return db.sessions.orderBy('brewedAt').reverse().toArray();
+	}
+
+	async getTinRaw(id: string): Promise<Tin | undefined> {
+		// Returns tombstones too — restore compares against a deleted row so an
+		// older backup can't overwrite (resurrect) it. getTin() hides them.
+		return db.tins.get(id);
+	}
+
+	async getSessionRaw(id: string): Promise<Session | undefined> {
+		return db.sessions.get(id);
+	}
+
+	async getTinPhotoRecord(tinId: string): Promise<TinPhoto | undefined> {
+		// The full record, including updatedAt — backup needs the timestamp to
+		// export it and to merge on restore. getTinPhoto() returns only the blob.
+		return db.tinPhotos.get(tinId);
+	}
+
+	async setTinPhotoAt(tinId: string, blob: Blob, updatedAt: string): Promise<void> {
+		// Preserves the backup's timestamp instead of stamping now() (as
+		// setTinPhoto does), so last-write-wins stays correct when this device
+		// is itself exported later.
+		await db.tinPhotos.put({ tinId, blob, updatedAt });
 	}
 }
 

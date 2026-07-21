@@ -57,19 +57,60 @@
 		const file = target.files?.[0];
 		if (!file) return;
 		importStatus = null;
+
+		let data: unknown;
+		try {
+			data = JSON.parse(await file.text());
+		} catch {
+			importStatus = { text: 'Could not read the file — is it valid JSON?', ok: false };
+			target.value = '';
+			return;
+		}
+
+		// Confirm before merging into the sole local copy. The header fields
+		// (present since v1) let the dialog name the backup so a mis-tapped or
+		// stale file is caught before it touches anything. A non-Chawan file
+		// skips the prompt and lets restoreBackup throw the proper error.
+		const header = data as {
+			app?: string;
+			exportedAt?: string;
+			tinsCount?: number;
+			sessionsCount?: number;
+		};
+		if (header?.app === 'chawan') {
+			const when =
+				typeof header.exportedAt === 'string'
+					? new Date(header.exportedAt).toLocaleDateString(undefined, {
+							year: 'numeric',
+							month: 'short',
+							day: 'numeric'
+						})
+					: 'an unknown date';
+			const t = Number(header.tinsCount) || 0;
+			const s = Number(header.sessionsCount) || 0;
+			const proceed = confirm(
+				`Restore from the backup taken ${when}?\n\n` +
+					`${t} tin${t === 1 ? '' : 's'} · ${s} session${s === 1 ? '' : 's'}. ` +
+					`Items merge by most-recent edit — newer copies already on this device are kept.`
+			);
+			if (!proceed) {
+				target.value = '';
+				return;
+			}
+		}
+
 		importing = true;
 		try {
-			const data = JSON.parse(await file.text());
 			const r = await restoreBackup(data);
 			const skipped = r.tinsInvalid + r.sessionsInvalid;
+			const kept = r.tinsKept + r.sessionsKept + r.photosKept;
 			const parts = [
 				`${r.tinsAdded} tin${r.tinsAdded === 1 ? '' : 's'}`,
 				`${r.sessionsAdded} session${r.sessionsAdded === 1 ? '' : 's'}`
 			];
 			if (r.photos) parts.push(`${r.photos} photo${r.photos === 1 ? '' : 's'}`);
 			let text = `Restored ${parts.join(' · ')}.`;
-			if (r.tinsKept + r.sessionsKept > 0)
-				text += ` Kept ${r.tinsKept + r.sessionsKept} newer local item(s).`;
+			if (kept > 0) text += ` Kept ${kept} newer local item(s).`;
 			if (skipped > 0) text += ` Skipped ${skipped} invalid.`;
 			if (r.photosFailed > 0)
 				text += ` ${r.photosFailed} photo${r.photosFailed === 1 ? '' : 's'} could not be saved.`;
