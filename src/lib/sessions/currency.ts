@@ -58,19 +58,61 @@ export function formatPrice(cents: number, code: string): string {
 	return `${info.symbol}${value.toFixed(info.decimals)}`;
 }
 
-/** Parse a user-typed string like "7.50" or "600" into integer cents.
- *  Currency-agnostic on purpose: "600" is always 60000 cents; the DISPLAY
- *  layer (formatPrice) handles JPY's zero-decimal rendering. The `_code`
- *  param is kept so call sites read naturally and the signature can grow
- *  currency-aware later without churn. */
+/** Parse a user-typed price string into integer cents.
+ *
+ *  Handles BOTH decimal conventions, because the price field is
+ *  `inputmode="decimal"` and iOS renders the DEVICE LOCALE's separator on that
+ *  keypad — a comma-decimal locale (much of Europe / Latin America) offers a
+ *  comma, not a dot. The old code blindly stripped commas as thousands
+ *  separators, which turned "4,50" (€4.50) into 45000 cents (€450) — a
+ *  plausible-looking 100× overcharge that never errors.
+ *
+ *  Working on the digits + `.` + `,` left after symbols/spaces are stripped:
+ *   - Both separators present → the LAST one is the decimal point and the other
+ *     is grouping, so "12,345.67" and "1.200,50" both come out right.
+ *   - A dot is the decimal point unless it repeats (then it's grouping:
+ *     "1.234.567"). This is the app's own format (formatPrice emits a dot), and
+ *     it's why "7.501" must stay a decimal, not read as a thousands group.
+ *   - A lone comma is grouping when it has exactly 3 trailing digits ("1,200")
+ *     or repeats ("1,2,3"); otherwise it's the decimal point ("4,50", "1,2").
+ *
+ *  Currency-agnostic on cents: "600" is 60000 cents for every currency; the
+ *  DISPLAY layer (formatPrice) handles JPY's zero-decimal rendering. `_code`
+ *  stays unused but keeps call sites readable and leaves room for per-currency
+ *  parsing later.
+ */
 export function parsePrice(text: string, _code: string): number {
-	// Strip thousands separators before parsing: parseFloat("1,200") stops at
-	// the comma and yields 1, silently saving ฿1 for a ฿1,200 tea. Our display
-	// layer never emits grouping separators and inputs are dot-decimal, so a
-	// comma here is always a thousands separator — safe to remove.
-	const trimmed = text.trim().replace(/,/g, '');
-	if (!trimmed) return 0;
-	const n = Number.parseFloat(trimmed);
+	// Drop currency symbols, spaces and stray letters; keep digits, separators
+	// and a sign. "฿1,200" → "1,200", "$4.50" → "4.50".
+	const s = text.replace(/[^\d.,-]/g, '');
+	if (!s) return 0;
+
+	const lastDot = s.lastIndexOf('.');
+	const lastComma = s.lastIndexOf(',');
+
+	let decimalSep: '.' | ',' | null;
+	if (lastDot !== -1 && lastComma !== -1) {
+		decimalSep = lastComma > lastDot ? ',' : '.';
+	} else if (lastComma !== -1) {
+		const trailing = s.length - lastComma - 1;
+		const repeats = s.indexOf(',') !== lastComma;
+		decimalSep = repeats || trailing === 3 ? null : ',';
+	} else if (lastDot !== -1) {
+		const repeats = s.indexOf('.') !== lastDot;
+		decimalSep = repeats ? null : '.';
+	} else {
+		decimalSep = null;
+	}
+
+	let normalized: string;
+	if (decimalSep === null) {
+		normalized = s.replace(/[.,]/g, ''); // every separator is grouping
+	} else {
+		const grouping = decimalSep === ',' ? '.' : ',';
+		normalized = s.split(grouping).join('').replace(decimalSep, '.');
+	}
+
+	const n = Number.parseFloat(normalized);
 	if (Number.isNaN(n) || n < 0) return 0;
 	return Math.round(n * 100);
 }

@@ -117,8 +117,41 @@ describe('parsePrice', () => {
 		expect(parsePrice('7.509', 'USD')).toBe(751);
 	});
 
-	it('strips thousands separators ("1,200" is ฿1,200, not ฿1)', () => {
+	it('treats a comma before 3 digits as a thousands separator ("1,200" = ฿1,200)', () => {
 		expect(parsePrice('1,200', 'THB')).toBe(120000);
 		expect(parsePrice('12,345.67', 'USD')).toBe(1234567);
+		expect(parsePrice('1,234,567', 'THB')).toBe(123456700);
+	});
+
+	// Regression: on a comma-decimal keypad (much of Europe) the old code read
+	// "4,50" as 45000 cents — a silent 100× overcharge. A comma before 1–2
+	// trailing digits is the decimal point.
+	it('treats a comma before 1–2 digits as a decimal point ("4,50" = €4.50)', () => {
+		expect(parsePrice('4,50', 'EUR')).toBe(450);
+		expect(parsePrice('1,2', 'EUR')).toBe(120);
+		expect(parsePrice('0,99', 'EUR')).toBe(99);
+	});
+
+	it('uses the LAST separator as the decimal point when both appear', () => {
+		expect(parsePrice('1.200,50', 'EUR')).toBe(120050); // dot grouping, comma decimal
+		expect(parsePrice('1,200.50', 'USD')).toBe(120050); // comma grouping, dot decimal
+	});
+
+	it('keeps a dot as the decimal point even before 3 digits ("7.501" rounds)', () => {
+		expect(parsePrice('7.501', 'USD')).toBe(750);
+		expect(parsePrice('1.234.567', 'EUR')).toBe(123456700); // repeated dot = grouping
+	});
+
+	it('strips currency symbols and stray characters before parsing', () => {
+		expect(parsePrice('฿1,200', 'THB')).toBe(120000);
+		expect(parsePrice('$4.50', 'USD')).toBe(450);
+		expect(parsePrice('€4,50', 'EUR')).toBe(450);
+		expect(parsePrice('A$12', 'AUD')).toBe(1200);
+	});
+
+	it('handles a leading/bare decimal separator', () => {
+		expect(parsePrice(',50', 'EUR')).toBe(50);
+		expect(parsePrice('.5', 'USD')).toBe(50);
+		expect(parsePrice('12,', 'THB')).toBe(1200);
 	});
 });
