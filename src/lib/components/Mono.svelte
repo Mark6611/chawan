@@ -37,7 +37,7 @@
 		ink: 'text-ink',
 		data: 'text-data',
 		muted: 'text-muted',
-		faint: 'text-faint',
+		faint: 'text-muted',
 		tea: 'text-tea'
 	};
 </script>

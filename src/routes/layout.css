@@ -28,7 +28,15 @@
 	--color-ink: oklch(0.94 0.01 95); /* primary */
 	--color-ink-70: oklch(0.74 0.01 95); /* secondary */
 	--color-muted: oklch(0.62 0.01 95); /* labels, eyebrows — WCAG AA on night paper (5.2:1) */
-	--color-faint: oklch(0.38 0.01 95); /* very low emphasis */
+	/* NON-TEXT ONLY. Measured (canvas-rasterized, because getComputedStyle
+	   returns oklch() verbatim and parsing its numbers fabricates passing
+	   ratios) at 1.89/1.78/1.66:1 on night paper/surface/card and 1.74/1.97/2.31
+	   in day — under HALF the 4.5:1 AA floor. It had no decorative uses at all:
+	   all 54 call sites were text, including the error-page message and 14
+	   placeholders, so they moved to --color-muted. A "faint" TEXT tier cannot
+	   exist at AA — reaching 4.5:1 lands it on top of muted in both themes.
+	   Kept for future decorative (non-text) use only. */
+	--color-faint: oklch(0.38 0.01 95);
 
 	/* — Structure — */
 	--color-hairline: rgba(225, 230, 220, 0.09); /* 0.5px lines as the structural element */
@@ -48,7 +56,10 @@
 
 	/* — Semantic — */
 	--color-warn: oklch(0.7 0.1 60);
-	--color-danger: oklch(0.6 0.15 25);
+	/* L raised 0.6 -> 0.66: at 0.6 this measured 3.91:1 on the night card — under
+	   AA, and it carries the Delete action at 11px. 0.66 measures 4.99:1 on the
+	   worst of paper/surface/card. */
+	--color-danger: oklch(0.66 0.15 25);
 
 	/* — Type — */
 	--font-display: 'Cormorant Garamond', 'EB Garamond', Georgia, serif;
@@ -76,7 +87,10 @@
 	/* — Ink — */
 	--color-ink: oklch(0.18 0.01 70); /* near-black warm */
 	--color-ink-70: oklch(0.42 0.012 75);
-	--color-muted: oklch(0.5 0.01 75); /* WCAG AA on day paper/surface (4.5:1) */
+	/* L 0.5 -> 0.49: the old value measured 4.49:1 on day paper, a hair under the
+	   4.5:1 it claimed. Now 4.70:1 on the worst surface. It also absorbs every
+	   former --color-faint text use, so it is now the app's low-emphasis tier. */
+	--color-muted: oklch(0.49 0.01 75);
 	--color-faint: oklch(0.74 0.008 75);
 
 	/* — Structure — */
@@ -158,6 +172,37 @@
 
 	.field-wrapper textarea {
 		resize: none;
+	}
+
+	/* Put a focus cue BACK on wrapped fields. The rule above strips the UA ring so
+	   the field looks seamless inside its wrapper, but nothing replaced it, so
+	   keyboard focus was invisible across the entire app.
+	   This must be its own rule with the .field-wrapper prefix, not left to the
+	   global :focus-visible below: `.field-wrapper input` is specificity (0,1,1)
+	   and a bare `:focus-visible` is (0,1,0), so the `outline: none` above would
+	   keep winning and the global rule would do nothing here. */
+	.field-wrapper input:focus-visible,
+	.field-wrapper textarea:focus-visible,
+	.field-wrapper select:focus-visible {
+		outline: 3px solid rgb(var(--color-tea-rgb) / 0.6);
+		outline-offset: 2px;
+	}
+
+	/* Global fallback for everything that is NOT a wrapped field: buttons, links,
+	   chips, tabs, the tab bar.
+	   Written as its own rule for readability, but note Lightning CSS MERGES it
+	   with the .field-wrapper rule above at build time (identical declarations),
+	   emitting one combined selector list. That is safe here only because every
+	   selector in the merged list is itself :focus-visible-based — on iOS 15.0-
+	   15.3, where :focus-visible is unsupported, the whole rule drops and those
+	   versions get no ring, which is exactly where they already were. Never add
+	   a NON-:focus-visible selector with these same declarations, or the merge
+	   would take it down too.
+	   rgb(var(--x-rgb) / a) rather than color-mix(): this app targets iOS 15.0
+	   and an unsupported value drops the whole declaration. */
+	:focus-visible {
+		outline: 3px solid rgb(var(--color-tea-rgb) / 0.6);
+		outline-offset: 2px;
 	}
 
 	/* Hide number-input spinners — we render mono visuals instead. */

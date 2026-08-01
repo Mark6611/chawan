@@ -44,7 +44,7 @@
 			<Chawan size={14} filled />
 		{/if}
 		{#if !picker}
-			<span class="shrink-0 font-mono text-[14px] text-faint" aria-hidden="true">›</span>
+			<span class="shrink-0 font-mono text-[14px] text-muted" aria-hidden="true">›</span>
 		{/if}
 	</div>
 {/snippet}

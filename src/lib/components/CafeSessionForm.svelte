@@ -211,7 +211,7 @@
 				class="font-mono text-[10.5px] font-medium tracking-[0.14em] text-tea uppercase hover:text-ink"
 				aria-label="Edit brew time"
 			>
-				{timeLabel} <span class="ml-1 text-faint">↗</span>
+				{timeLabel} <span class="ml-1 text-muted">↗</span>
 			</button>
 		{:else}
 			<div class="field-wrapper flex items-center gap-3">
@@ -246,7 +246,7 @@
 				bind:value={cafeName}
 				placeholder="Stonemill"
 				autocomplete="off"
-				class="w-full font-display text-[22px] text-ink italic placeholder:text-faint"
+				class="w-full font-display text-[22px] text-ink italic placeholder:text-muted"
 			/>
 			<datalist id="cafe-names">
 				{#each uniqueCafeNames as name (name)}
@@ -265,7 +265,7 @@
 				bind:value={maker}
 				placeholder="Marukyu Kōyamaen"
 				autocomplete="off"
-				class="w-full font-body text-[15px] text-ink placeholder:text-faint"
+				class="w-full font-body text-[15px] text-ink placeholder:text-muted"
 			/>
 			<datalist id="maker-names">
 				{#each uniqueMakers as name (name)}
@@ -309,14 +309,14 @@
 				</select>
 			{/snippet}
 			<div class="flex items-baseline gap-2">
-				<span class="font-mono text-[32px] leading-none text-faint">{currency.symbol}</span>
+				<span class="font-mono text-[32px] leading-none text-muted">{currency.symbol}</span>
 				<input
 					type="text"
 					inputmode="decimal"
 					bind:value={priceText}
 					placeholder={currency.decimals === 0 ? '0' : '0.00'}
 					autocomplete="off"
-					class="w-full font-mono text-[32px] leading-none text-ink tabular-nums placeholder:text-faint"
+					class="w-full font-mono text-[32px] leading-none text-ink tabular-nums placeholder:text-muted"
 				/>
 			</div>
 		</Field>
@@ -332,7 +332,7 @@
 				bind:value={notes}
 				rows="3"
 				placeholder="How was it?"
-				class="w-full font-body text-[15px] text-ink italic placeholder:text-faint"
+				class="w-full font-body text-[15px] text-ink italic placeholder:text-muted"
 			></textarea>
 		</Field>
 

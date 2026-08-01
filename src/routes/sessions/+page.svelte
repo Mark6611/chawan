@@ -143,7 +143,7 @@
 						? 'text-tea'
 						: 'text-muted hover:text-ink'}"
 				>
-					{f.label} <span class="text-faint">· {counts[f.value]}</span>
+					{f.label} <span class="text-muted">· {counts[f.value]}</span>
 				</button>
 			{/each}
 		</nav>

@@ -146,7 +146,7 @@
 				onfocus={() => (isOpen = true)}
 				onkeydown={onInputKeydown}
 				placeholder={activeTins.length === 0 ? 'No tins yet — add one' : 'Search or add a tin…'}
-				class="w-full bg-transparent font-body text-[15px] text-ink outline-none placeholder:text-faint"
+				class="w-full bg-transparent font-body text-[15px] text-ink outline-none placeholder:text-muted"
 			/>
 			{#if hasQuery}
 				<span class="shrink-0 font-mono text-[10px] tracking-[0.14em] text-muted uppercase">

@@ -321,7 +321,7 @@
 				class="font-mono text-[10.5px] font-medium tracking-[0.14em] text-tea uppercase hover:text-ink"
 				aria-label="Edit brew time"
 			>
-				{timeLabel} <span class="ml-1 text-faint">↗</span>
+				{timeLabel} <span class="ml-1 text-muted">↗</span>
 			</button>
 		{:else}
 			<div class="field-wrapper flex items-center gap-3">
@@ -451,7 +451,7 @@
 				bind:value={notes}
 				rows="3"
 				placeholder="How was it?"
-				class="w-full font-body text-[15px] text-ink italic placeholder:text-faint"
+				class="w-full font-body text-[15px] text-ink italic placeholder:text-muted"
 			></textarea>
 		</Field>
 

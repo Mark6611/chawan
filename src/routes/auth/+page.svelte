@@ -153,7 +153,7 @@
 					required
 					autocomplete="email"
 					placeholder="you@example.com"
-					class="w-full font-body text-[16px] text-ink placeholder:text-faint"
+					class="w-full font-body text-[16px] text-ink placeholder:text-muted"
 				/>
 			</Field>
 
@@ -166,7 +166,7 @@
 							required
 							autocomplete="current-password"
 							placeholder="••••••••"
-							class="w-full font-body text-[16px] text-ink placeholder:text-faint"
+							class="w-full font-body text-[16px] text-ink placeholder:text-muted"
 						/>
 					</Field>
 				</div>
@@ -229,7 +229,7 @@
 					pattern="[0-9]*"
 					maxlength="10"
 					placeholder="00000000"
-					class="w-full text-center font-mono text-[24px] tracking-[0.25em] text-ink tabular-nums placeholder:text-faint"
+					class="w-full text-center font-mono text-[24px] tracking-[0.25em] text-ink tabular-nums placeholder:text-muted"
 				/>
 			</Field>
 

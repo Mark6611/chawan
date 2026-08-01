@@ -265,7 +265,7 @@
 			type="text"
 			bind:value={name}
 			placeholder="Eiju"
-			class="w-full font-display text-[22px] text-ink italic placeholder:text-faint"
+			class="w-full font-display text-[22px] text-ink italic placeholder:text-muted"
 		/>
 	</Field>
 
@@ -274,7 +274,7 @@
 			type="text"
 			bind:value={maker}
 			placeholder="Marukyu Kōyamaen"
-			class="w-full font-body text-[16px] text-ink placeholder:text-faint"
+			class="w-full font-body text-[16px] text-ink placeholder:text-muted"
 		/>
 	</Field>
 
@@ -298,7 +298,7 @@
 			type="text"
 			bind:value={cultivar}
 			placeholder="Yabukita, Asahi, …"
-			class="w-full font-body text-[15px] text-ink placeholder:text-faint"
+			class="w-full font-body text-[15px] text-ink placeholder:text-muted"
 		/>
 		<div class="mt-2 flex flex-wrap gap-2">
 			{#each SUGGESTED_CULTIVARS as c (c)}
@@ -333,14 +333,14 @@
 			</select>
 		{/snippet}
 		<div class="flex items-baseline gap-2">
-			<span class="font-mono text-[32px] leading-none text-faint">{currency.symbol}</span>
+			<span class="font-mono text-[32px] leading-none text-muted">{currency.symbol}</span>
 			<input
 				type="text"
 				inputmode="decimal"
 				bind:value={priceText}
 				placeholder={currency.decimals === 0 ? '0' : '0.00'}
 				autocomplete="off"
-				class="w-full font-mono text-[32px] leading-none text-ink tabular-nums placeholder:text-faint"
+				class="w-full font-mono text-[32px] leading-none text-ink tabular-nums placeholder:text-muted"
 			/>
 		</div>
 	</Field>
@@ -376,7 +376,7 @@
 			bind:value={notes}
 			rows="3"
 			placeholder="Source, first impressions, provenance…"
-			class="w-full font-body text-[15px] text-ink italic placeholder:text-faint"
+			class="w-full font-body text-[15px] text-ink italic placeholder:text-muted"
 		></textarea>
 	</Field>
 
