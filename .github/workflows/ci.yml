@@ -1,0 +1,30 @@
+# CI for chawan — mirrors the coffee sibling's workflow (CODE/.github/workflows/ci.yml)
+# plus a production build and the iOS-15 browser-floor CSS gate
+# (scripts/verify-bundle-css.mjs: backdrop-filter -webkit- pairing, color-mix
+# @supports guards, no media-query range syntax).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Typecheck (svelte-check)
+        run: npm run check
+      - name: Unit tests
+        run: npm test
+      - name: Build
+        run: npm run build
+      - name: CSS browser-floor gate
+        run: node scripts/verify-bundle-css.mjs

@@ -3,7 +3,8 @@ import { fileURLToPath } from 'node:url';
 import tailwindcss from '@tailwindcss/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { SvelteKitPWA } from '@vite-pwa/sveltekit';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
+import { transform as transformCss } from 'lightningcss';
 
 // Single source of truth for the app version: package.json. Bumping it there
 // updates the Settings "About" line (and anywhere else __APP_VERSION__ is used),
@@ -12,12 +13,46 @@ const pkg = JSON.parse(
 	readFileSync(fileURLToPath(new URL('./package.json', import.meta.url)), 'utf-8')
 );
 
+// iOS 15 browser floor (same as the coffee sibling): Tailwind v4 emits
+// media-query RANGE syntax (`@media (width >= 40rem)`), which Safari only
+// understands from 16.4 — on older WebKit the whole media block is dropped
+// silently. Vite's own `build.cssMinify: 'lightningcss'` does NOT reach
+// Tailwind's output (verified: identical asset hash — @tailwindcss/vite runs
+// its own internal optimize pass with its own targets), so we lower the floor
+// ourselves in a post `generateBundle` pass over every emitted CSS asset.
+// Lightning CSS rewrites range syntax to min-/max-width, adds needed -webkit-
+// prefixes, and resolves guarded color-mix() to static lab() (Safari 15+).
+// Guarded end-to-end by scripts/verify-bundle-css.mjs in CI.
+// Lightning CSS version encoding: major << 16 | minor << 8.
+const IOS_FLOOR = 15 << 16;
+
+function lowerCssToIos15Floor(): Plugin {
+	return {
+		name: 'lower-css-to-ios15-floor',
+		apply: 'build',
+		enforce: 'post',
+		generateBundle(_options, bundle) {
+			for (const [fileName, entry] of Object.entries(bundle)) {
+				if (entry.type !== 'asset' || !fileName.endsWith('.css')) continue;
+				const result = transformCss({
+					filename: fileName,
+					code: Buffer.from(entry.source),
+					minify: true,
+					targets: { safari: IOS_FLOOR, ios_saf: IOS_FLOOR }
+				});
+				entry.source = result.code.toString();
+			}
+		}
+	};
+}
+
 export default defineConfig({
 	define: {
 		__APP_VERSION__: JSON.stringify(pkg.version)
 	},
 	plugins: [
 		tailwindcss(),
+		lowerCssToIos15Floor(),
 		sveltekit(),
 		SvelteKitPWA({
 			// 'prompt' — a freshly deployed service worker WAITS instead of
