@@ -65,7 +65,13 @@ echo "══ Version bump"
 CUR=$(grep -m1 'CURRENT_PROJECT_VERSION = ' "$PBXPROJ" | sed 's/[^0-9]//g')
 BUILD_NUM=${BUILD_NUM:-$((CUR + 1))}
 sed -i '' "s/CURRENT_PROJECT_VERSION = [0-9]*;/CURRENT_PROJECT_VERSION = ${BUILD_NUM};/g" "$PBXPROJ"
-echo "   building 1.0 (${BUILD_NUM})"
+# Read the marketing version rather than hardcoding it. This line said "1.0" for
+# every ship, so from the 1.1 release onward the log disagreed with the binary it
+# had just uploaded — the same bug buffy carried until fd94d54. A ship log that
+# misreports the version is worse than no log: it is the artefact you check when
+# deciding whether a build reached the right train.
+MARKETING=$(grep -m1 -E 'MARKETING_VERSION = ' "$PBXPROJ" | sed 's/.*= *//;s/;.*//')
+echo "   building ${MARKETING} (${BUILD_NUM})"
 
 echo "══ Web bundle + native sync"
 npm run native:build > /tmp/chawan-iossync.log 2>&1 || { tail -30 /tmp/chawan-iossync.log; exit 1; }
