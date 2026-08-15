@@ -379,4 +379,47 @@ html.theming *::after {
 			rgb(var(--color-tea-rgb) / 0.22)
 		);
 	}
+
+	/* Over-media glass (the kit's dark vibrancy). Controls that float ON a user
+	   photo cannot use the card-tinted material above: the backdrop is an
+	   arbitrary image, so a light body plus a light glyph loses all contrast the
+	   moment the photo is bright. iOS darkens the material and keeps the glyph
+	   light instead, which is what this does.
+
+	   Theme-INDEPENDENT on purpose — it sits on the photo, not on the page, so it
+	   must not flip with day/night the way .glass does.
+
+	   rgb(0 0 0 / …) rather than color-mix(): this app targets iOS 15.0, where an
+	   unsupported value drops the whole declaration — and here that would fall
+	   through to .glass's light card fill while the glyph stays light, i.e. the
+	   exact unreadable case this class exists to prevent.
+
+	   It carries its own two fallbacks because chawan has no global
+	   reduced-transparency block yet. Both must stay DARKER, never lighter: the
+	   glyph on top is always light. */
+	.glass-scrim {
+		--glass-opacity: 0.55;
+		--glass-blur: 12px;
+		--glass-specular: 0.3;
+		background-color: rgb(0 0 0 / var(--glass-opacity));
+		/* A LITERAL warm off-white, not a token. Every ink/paper token in this app
+		   flips with the theme, and this surface does not: --color-ink would be
+		   near-black in day and paint a black glyph on a black scrim. A plain hex
+		   also survives iOS 15.0, where an oklch() literal would be dropped and the
+		   glyph would inherit whatever colour the page happened to set. */
+		color: #f2efe6;
+	}
+	@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+		.glass-scrim {
+			background-color: rgba(0, 0, 0, 0.72);
+		}
+	}
+	@media (prefers-reduced-transparency: reduce) {
+		.glass-scrim {
+			background-color: rgba(0, 0, 0, 0.82);
+			-webkit-backdrop-filter: none;
+			backdrop-filter: none;
+			box-shadow: none;
+		}
+	}
 }

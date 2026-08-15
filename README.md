@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/Mark6611/chawan/actions/workflows/ci.yml/badge.svg)](https://github.com/Mark6611/chawan/actions/workflows/ci.yml)
 ![SvelteKit](https://img.shields.io/badge/SvelteKit-Svelte%205-ff3e00)
-![Data](https://img.shields.io/badge/data-local--only%20(IndexedDB)-4a7c59)
+![Data](<https://img.shields.io/badge/data-local--only%20(IndexedDB)-4a7c59>)
 ![iOS](https://img.shields.io/badge/iOS-Capacitor-111111)
 
 - **Local-only:** all data lives on-device in IndexedDB (Dexie). No accounts, no backend, no data collection. The app works fully offline; JSON export/import is the backup path.
@@ -64,14 +64,14 @@ src/
 
 Supporting directories:
 
-| Path                     | What it is                                                |
-| ------------------------ | --------------------------------------------------------- |
-| `ios/`                   | Capacitor-generated Xcode project (the iOS app)           |
-| `supabase/`              | SQL migrations for the dormant sync backend               |
-| `scripts/`               | `ship.sh` (gated TestFlight pipeline), CSS gate, icons    |
-| `docs/`                  | Design briefs and product/design handoff docs             |
-| [ROADMAP.md](ROADMAP.md) | What's planned next                                       |
-| [CLAUDE.md](CLAUDE.md)   | Project conventions for AI-assisted work                  |
+| Path                     | What it is                                             |
+| ------------------------ | ------------------------------------------------------ |
+| `ios/`                   | Capacitor-generated Xcode project (the iOS app)        |
+| `supabase/`              | SQL migrations for the dormant sync backend            |
+| `scripts/`               | `ship.sh` (gated TestFlight pipeline), CSS gate, icons |
+| `docs/`                  | Design briefs and product/design handoff docs          |
+| [ROADMAP.md](ROADMAP.md) | What's planned next                                    |
+| [CLAUDE.md](CLAUDE.md)   | Project conventions for AI-assisted work               |
 
 ## Engineering practice
 

@@ -41,6 +41,7 @@
 	import Stepper from './Stepper.svelte';
 	import ChipGroup from './ChipGroup.svelte';
 	import PrimaryButton from './PrimaryButton.svelte';
+	import Button from './Button.svelte';
 
 	let {
 		tin
@@ -380,20 +381,11 @@
 		></textarea>
 	</Field>
 
-	<!-- Photo — stays on this device (not synced, not in the JSON backup). -->
+	<!-- Photo — stays on this device (it IS carried in the JSON backup, which is
+	     its only escape hatch; see db/backup.ts). -->
 	<Field label="Photo" hairline={false}>
 		{#snippet action()}
-			{#if photoPreview}
-				<button
-					type="button"
-					onclick={removePhoto}
-					class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink"
-				>
-					remove
-				</button>
-			{:else}
-				<Mono size="meta" tone="faint">optional · stays on this device</Mono>
-			{/if}
+			<Mono size="meta" tone="muted">optional · stays on this device</Mono>
 		{/snippet}
 
 		<input
@@ -405,18 +397,65 @@
 		/>
 
 		{#if photoPreview}
-			<button
-				type="button"
-				onclick={() => fileInput?.click()}
-				class="block w-full"
-				aria-label="Replace photo"
-			>
+			<!-- Replace/remove sit ON the photo as over-media glass, matching the
+			     coffee sibling. The whole image is no longer one big button: a
+			     screen-reader user got a single "Replace photo" control with no way
+			     to remove, and the remove action was a 11px text link in the field
+			     header, far from the thing it acts on. -->
+			<div class="relative overflow-hidden rounded-[14px] border-[0.5px] border-hairline">
 				<img
 					src={photoPreview}
 					alt="{name || 'Tin'} photo"
-					class="aspect-[4/3] w-full rounded-[14px] border-[0.5px] border-hairline object-cover"
+					class="aspect-[4/3] w-full object-cover"
 				/>
-			</button>
+				<div class="absolute top-2 right-2 flex gap-1.5">
+					<Button
+						variant="glassScrim"
+						size="medium"
+						iconOnly
+						onclick={() => fileInput?.click()}
+						disabled={photoBusy}
+						label="Replace photo"
+						title="Replace"
+					>
+						<svg
+							width="16"
+							height="16"
+							viewBox="0 0 16 16"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.5"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						>
+							<path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9" />
+							<path d="M13.5 2.5V5H11" />
+						</svg>
+					</Button>
+					<Button
+						variant="glassScrim"
+						size="medium"
+						iconOnly
+						onclick={removePhoto}
+						label="Remove photo"
+						title="Remove"
+						class="hover:!bg-danger"
+					>
+						<svg
+							width="16"
+							height="16"
+							viewBox="0 0 16 16"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.6"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						>
+							<path d="M4 4l8 8M12 4l-8 8" />
+						</svg>
+					</Button>
+				</div>
+			</div>
 		{:else}
 			<button
 				type="button"

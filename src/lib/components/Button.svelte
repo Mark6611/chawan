@@ -15,7 +15,14 @@
 	// looks like a button doesn't need the class list duplicated.
 
 	type Size = 'large' | 'medium' | 'regular' | 'small';
-	type Variant = 'tea' | 'glass' | 'glassTinted' | 'bordered' | 'plain' | 'destructive';
+	type Variant =
+		| 'tea'
+		| 'glass'
+		| 'glassTinted'
+		| 'glassScrim'
+		| 'bordered'
+		| 'plain'
+		| 'destructive';
 
 	let {
 		size = 'regular',
@@ -75,6 +82,11 @@
 		glass: 'glass text-ink hover:brightness-[0.97]',
 		// Accent-tinted glass — secondary emphasis without a second filled CTA.
 		glassTinted: 'glass glass-tinted text-tea hover:brightness-[0.97]',
+		// Dark vibrancy for controls sitting ON a user photo, where the card-tinted
+		// material above cannot hold contrast. The label colour comes from
+		// .glass-scrim itself (it is theme-independent), so no text-* utility here
+		// to fight it.
+		glassScrim: 'glass glass-scrim hover:brightness-110',
 		// Hairline outline on the page surface — the kit's Bordered.
 		bordered: 'border-[0.5px] border-rule text-ink hover:bg-surface',
 		// Text-only; still gets press physics and a hit box.
@@ -89,6 +101,9 @@
 	const shape = $derived(
 		iconOnly ? `${s.box} aspect-square rounded-full` : `${s.box} rounded-full ${s.pad}`
 	);
+	// glassScrim is deliberately absent from this list: it sets its own
+	// --glass-opacity/blur/specular (it sits on a photo, not on the page), so
+	// adding a size class would leave the winner depending on CSS source order.
 	const glassScale = $derived(
 		variant === 'glass' || variant === 'glassTinted' ? GLASS_SCALE[size] : ''
 	);
