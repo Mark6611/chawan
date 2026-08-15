@@ -24,3 +24,7 @@ vite.config.ts.timestamp-*
 
 # Claude Code (machine-specific)
 .claude/settings.local.json
+
+# App Store screenshot output (scripts/gen-shots.mjs)
+appstore-screenshots/
+appstore-screenshots-ipad13/
