@@ -56,7 +56,7 @@
 
 	<h2>Your control &amp; data deletion</h2>
 	<ul>
-		<li>Delete any session or tin inside the app at any time.</li>
+		<li>Delete any session, or archive any tin, inside the app at any time.</li>
 		<li>Export a full backup (JSON) of your sessions and tins from Settings whenever you like.</li>
 		<li>
 			Deleting the app deletes your data with it — nothing remains anywhere else, because nothing

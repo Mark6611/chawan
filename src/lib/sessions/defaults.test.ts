@@ -69,8 +69,28 @@ describe('hasCustomDefaults', () => {
 		expect(hasCustomDefaults()).toBe(false);
 	});
 
-	it('returns true once defaults are written', () => {
-		writeDefaults({ style: 'usucha', waterTempC: 76, whisk: 'chasen-100' });
+	// This used to assert `true` for a blob equal to DEFAULT_DEFAULTS, which
+	// codified the bug: Settings auto-saves on a $effect that fires once right
+	// after it loads, so merely OPENING Settings wrote the key with the built-in
+	// values and the personal form then showed its "Defaults applied" banner
+	// forever, for a user who had never set a default.
+	it('returns false when the written values equal the built-in defaults', () => {
+		writeDefaults({ ...DEFAULT_DEFAULTS });
+		expect(hasCustomDefaults()).toBe(false);
+	});
+
+	it('returns true when any single value genuinely differs', () => {
+		writeDefaults({ ...DEFAULT_DEFAULTS, waterTempC: 80 });
 		expect(hasCustomDefaults()).toBe(true);
+	});
+
+	it('returns true when the style differs', () => {
+		writeDefaults({ ...DEFAULT_DEFAULTS, style: 'koicha' });
+		expect(hasCustomDefaults()).toBe(true);
+	});
+
+	it('returns false when the stored blob is malformed (reads as defaults)', () => {
+		localStorage.setItem('chawan:defaults', '{not json');
+		expect(hasCustomDefaults()).toBe(false);
 	});
 });

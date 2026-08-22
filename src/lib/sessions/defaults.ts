@@ -29,8 +29,22 @@ export function writeDefaults(d: UserDefaults): void {
 	}
 }
 
-/** Returns true when the saved defaults differ from the hard-coded defaults. */
+/** Returns true when the saved defaults differ from the hard-coded defaults.
+ *
+ *  Compares VALUES, not key existence. Settings auto-saves on a $effect that
+ *  fires once right after it loads, so merely opening Settings and touching
+ *  nothing wrote the key with the built-in values — and a key-existence check
+ *  then reported "custom" forever. That put the personal form's "Defaults
+ *  applied" banner on every new session for a user who had never set a default,
+ *  which is exactly the noise that banner's own guard exists to prevent. */
 export function hasCustomDefaults(): boolean {
 	if (typeof localStorage === 'undefined') return false;
-	return localStorage.getItem(KEY) !== null;
+	const raw = localStorage.getItem(KEY);
+	if (raw === null) return false;
+	const saved = readDefaults(); // falls back to DEFAULT_DEFAULTS on bad JSON
+	return (
+		saved.style !== DEFAULT_DEFAULTS.style ||
+		saved.waterTempC !== DEFAULT_DEFAULTS.waterTempC ||
+		saved.whisk !== DEFAULT_DEFAULTS.whisk
+	);
 }
