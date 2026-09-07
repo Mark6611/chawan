@@ -299,6 +299,13 @@
 			Your matcha log lives entirely on this device — nothing is collected or sent anywhere. Back it
 			up below to keep a copy or move it to a new phone.
 		</p>
+		{#if preferences.storagePersisted === false}
+			<p class="mt-3 max-w-[38ch] text-[13px] text-danger">
+				This browser has not granted persistent storage, so it may clear your log if the device runs
+				low on space or you leave the app unused for a while. Downloading a backup is the only way
+				to be safe.
+			</p>
+		{/if}
 	</section>
 
 	<Hairline class="my-7" />

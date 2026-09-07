@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { incomingWins } from './backup-merge';
+import { incomingWins, isImplausiblyFuture } from './backup-merge';
 
 // The restore merge is the app's only disaster path, and two of its defects
 // were data-loss class (a delete resurrected, a newer photo clobbered). The
@@ -79,5 +79,32 @@ describe('photo restore fallback (undefined vs now)', () => {
 	it('a removal newer than the backup copy wins', () => {
 		const removedLocally = { updatedAt: '2026-08-10T00:00:00.000Z' };
 		expect(incomingWins({ updatedAt: '2026-08-01T00:00:00.000Z' }, removedLocally)).toBe(false);
+	});
+});
+
+// A row stamped far in the future outranks everything for ever on a
+// lexicographic LWW compare — it cannot be edited away, and re-restoring the
+// same file re-applies it. Zod's .datetime() does not catch this: the string
+// is valid ISO. Real skew between two of your own devices is minutes.
+describe('isImplausiblyFuture', () => {
+	const now = Date.parse('2026-08-22T12:00:00.000Z');
+
+	it('rejects the year-9999 pin', () => {
+		expect(isImplausiblyFuture('9999-01-01T00:00:00.000Z', now)).toBe(true);
+	});
+
+	it('accepts ordinary clock skew between devices', () => {
+		expect(isImplausiblyFuture('2026-08-22T12:05:00.000Z', now)).toBe(false);
+		expect(isImplausiblyFuture('2026-08-23T11:00:00.000Z', now)).toBe(false);
+	});
+
+	it('rejects beyond a day of skew', () => {
+		expect(isImplausiblyFuture('2026-08-24T12:00:00.000Z', now)).toBe(true);
+	});
+
+	it('is indifferent to the past and to absent or unparseable values', () => {
+		expect(isImplausiblyFuture('2020-01-01T00:00:00.000Z', now)).toBe(false);
+		expect(isImplausiblyFuture(undefined, now)).toBe(false);
+		expect(isImplausiblyFuture('not a date', now)).toBe(false);
 	});
 });

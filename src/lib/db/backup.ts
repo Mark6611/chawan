@@ -26,7 +26,7 @@
 import { repository } from './repository';
 import { SessionSchema, TinSchema, nowIso, type Session, type Tin } from './types';
 import { isQuota } from './quota';
-import { incomingWins } from './backup-merge';
+import { incomingWins, isImplausiblyFuture } from './backup-merge';
 
 export interface BackupPhoto {
 	tinId: string;
@@ -265,6 +265,10 @@ export async function restoreBackup(data: unknown): Promise<RestoreResult> {
 	const liveTinIds = new Set<string>();
 
 	for (const raw of tinList) {
+		if (isImplausiblyFuture((raw as { updatedAt?: string })?.updatedAt)) {
+			res.tinsInvalid++;
+			continue;
+		}
 		const parsed = TinSchema.safeParse(raw);
 		if (!parsed.success) {
 			res.tinsInvalid++;
@@ -294,6 +298,10 @@ export async function restoreBackup(data: unknown): Promise<RestoreResult> {
 	}
 
 	for (const raw of sessionList) {
+		if (isImplausiblyFuture((raw as { updatedAt?: string })?.updatedAt)) {
+			res.sessionsInvalid++;
+			continue;
+		}
 		const parsed = SessionSchema.safeParse(raw);
 		if (!parsed.success) {
 			res.sessionsInvalid++;
@@ -317,6 +325,10 @@ export async function restoreBackup(data: unknown): Promise<RestoreResult> {
 	for (const raw of photoList) {
 		const p = raw as Partial<BackupPhoto>;
 		if (!p || typeof p.tinId !== 'string') continue;
+		if (isImplausiblyFuture(p.updatedAt)) {
+			res.photosFailed++;
+			continue;
+		}
 		const isTombstone = typeof p.deletedAt === 'string';
 		// A row must carry bytes or be a tombstone; anything else is malformed.
 		if (!isTombstone && typeof p.dataUrl !== 'string') continue;

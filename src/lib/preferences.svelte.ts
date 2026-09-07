@@ -26,6 +26,21 @@ class Preferences {
 	theme = $state<Theme>(readInitialTheme());
 	hideChawan = $state(readInitialHideGlyph());
 
+	/** Whether the browser granted persistent storage.
+	 *
+	 *  null = not asked yet (or unsupported). IndexedDB is the SOLE copy of
+	 *  every tin, session and photo, and WebKit evicts a non-persisted origin
+	 *  under storage pressure or after about a week idle. persist() RESOLVES
+	 *  false when declined rather than rejecting, so the answer used to be
+	 *  thrown away — this makes the risk sayable in Settings. Deliberately not
+	 *  persisted to localStorage: it is a fact about the current browser, and a
+	 *  stale "granted" would be worse than no answer. */
+	storagePersisted = $state<boolean | null>(null);
+
+	setStoragePersisted(granted: boolean) {
+		this.storagePersisted = granted;
+	}
+
 	/** Safety re-read after hydration (SSR may have given defaults). */
 	init() {
 		if (typeof localStorage === 'undefined') return;

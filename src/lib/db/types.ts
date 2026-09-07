@@ -92,13 +92,13 @@ export const TinSchema = z.object({
 	cultivar: z.string().optional(),
 	harvestDate: z.string().optional(), // ISO YYYY-MM-DD
 	weightGrams: z.number().positive(),
-	openedAt: z.string().optional(), // ISO timestamp; undefined = unopened
+	openedAt: z.string().datetime().optional(), // ISO timestamp; undefined = unopened
 	archived: z.boolean(),
-	createdAt: z.string(),
-	updatedAt: z.string(),
+	createdAt: z.string().datetime(),
+	updatedAt: z.string().datetime(),
 	// Soft-delete tombstone — Phase 2 sync uses this so deletions propagate
 	// across devices. Reads filter out rows with deletedAt set.
-	deletedAt: z.string().optional(),
+	deletedAt: z.string().datetime().optional(),
 	// Phase 3: soft link back to the catalog entry the tin was created from.
 	// Drives the "I've tried" indicator on catalog screens. Optional —
 	// tins created manually (without the catalog picker) leave this null.
@@ -134,7 +134,7 @@ export interface TinPhoto {
 
 const sessionBaseShape = {
 	id: z.string().min(1),
-	brewedAt: z.string(), // ISO timestamp
+	brewedAt: z.string().datetime(), // ISO timestamp
 	style: StyleSchema,
 	// Milk is required if style === 'latte'; enforcement is at the form layer
 	// (the storage shape stays optional so we can save drafts mid-edit).
@@ -142,10 +142,10 @@ const sessionBaseShape = {
 	// Half-point scale: 0, 0.5, 1, 1.5, … 5. Form layer enforces the .5 step.
 	rating: z.number().min(0).max(5).optional(),
 	notes: z.string().optional(),
-	createdAt: z.string(),
-	updatedAt: z.string(),
+	createdAt: z.string().datetime(),
+	updatedAt: z.string().datetime(),
 	// Soft-delete tombstone for Phase 2 sync (see TinSchema comment).
-	deletedAt: z.string().optional()
+	deletedAt: z.string().datetime().optional()
 };
 
 export const PersonalSessionSchema = z.object({

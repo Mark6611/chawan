@@ -7,7 +7,7 @@
 // reason `deletedAt` earns its keep now that nothing pushes.
 
 import { db } from './dexie';
-import { isPersonal, nowIso } from './types';
+import { SessionSchema, TinSchema, isPersonal, nowIso } from './types';
 import type { Repository } from './repository.types';
 import type { PersonalSession, Session, Tin, TinPhoto } from './types';
 
@@ -31,7 +31,12 @@ class DexieRepository implements Repository {
 	}
 
 	async saveTin(tin: Tin): Promise<void> {
-		await db.tins.put(tin);
+		// Validate on the way in. types.ts calls Zod "the source of truth", but
+		// nothing enforced it at the write boundary — the only validators lived in
+		// the sync layer, which is gone. A malformed row written here is one the
+		// backup will carry and restore will then reject, so the loss surfaces
+		// long after the data that caused it. Throws into the forms' catch blocks.
+		await db.tins.put(TinSchema.parse(tin));
 	}
 
 	async archiveTin(id: string): Promise<void> {
@@ -96,7 +101,7 @@ class DexieRepository implements Repository {
 	}
 
 	async saveSession(session: Session): Promise<void> {
-		await db.sessions.put(session);
+		await db.sessions.put(SessionSchema.parse(session));
 	}
 
 	async deleteSession(id: string): Promise<void> {

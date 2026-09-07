@@ -65,7 +65,14 @@
 		// photo. Without this, WebKit can evict a non-persisted origin under
 		// storage pressure or after ~7 days idle, silently wiping all data.
 		// Installed PWAs are often granted silently; harmless where unsupported.
-		void navigator.storage?.persist?.().catch(() => {});
+		// persist() RESOLVES false when the browser declines (routine for a
+		// non-installed iOS PWA) — it does not reject, so the old
+		// `.catch(() => {})` discarded exactly the answer that matters. Recorded
+		// so Settings can say the sole copy of the data is evictable.
+		void navigator.storage
+			?.persist?.()
+			.then((granted) => preferences.setStoragePersisted(granted === true))
+			.catch(() => preferences.setStoragePersisted(false));
 
 		// Native shell (Capacitor): the splash is launchAutoHide=false and
 		// released here after first paint — no white gap. The `safety` timer

@@ -21,6 +21,23 @@
  *  local tombstone that replaced it, so it loses — PROVIDED the caller looks the
  *  existing row up WITHOUT filtering tombstones (getTinRaw / getSessionRaw).
  */
+/** How far ahead of this device's clock an incoming timestamp may sit.
+ *
+ *  The merge is last-write-wins on a lexicographic ISO compare, so a row
+ *  stamped "9999-01-01T00:00:00.000Z" outranks everything for ever: it can
+ *  never be edited away, and re-restoring the same file re-applies it. Zod's
+ *  .datetime() does not help — that string is perfectly valid ISO. A backup
+ *  file is untrusted input, and real clock skew between two of your own
+ *  devices is minutes, not years. */
+const MAX_CLOCK_SKEW_MS = 24 * 60 * 60 * 1000;
+
+/** Whether an incoming timestamp is impossibly far in the future. */
+export function isImplausiblyFuture(ts: string | undefined, now = Date.now()): boolean {
+	if (!ts) return false;
+	const t = Date.parse(ts);
+	return Number.isFinite(t) && t > now + MAX_CLOCK_SKEW_MS;
+}
+
 export function incomingWins(
 	incoming: { updatedAt?: string },
 	existing: { updatedAt?: string }
