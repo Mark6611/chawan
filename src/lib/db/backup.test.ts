@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { Dexie } from 'dexie';
 import { isQuota } from './quota';
+import { dataUrlToBlob } from './backup';
 
 // Regression coverage for the quota-detection bug: isQuota() originally gated
 // on `err instanceof DOMException`, which is true for the error the BROWSER
@@ -38,5 +39,58 @@ describe('isQuota', () => {
 		expect(isQuota(null)).toBe(false);
 		expect(isQuota(undefined)).toBe(false);
 		expect(isQuota('QuotaExceededError')).toBe(false);
+	});
+});
+
+// Regression coverage for the restore-time SSRF/beacon: dataUrlToBlob used to
+// be `fetch(dataUrl).blob()`, and fetch() resolves ANY scheme. A backup file
+// is untrusted input — hand-editable, and shareable between people — so a
+// crafted "dataUrl": "https://attacker.example/beacon?d=..." turned a restore
+// into a real outbound request. That is the whole proposition of a local-only
+// app, and chawan ships no CSP to catch it. These pin the scheme, not the type.
+describe('dataUrlToBlob', () => {
+	const jpeg = `data:image/jpeg;base64,${btoa('\xff\xd8\xff\xe0 fake jpeg bytes')}`;
+
+	it('decodes a base64 image data URL to bytes, without any network call', async () => {
+		const spy = vi.spyOn(globalThis, 'fetch');
+		const blob = dataUrlToBlob(jpeg);
+		expect(blob.type).toBe('image/jpeg');
+		// Compare BYTES, not text: a JPEG starts 0xFF 0xD8, which is not valid
+		// UTF-8, so blob.text() would mangle exactly the bytes that matter.
+		const bytes = new Uint8Array(await blob.arrayBuffer());
+		expect([...bytes.slice(0, 4)]).toEqual([0xff, 0xd8, 0xff, 0xe0]);
+		expect(bytes.length).toBe(20);
+		expect(spy).not.toHaveBeenCalled();
+		spy.mockRestore();
+	});
+
+	// The exact payload the old implementation would have fetched.
+	it('refuses an http(s) URL instead of requesting it', () => {
+		const spy = vi.spyOn(globalThis, 'fetch');
+		expect(() => dataUrlToBlob('https://attacker.example/beacon?d=leak')).toThrow(
+			/not a base64 image data URL/
+		);
+		expect(spy).not.toHaveBeenCalled();
+		spy.mockRestore();
+	});
+
+	it.each([
+		['file://', 'file:///etc/passwd'],
+		['blob:', 'blob:https://example.com/abc-123'],
+		['non-image data:', 'data:text/html;base64,PHNjcmlwdD4='],
+		['svg (scriptable)', 'data:image/svg+xml;base64,PHN2Zy8+'],
+		['url-encoded, not base64', 'data:image/png,%3Cscript%3E'],
+		['empty', '']
+	])('refuses %s', (_label, value) => {
+		expect(() => dataUrlToBlob(value)).toThrow();
+	});
+
+	it('refuses a photo over the size cap before allocating it', () => {
+		const huge = `data:image/png;base64,${'A'.repeat(12 * 1024 * 1024)}`;
+		expect(() => dataUrlToBlob(huge)).toThrow(/size cap/);
+	});
+
+	it('refuses malformed base64', () => {
+		expect(() => dataUrlToBlob('data:image/jpeg;base64,not valid base64!!')).toThrow();
 	});
 });

