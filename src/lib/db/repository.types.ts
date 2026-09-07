@@ -33,6 +33,10 @@ export interface Repository {
 	// row rather than resurrecting it. Everything else in this interface hides
 	// tombstones — these five are the only exceptions, hence the explicit names.
 	listTinsWithDeleted(): Promise<Tin[]>;
+	/** Tombstoned sessions, newest deletion first (undo surface). */
+	listDeletedSessions(): Promise<Session[]>;
+	/** Clear a session's tombstone. */
+	undeleteSession(id: string): Promise<void>;
 	listSessionsWithDeleted(): Promise<Session[]>;
 	getTinRaw(id: string): Promise<Tin | undefined>;
 	getSessionRaw(id: string): Promise<Session | undefined>;

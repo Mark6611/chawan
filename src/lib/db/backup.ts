@@ -74,9 +74,21 @@ export interface RestoreResult {
 }
 
 export class QuotaError extends Error {
-	constructor() {
+	/** What had already landed when storage ran out.
+	 *
+	 *  Restore is deliberately NOT wrapped in a transaction. It writes tins,
+	 *  then sessions, then photos, and a rollback on the last one would throw
+	 *  away a recovery that was 90% done — the opposite of what someone
+	 *  restoring a backup wants. Because the merge ties to the incoming row
+	 *  (see incomingWins), re-running the same file after freeing space is
+	 *  idempotent and simply finishes the job. What was missing was telling
+	 *  anyone that: the abort used to discard these counts, so the user was
+	 *  left with "Storage is full" and no idea which half had landed. */
+	readonly partial?: RestoreResult;
+	constructor(partial?: RestoreResult) {
 		super('Storage is full — free up space and try again.');
 		this.name = 'QuotaError';
+		this.partial = partial;
 	}
 }
 
@@ -276,7 +288,7 @@ export async function restoreBackup(data: unknown): Promise<RestoreResult> {
 			}
 			if (live) liveTinIds.add(incoming.id);
 		} catch (err) {
-			if (isQuota(err)) throw new QuotaError();
+			if (isQuota(err)) throw new QuotaError(res);
 			res.tinsInvalid++;
 		}
 	}
@@ -297,7 +309,7 @@ export async function restoreBackup(data: unknown): Promise<RestoreResult> {
 			await repository.saveSession(incoming);
 			if (isLive(incoming)) res.sessionsAdded++;
 		} catch (err) {
-			if (isQuota(err)) throw new QuotaError();
+			if (isQuota(err)) throw new QuotaError(res);
 			res.sessionsInvalid++;
 		}
 	}
@@ -335,7 +347,7 @@ export async function restoreBackup(data: unknown): Promise<RestoreResult> {
 				res.photos++;
 			}
 		} catch (err) {
-			if (isQuota(err)) throw new QuotaError();
+			if (isQuota(err)) throw new QuotaError(res);
 			// A single unreadable photo shouldn't abort the whole restore — but it
 			// must still be reported, not folded into a success message.
 			res.photosFailed++;

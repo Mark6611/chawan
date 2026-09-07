@@ -131,6 +131,30 @@ class DexieRepository implements Repository {
 		return db.tins.orderBy('createdAt').reverse().toArray();
 	}
 
+	/** Tombstoned sessions, newest deletion first.
+	 *
+	 *  A tombstone keeps the whole row, so the data to undo a delete has always
+	 *  been sitting there unused. It could not be reached from anywhere: the
+	 *  delete is permanent by design (the tombstone's updatedAt is stamped at
+	 *  deletion, so it outranks any earlier backup and restoring one cannot
+	 *  bring the session back), which left an accidental tap unrecoverable by
+	 *  any path at all. */
+	async listDeletedSessions(): Promise<Session[]> {
+		const all = await db.sessions.toArray();
+		return all
+			.filter((s) => !!s.deletedAt)
+			.sort((a, b) => (b.deletedAt ?? '').localeCompare(a.deletedAt ?? ''));
+	}
+
+	/** Bring a tombstoned session back. Bumps updatedAt so the revival outranks
+	 *  the tombstone the same way the tombstone outranked the live row. */
+	async undeleteSession(id: string): Promise<void> {
+		const existing = await db.sessions.get(id);
+		if (!existing?.deletedAt) return;
+		const { deletedAt: _removed, ...rest } = existing;
+		await db.sessions.put({ ...rest, updatedAt: nowIso() } as Session);
+	}
+
 	async listSessionsWithDeleted(): Promise<Session[]> {
 		return db.sessions.orderBy('brewedAt').reverse().toArray();
 	}

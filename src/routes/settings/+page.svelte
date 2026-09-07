@@ -7,6 +7,8 @@
 	import { readDefaults, writeDefaults } from '$lib/sessions/defaults';
 	import { preferences } from '$lib/preferences.svelte';
 	import { buildBackup, restoreBackup, QuotaError } from '$lib/db/backup';
+	import { repository } from '$lib/db/repository';
+	import type { Session } from '$lib/db/types';
 	import { shareOrDownload } from '$lib/share/share-card';
 	import { STYLE_LABELS, WHISK_LABELS, type Style, type Whisk } from '$lib/db/types';
 
@@ -26,6 +28,31 @@
 	let whisk = $state<string>('chasen-100');
 	let loaded = $state(false);
 	let lastSaved = $state<string | null>(null);
+
+	// Recently deleted — the undo surface for session deletion. Tombstones keep
+	// the whole row, so this data was always there; nothing could reach it.
+	let deletedSessions = $state<Session[]>([]);
+	let restoringId = $state<string | null>(null);
+	async function loadDeleted() {
+		deletedSessions = await repository.listDeletedSessions();
+	}
+	async function undelete(id: string) {
+		if (restoringId) return;
+		restoringId = id;
+		try {
+			await repository.undeleteSession(id);
+			await loadDeleted();
+		} finally {
+			restoringId = null;
+		}
+	}
+	const deletedLabel = (s: Session) => {
+		const when = new Date(s.brewedAt).toLocaleDateString(undefined, {
+			month: 'short',
+			day: 'numeric'
+		});
+		return `${STYLE_LABELS[s.style]} · ${when}`;
+	};
 
 	// Backup / restore state
 	let exporting = $state(false);
@@ -125,12 +152,23 @@
 			const lost = skipped + r.photosFailed + r.photosSkipped;
 			importStatus = { text, ok: lost === 0 };
 		} catch (err) {
-			const text =
-				err instanceof QuotaError
-					? err.message
-					: err instanceof Error && err.message === 'Not a Chawan backup file.'
-						? err.message
-						: 'Could not read the file — is it a valid Chawan backup?';
+			let text: string;
+			if (err instanceof QuotaError) {
+				// Say what survived. The restore is idempotent, so re-running the
+				// same file after freeing space finishes it rather than starting
+				// over — but only if the user knows that.
+				const p = err.partial;
+				const landed = p ? p.tinsAdded + p.sessionsAdded + p.photos : 0;
+				text = landed
+					? `${err.message} ${landed} item(s) were restored before it ran out — free up space and restore the same file again to finish.`
+					: err.message;
+			} else if (err instanceof Error && /newer version of Chawan/i.test(err.message)) {
+				text = err.message;
+			} else if (err instanceof Error && err.message === 'Not a Chawan backup file.') {
+				text = err.message;
+			} else {
+				text = 'Could not read the file — is it a valid Chawan backup?';
+			}
 			importStatus = { text, ok: false };
 		} finally {
 			importing = false;
@@ -155,6 +193,7 @@
 		waterTempC = d.waterTempC;
 		whisk = d.whisk;
 		loaded = true;
+		void loadDeleted();
 	});
 
 	// Auto-save defaults whenever the controlled fields change.
@@ -263,6 +302,41 @@
 	</section>
 
 	<Hairline class="my-7" />
+
+	<!-- ─── Recently deleted ─────────────────────────────
+	     Deleting a session stamps a tombstone whose updatedAt is NEWER than any
+	     earlier backup's copy, so restoring a backup cannot bring it back — by
+	     design, or an old file would resurrect everything ever deleted. That
+	     left an accidental tap with no recovery path at all. The tombstone
+	     keeps the whole row, so undo is just clearing the flag. -->
+	{#if deletedSessions.length}
+		<section>
+			<Eyebrow>Recently deleted</Eyebrow>
+			<p class="mt-2 text-[14px] text-muted italic">
+				Deleted sessions are kept so you can put one back. Restoring a backup will not recover them
+				— this is the only way.
+			</p>
+			<div class="mt-4 overflow-hidden rounded-[14px] border-[0.5px] border-hairline">
+				{#each deletedSessions.slice(0, 12) as s (s.id)}
+					<div
+						class="flex items-center justify-between gap-3 border-b-[0.5px] border-hairline px-4 py-3 last:border-b-0"
+					>
+						<Mono size="m" tone="ink">{deletedLabel(s)}</Mono>
+						<Button
+							size="small"
+							variant="bordered"
+							onclick={() => undelete(s.id)}
+							disabled={restoringId === s.id}
+						>
+							{restoringId === s.id ? 'Restoring…' : 'Restore'}
+						</Button>
+					</div>
+				{/each}
+			</div>
+		</section>
+
+		<Hairline class="my-7" />
+	{/if}
 
 	<!-- ─── Backup ────────────────────────────────────────── -->
 	<section>
