@@ -111,17 +111,27 @@
 	async function archive() {
 		if (!tin || busy) return;
 		busy = true;
-		await repository.archiveTin(tin.id);
-		await load();
-		busy = false;
+		// finally, not a trailing assignment: an uncaught throw here left the
+		// button stuck on its in-flight label with no way to retry.
+		try {
+			await repository.archiveTin(tin.id);
+			await load();
+		} finally {
+			busy = false;
+		}
 	}
 
 	async function unarchive() {
 		if (!tin || busy) return;
 		busy = true;
-		await repository.unarchiveTin(tin.id);
-		await load();
-		busy = false;
+		// finally, not a trailing assignment: an uncaught throw here left the
+		// button stuck on its in-flight label with no way to retry.
+		try {
+			await repository.unarchiveTin(tin.id);
+			await load();
+		} finally {
+			busy = false;
+		}
 	}
 </script>
 

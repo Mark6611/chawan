@@ -66,8 +66,14 @@
 
 	// One-tap repeat: clone the suggested session with fresh id + timestamps.
 	// Rating and notes don't carry over — they're per-session impressions.
+	let logging = $state(false);
+	let logError = $state<string | null>(null);
 	async function logAgain() {
-		if (!usual) return;
+		// Guard the in-flight window: this writes a NEW session, so a double tap
+		// on a slow device logged the bowl twice with no way to tell.
+		if (!usual || logging) return;
+		logging = true;
+		logError = null;
 		const now = nowIso();
 		const repeat = {
 			...usual.session,
@@ -78,8 +84,14 @@
 			rating: undefined,
 			notes: undefined
 		};
-		await repository.saveSession(repeat);
-		await load();
+		try {
+			await repository.saveSession(repeat);
+			await load();
+		} catch (e) {
+			logError = e instanceof Error ? e.message : 'Could not log that session.';
+		} finally {
+			logging = false;
+		}
 	}
 </script>
 
@@ -193,8 +205,10 @@
 			<button
 				type="button"
 				onclick={logAgain}
+				disabled={logging}
 				class="mb-3 flex w-full items-center justify-between rounded-full border-[0.5px] border-tea
-					bg-tea-wash px-5 py-3 text-left transition-opacity duration-150 hover:opacity-90"
+					bg-tea-wash px-5 py-3 text-left transition-opacity duration-150 hover:opacity-90
+					disabled:opacity-60"
 			>
 				<span class="flex flex-col gap-0.5">
 					<span class="font-mono text-[10.5px] font-medium tracking-[0.14em] text-tea uppercase">
@@ -205,8 +219,11 @@
 							.waterTempC}°C
 					</span>
 				</span>
-				<span class="font-mono text-[14px] text-tea">→</span>
+				<span class="font-mono text-[14px] text-tea">{logging ? '…' : '→'}</span>
 			</button>
+			{#if logError}
+				<p class="mb-3 px-1 font-mono text-[11px] text-danger">{logError}</p>
+			{/if}
 		{/if}
 
 		<PrimaryButton href="/sessions/new">Begin a session</PrimaryButton>

@@ -204,7 +204,14 @@
 				try {
 					await repository.setTinPhoto(next.id, photoBlob);
 				} catch (photoErr) {
+					// The tin IS saved, so this is not a save failure — but the photo
+					// is gone and only a console.warn said so, which nobody sees. Tell
+					// the user here instead of navigating away as if it worked.
 					console.warn('[tin] photo not stored (tin was saved):', photoErr);
+					error =
+						'Saved, but the photo could not be stored — your device may be out of space. Edit the tin to try adding it again.';
+					saving = false;
+					return;
 				}
 			} else if (photoRemoved && isEdit) {
 				await repository.deleteTinPhoto(next.id);

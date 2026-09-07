@@ -33,6 +33,7 @@
 	import Mono from './Mono.svelte';
 	import Hairline from './Hairline.svelte';
 	import Field from './Field.svelte';
+	import LoadError from './LoadError.svelte';
 	import Segmented from './Segmented.svelte';
 	import ChipGroup from './ChipGroup.svelte';
 	import Rating from './Rating.svelte';
@@ -68,6 +69,7 @@
 	let cafeSessions = $state<CafeSession[]>([]);
 	let tins = $state<Tin[]>([]);
 	let loaded = $state(false);
+	let loadError = $state<string | null>(null);
 	let saving = $state(false);
 	let error = $state<string | null>(null);
 
@@ -98,13 +100,21 @@
 
 	onMount(async () => {
 		if (!isEdit) currencyCode = readCurrency();
-		const [allSessions, allTins] = await Promise.all([
-			repository.listSessions(),
-			repository.listTins()
-		]);
-		cafeSessions = allSessions.filter(isCafe);
-		tins = allTins;
-		loaded = true;
+		// try/catch/finally, matching the list routes: `loaded = true` used to sit
+		// after the awaits, so an IndexedDB failure (private mode, evicted store)
+		// left the form on "Loading…" forever with no way back.
+		try {
+			const [allSessions, allTins] = await Promise.all([
+				repository.listSessions(),
+				repository.listTins()
+			]);
+			cafeSessions = allSessions.filter(isCafe);
+			tins = allTins;
+		} catch (e) {
+			loadError = e instanceof Error ? e.message : 'Could not open your log.';
+		} finally {
+			loaded = true;
+		}
 	});
 
 	const brewedAtLocal = $derived(isoToLocal(brewedAt));
@@ -234,7 +244,12 @@
 
 	<Hairline class="my-7" />
 
-	{#if !loaded}
+	{#if loadError}
+		<LoadError
+			onretry={() => location.reload()}
+			message="Couldn't open your log — local storage may be blocked."
+		/>
+	{:else if !loaded}
 		<div class="mt-8 text-center">
 			<Mono size="meta" tone="muted">Loading…</Mono>
 		</div>

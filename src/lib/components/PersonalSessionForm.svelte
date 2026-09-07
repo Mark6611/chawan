@@ -40,6 +40,7 @@
 	import Mono from './Mono.svelte';
 	import Hairline from './Hairline.svelte';
 	import Field from './Field.svelte';
+	import LoadError from './LoadError.svelte';
 	import Segmented from './Segmented.svelte';
 	import ChipGroup from './ChipGroup.svelte';
 	import Stepper from './Stepper.svelte';
@@ -78,6 +79,7 @@
 	let tins = $state<Tin[]>([]);
 	let personalSessions = $state<PersonalSession[]>([]);
 	let loaded = $state(false);
+	let loadError = $state<string | null>(null);
 	let saving = $state(false);
 	let error = $state<string | null>(null);
 
@@ -118,67 +120,74 @@
 	);
 
 	onMount(async () => {
-		// In new mode, pre-populate from localStorage defaults.
-		if (!isEdit) {
-			const d = readDefaults();
-			style = d.style;
-			waterTempC = d.waterTempC;
-			whisk = d.whisk;
-			if (d.powderGrams) powderGrams = d.powderGrams;
-			if (d.waterGrams) waterGrams = d.waterGrams;
-			// Only surface the banner when the user has actually saved
-			// custom defaults — otherwise it's noise about hard-coded values.
-			showDefaultsBanner = hasCustomDefaults();
-		}
-
-		const [allTins, allSessions] = await Promise.all([
-			repository.listTins(),
-			repository.listSessions()
-		]);
-		tins = allTins;
-		personalSessions = allSessions.filter(isPersonal);
-
-		// New mode: auto-pick most recently used active tin.
-		// Edit mode: selectedTinId already set from initial.tinId.
-		if (!isEdit) {
-			const active = allTins.filter((t) => !t.archived);
-			if (active.length > 0) {
-				const lastPersonal = allSessions.find(isPersonal);
-				const used = lastPersonal && active.find((t) => t.id === lastPersonal.tinId);
-				selectedTinId = used ? used.id : active[0].id;
+		// try/catch/finally, matching the list routes: `loaded = true` used to sit
+		// after the awaits, so an IndexedDB failure (private mode, evicted store)
+		// left the form on "Loading…" forever with no way back.
+		try {
+			// In new mode, pre-populate from localStorage defaults.
+			if (!isEdit) {
+				const d = readDefaults();
+				style = d.style;
+				waterTempC = d.waterTempC;
+				whisk = d.whisk;
+				if (d.powderGrams) powderGrams = d.powderGrams;
+				if (d.waterGrams) waterGrams = d.waterGrams;
+				// Only surface the banner when the user has actually saved
+				// custom defaults — otherwise it's noise about hard-coded values.
+				showDefaultsBanner = hasCustomDefaults();
 			}
 
-			// Restore form state from sessionStorage (set if we bounced through
-			// /tins/new). Then clear the draft so a future fresh mount doesn't
-			// re-apply stale state.
-			if (typeof sessionStorage !== 'undefined') {
-				try {
-					const raw = sessionStorage.getItem(DRAFT_KEY);
-					if (raw) {
-						const d = JSON.parse(raw);
-						if (typeof d.style === 'string') style = d.style;
-						if (typeof d.powderGrams === 'number') powderGrams = d.powderGrams;
-						if (typeof d.waterGrams === 'number') waterGrams = d.waterGrams;
-						if (typeof d.waterTempC === 'number') waterTempC = d.waterTempC;
-						if (typeof d.whisk === 'string') whisk = d.whisk;
-						if (typeof d.milk === 'string') milk = d.milk;
-						if (typeof d.rating === 'number') rating = d.rating;
-						if (typeof d.notes === 'string') notes = d.notes;
-						if (typeof d.brewedAt === 'string') brewedAt = d.brewedAt;
-					}
-					sessionStorage.removeItem(DRAFT_KEY);
-				} catch {
-					// ignore malformed draft
+			const [allTins, allSessions] = await Promise.all([
+				repository.listTins(),
+				repository.listSessions()
+			]);
+			tins = allTins;
+			personalSessions = allSessions.filter(isPersonal);
+
+			// New mode: auto-pick most recently used active tin.
+			// Edit mode: selectedTinId already set from initial.tinId.
+			if (!isEdit) {
+				const active = allTins.filter((t) => !t.archived);
+				if (active.length > 0) {
+					const lastPersonal = allSessions.find(isPersonal);
+					const used = lastPersonal && active.find((t) => t.id === lastPersonal.tinId);
+					selectedTinId = used ? used.id : active[0].id;
 				}
+
+				// Restore form state from sessionStorage (set if we bounced through
+				// /tins/new). Then clear the draft so a future fresh mount doesn't
+				// re-apply stale state.
+				if (typeof sessionStorage !== 'undefined') {
+					try {
+						const raw = sessionStorage.getItem(DRAFT_KEY);
+						if (raw) {
+							const d = JSON.parse(raw);
+							if (typeof d.style === 'string') style = d.style;
+							if (typeof d.powderGrams === 'number') powderGrams = d.powderGrams;
+							if (typeof d.waterGrams === 'number') waterGrams = d.waterGrams;
+							if (typeof d.waterTempC === 'number') waterTempC = d.waterTempC;
+							if (typeof d.whisk === 'string') whisk = d.whisk;
+							if (typeof d.milk === 'string') milk = d.milk;
+							if (typeof d.rating === 'number') rating = d.rating;
+							if (typeof d.notes === 'string') notes = d.notes;
+							if (typeof d.brewedAt === 'string') brewedAt = d.brewedAt;
+						}
+						sessionStorage.removeItem(DRAFT_KEY);
+					} catch {
+						// ignore malformed draft
+					}
+				}
+
+				// URL ?tinId= overrides (after returning from /tins/new). It wins
+				// over the auto-pick + the draft's selectedTinId.
+				const urlTinId = page.url.searchParams.get('tinId');
+				if (urlTinId) selectedTinId = urlTinId;
 			}
-
-			// URL ?tinId= overrides (after returning from /tins/new). It wins
-			// over the auto-pick + the draft's selectedTinId.
-			const urlTinId = page.url.searchParams.get('tinId');
-			if (urlTinId) selectedTinId = urlTinId;
+		} catch (e) {
+			loadError = e instanceof Error ? e.message : 'Could not open your log.';
+		} finally {
+			loaded = true;
 		}
-
-		loaded = true;
 	});
 
 	function saveDraft() {
@@ -344,7 +353,12 @@
 
 	<Hairline class="my-7" />
 
-	{#if !loaded}
+	{#if loadError}
+		<LoadError
+			onretry={() => location.reload()}
+			message="Couldn't open your log — local storage may be blocked."
+		/>
+	{:else if !loaded}
 		<div class="mt-8 text-center">
 			<Mono size="meta" tone="muted">Loading…</Mono>
 		</div>
