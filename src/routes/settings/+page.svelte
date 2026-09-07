@@ -114,8 +114,16 @@
 			if (skipped > 0) text += ` Skipped ${skipped} invalid.`;
 			if (r.photosFailed > 0)
 				text += ` ${r.photosFailed} photo${r.photosFailed === 1 ? '' : 's'} could not be saved.`;
-			// A failed photo isn't a success, even if every tin landed.
-			importStatus = { text, ok: r.photosFailed === 0 };
+			if (r.photosSkipped > 0)
+				text += ` ${r.photosSkipped} photo${r.photosSkipped === 1 ? '' : 's'} had no matching tin.`;
+			// Nothing that was LOST may render as success. This used to gate on
+			// photosFailed alone, so a file whose tins and sessions all failed
+			// validation — the rows are in the file and will never come back —
+			// showed the green "Restored 0 tins · 0 sessions. Skipped 40 invalid."
+			// Kept items are not loss: those are newer local copies, working as
+			// intended.
+			const lost = skipped + r.photosFailed + r.photosSkipped;
+			importStatus = { text, ok: lost === 0 };
 		} catch (err) {
 			const text =
 				err instanceof QuotaError

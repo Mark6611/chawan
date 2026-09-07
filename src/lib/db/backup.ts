@@ -30,8 +30,12 @@ import { incomingWins } from './backup-merge';
 
 export interface BackupPhoto {
 	tinId: string;
-	dataUrl: string; // "data:image/...;base64,...."
+	/** Absent on a tombstone (format 3+). */
+	dataUrl?: string; // "data:image/...;base64,...."
 	updatedAt?: string; // ISO; absent in v1 backups
+	/** Set when the photo was REMOVED. Without this a restore of an older file
+	 *  silently reinstated a photo the user had deleted. */
+	deletedAt?: string; // ISO
 }
 
 export interface BackupPayload {
@@ -43,6 +47,8 @@ export interface BackupPayload {
 	tinsCount: number; // live items only — what the user thinks of as their data
 	sessionsCount: number;
 	photosCount: number;
+	/** Rows the schema will reject on restore — 0 in a healthy export. */
+	unrestorableCount?: number;
 	tins: Tin[]; // includes tombstones (deletedAt set)
 	sessions: Session[]; // includes tombstones
 	photos: BackupPhoto[];
@@ -60,6 +66,8 @@ export interface RestoreResult {
 	/** Photos that couldn't be written. Counted rather than swallowed: a photo
 	 *  is the one part of a tin that exists nowhere else once restored. */
 	photosFailed: number;
+	/** Photos removed because the backup carried a removal newer than the local copy. */
+	photosDeleted: number;
 	/** Photos with no live tin to attach to (a deleted or absent tin). Skipped
 	 *  so a stale/hand-edited file can't leave unreachable blobs eating quota. */
 	photosSkipped: number;
@@ -110,6 +118,10 @@ export function dataUrlToBlob(dataUrl: string): Blob {
 	return new Blob([bytes], { type: `image/${subtype}` });
 }
 
+/** Current backup schema version. 1: photos as {tinId,dataUrl}. 2: photo
+ *  timestamps + tin/session tombstones. 3: photo tombstones. */
+export const BACKUP_FORMAT = 3;
+
 const isLive = (row: { deletedAt?: string }) => !row.deletedAt;
 
 /** Gather everything (tins, sessions, and every tin photo) into one payload. */
@@ -120,29 +132,53 @@ export async function buildBackup(version: string): Promise<BackupPayload> {
 		repository.listSessionsWithDeleted()
 	]);
 
+	// Validate on the way OUT as well as on the way in. restoreBackup safeParses
+	// every row and drops the failures into tinsInvalid/sessionsInvalid, so a row
+	// that cannot satisfy the schema is one the backup carries but can never give
+	// back — and the export is the last moment the original still exists to fix.
+	// Export is not the place to silently drop data either, so this reports
+	// rather than filters: the caller decides.
+	const unrestorable = [
+		...tins.filter((r) => !TinSchema.safeParse(r).success).map((r) => `tin ${r.id}`),
+		...sessions.filter((r) => !SessionSchema.safeParse(r).success).map((r) => `session ${r.id}`)
+	];
+	if (unrestorable.length) {
+		console.warn(
+			`[backup] ${unrestorable.length} row(s) will not survive a restore:`,
+			unrestorable.slice(0, 10)
+		);
+	}
+
 	// Photos only for LIVE tins: a deleted tin shouldn't drag its picture back,
 	// and a photo whose tin is gone would restore as an unreachable orphan.
 	const liveTins = tins.filter(isLive);
 	const photos: BackupPhoto[] = [];
 	for (const tin of liveTins) {
 		const rec = await repository.getTinPhotoRecord(tin.id);
-		if (rec) {
-			photos.push({
-				tinId: tin.id,
-				dataUrl: await blobToDataUrl(rec.blob),
-				updatedAt: rec.updatedAt
-			});
+		if (!rec) continue;
+		if (rec.deletedAt || !rec.blob) {
+			// Carry the removal, not the bytes. A restore elsewhere has to learn
+			// that this photo is gone, or it would hand back a copy from its own
+			// older data.
+			photos.push({ tinId: tin.id, updatedAt: rec.updatedAt, deletedAt: rec.deletedAt });
+			continue;
 		}
+		photos.push({
+			tinId: tin.id,
+			dataUrl: await blobToDataUrl(rec.blob),
+			updatedAt: rec.updatedAt
+		});
 	}
 
 	return {
 		app: 'chawan',
-		format: 2,
+		format: BACKUP_FORMAT,
 		version,
 		exportedAt: nowIso(),
 		tinsCount: liveTins.length,
 		sessionsCount: sessions.filter(isLive).length,
 		photosCount: photos.length,
+		unrestorableCount: unrestorable.length,
 		tins,
 		sessions,
 		photos
@@ -166,18 +202,37 @@ export async function restoreBackup(data: unknown): Promise<RestoreResult> {
 		throw new Error('Not a Chawan backup file.');
 	}
 	const d = data as {
+		format?: unknown;
 		exportedAt?: string;
 		tins?: unknown[];
 		sessions?: unknown[];
 		photos?: unknown[];
 	};
+
+	// Refuse a file from a NEWER build rather than silently degrading it. Zod
+	// strips unknown keys, so a future format would restore looking successful
+	// while quietly dropping whatever that version added — the worst failure
+	// mode for the one instrument that exists to not lose data. Older formats
+	// (1 and 2) stay readable; only the future is refused.
+	const format = typeof d.format === 'number' ? d.format : 1;
+	if (format > BACKUP_FORMAT) {
+		throw new Error(
+			`This backup was made by a newer version of Chawan (format ${format}). Update the app, then restore.`
+		);
+	}
 	const tinList = Array.isArray(d.tins) ? d.tins : [];
 	const sessionList = Array.isArray(d.sessions) ? d.sessions : [];
 	const photoList = Array.isArray(d.photos) ? d.photos : [];
-	// v1 photos carry no timestamp; the export time is a safe lower bound on the
+	// v1 photos carry no timestamp; the export time is a safe LOWER bound on the
 	// photo's age, so the merge can still order it (and it loses to anything
 	// stamped later locally).
-	const photoFallbackTs = typeof d.exportedAt === 'string' ? d.exportedAt : nowIso();
+	//
+	// When even exportedAt is missing there is no lower bound to be had, so this
+	// is undefined rather than nowIso(). now() is an UPPER bound: it made an
+	// unstamped photo in an unstamped file beat every locally-stamped one,
+	// exactly inverting the rule stated above and in incomingWins() — the v1
+	// clobber this fallback exists to prevent.
+	const photoFallbackTs = typeof d.exportedAt === 'string' ? d.exportedAt : undefined;
 
 	const res: RestoreResult = {
 		tinsAdded: 0,
@@ -189,6 +244,7 @@ export async function restoreBackup(data: unknown): Promise<RestoreResult> {
 		photos: 0,
 		photosKept: 0,
 		photosFailed: 0,
+		photosDeleted: 0,
 		photosSkipped: 0
 	};
 
@@ -248,21 +304,36 @@ export async function restoreBackup(data: unknown): Promise<RestoreResult> {
 
 	for (const raw of photoList) {
 		const p = raw as Partial<BackupPhoto>;
-		if (!p || typeof p.tinId !== 'string' || typeof p.dataUrl !== 'string') continue;
+		if (!p || typeof p.tinId !== 'string') continue;
+		const isTombstone = typeof p.deletedAt === 'string';
+		// A row must carry bytes or be a tombstone; anything else is malformed.
+		if (!isTombstone && typeof p.dataUrl !== 'string') continue;
 		// Orphan guard: attach only to a tin that's live after the restore.
 		if (!liveTinIds.has(p.tinId)) {
 			res.photosSkipped++;
 			continue;
 		}
+		// Two different timestamps on purpose. `incomingTs` may be undefined —
+		// that is what makes an unstamped photo lose to a stamped local one in
+		// incomingWins(). `storedTs` is what we persist if it does win, and must
+		// be a real ISO string, so it falls back to now(): the photo genuinely
+		// arrived on this device now, and stamping it lets a later export order
+		// it correctly.
 		const incomingTs = typeof p.updatedAt === 'string' ? p.updatedAt : photoFallbackTs;
+		const storedTs = incomingTs ?? nowIso();
 		try {
 			const existing = await repository.getTinPhotoRecord(p.tinId);
 			if (existing && !incomingWins({ updatedAt: incomingTs }, existing)) {
 				res.photosKept++;
 				continue;
 			}
-			await repository.setTinPhotoAt(p.tinId, dataUrlToBlob(p.dataUrl), incomingTs);
-			res.photos++;
+			if (isTombstone) {
+				await repository.deleteTinPhotoAt(p.tinId, storedTs);
+				res.photosDeleted++;
+			} else {
+				await repository.setTinPhotoAt(p.tinId, dataUrlToBlob(p.dataUrl as string), storedTs);
+				res.photos++;
+			}
 		} catch (err) {
 			if (isQuota(err)) throw new QuotaError();
 			// A single unreadable photo shouldn't abort the whole restore — but it

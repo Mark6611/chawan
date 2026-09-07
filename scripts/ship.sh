@@ -54,12 +54,15 @@ if [ -n "$(git status --porcelain -- . ":!$PBXPROJ" 2>/dev/null)" ]; then
 	echo "── note: uncommitted changes besides the version bump — commit feature work first if it should ship."
 fi
 
-echo "══ Gate 1/3: unit tests"
+echo "══ Gate 1/4: unit tests"
 npm test
-echo "══ Gate 2/3: type-check"
+echo "══ Gate 2/4: type-check"
 npm run check
-echo "══ Gate 3/3: lint + format"
+echo "══ Gate 3/4: lint + format"
 npm run lint
+
+echo "══ Gate 4/4: privacy policy parity"
+node scripts/verify-privacy-parity.mjs
 
 echo "══ Version bump"
 CUR=$(grep -m1 'CURRENT_PROJECT_VERSION = ' "$PBXPROJ" | sed 's/[^0-9]//g')

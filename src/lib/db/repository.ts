@@ -52,6 +52,8 @@ class DexieRepository implements Repository {
 
 	async getTinPhoto(tinId: string): Promise<Blob | undefined> {
 		const row = await db.tinPhotos.get(tinId);
+		// A tombstone has no bytes — treat it as absent for every reader.
+		if (row?.deletedAt) return undefined;
 		return row?.blob;
 	}
 
@@ -60,7 +62,12 @@ class DexieRepository implements Repository {
 	}
 
 	async deleteTinPhoto(tinId: string): Promise<void> {
-		await db.tinPhotos.delete(tinId);
+		// Soft delete: drop the bytes (the point of removing a photo) but keep
+		// the row as a tombstone so a later restore can tell "removed" from
+		// "never had one". Bumping updatedAt is what makes the removal win over
+		// an older backup's copy.
+		const now = nowIso();
+		await db.tinPhotos.put({ tinId, updatedAt: now, deletedAt: now });
 	}
 
 	// ─── Sessions ───────────────────────────────────────────
@@ -142,6 +149,12 @@ class DexieRepository implements Repository {
 		// The full record, including updatedAt — backup needs the timestamp to
 		// export it and to merge on restore. getTinPhoto() returns only the blob.
 		return db.tinPhotos.get(tinId);
+	}
+
+	/** Tombstone a photo with an explicit timestamp (restore path — mirrors
+	 *  setTinPhotoAt, which preserves the backup's clock rather than now()). */
+	async deleteTinPhotoAt(tinId: string, updatedAt: string): Promise<void> {
+		await db.tinPhotos.put({ tinId, updatedAt, deletedAt: updatedAt });
 	}
 
 	async setTinPhotoAt(tinId: string, blob: Blob, updatedAt: string): Promise<void> {

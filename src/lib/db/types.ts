@@ -118,8 +118,14 @@ export type Tin = z.infer<typeof TinSchema>;
 // excluded from the JSON backup. TS-only, no Zod: it never crosses a wire.
 export interface TinPhoto {
 	tinId: string;
-	blob: Blob;
+	/** Absent on a tombstone — the bytes are dropped, the row is kept. */
+	blob?: Blob;
 	updatedAt: string; // ISO
+	/** Set when the photo was removed. Tins and sessions have carried a
+	 *  tombstone since v1; photos hard-deleted their row instead, so a restore
+	 *  found nothing to compare against, took the "no existing timestamp →
+	 *  incoming wins" branch, and silently put a removed photo back. */
+	deletedAt?: string; // ISO
 }
 
 // ─────────────────────────────────────────────────────────────

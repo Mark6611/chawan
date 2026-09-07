@@ -51,3 +51,33 @@ describe('incomingWins', () => {
 		expect(incomingWins(backupTombstone, localLive)).toBe(true);
 	});
 });
+
+// The photo-restore fallback used to be nowIso() when a file carried no
+// exportedAt. now() is an UPPER bound, so an unstamped photo beat every
+// locally-stamped one — the exact v1 clobber the fallback exists to prevent,
+// and the opposite of what incomingWins() documents. It is undefined now, and
+// these pin the branch that undefined selects.
+describe('photo restore fallback (undefined vs now)', () => {
+	const local = { updatedAt: '2026-08-01T00:00:00.000Z' };
+
+	it('an unstamped photo from an unstamped file loses to a stamped local one', () => {
+		expect(incomingWins({ updatedAt: undefined }, local)).toBe(false);
+	});
+
+	it('a now() fallback would have won — the bug this replaces', () => {
+		const asIfNow = { updatedAt: new Date().toISOString() };
+		expect(incomingWins(asIfNow, local)).toBe(true);
+	});
+
+	it('exportedAt is still used when present, as a lower bound', () => {
+		expect(incomingWins({ updatedAt: '2026-07-01T00:00:00.000Z' }, local)).toBe(false);
+		expect(incomingWins({ updatedAt: '2026-09-01T00:00:00.000Z' }, local)).toBe(true);
+	});
+
+	// A photo tombstone is just a row whose updatedAt is newer, so removal wins
+	// over an older backup's copy by the same rule as everything else.
+	it('a removal newer than the backup copy wins', () => {
+		const removedLocally = { updatedAt: '2026-08-10T00:00:00.000Z' };
+		expect(incomingWins({ updatedAt: '2026-08-01T00:00:00.000Z' }, removedLocally)).toBe(false);
+	});
+});

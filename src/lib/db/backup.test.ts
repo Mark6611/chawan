@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Dexie } from 'dexie';
 import { isQuota } from './quota';
-import { dataUrlToBlob } from './backup';
+import { BACKUP_FORMAT, dataUrlToBlob, restoreBackup } from './backup';
 
 // Regression coverage for the quota-detection bug: isQuota() originally gated
 // on `err instanceof DOMException`, which is true for the error the BROWSER
@@ -92,5 +92,30 @@ describe('dataUrlToBlob', () => {
 
 	it('refuses malformed base64', () => {
 		expect(() => dataUrlToBlob('data:image/jpeg;base64,not valid base64!!')).toThrow();
+	});
+});
+
+// A backup from a NEWER build used to restore "successfully" while Zod
+// silently stripped whatever that version added — the worst failure mode for
+// the one instrument whose entire job is not losing data.
+describe('restoreBackup format gate', () => {
+	const file = (format?: number) => ({ app: 'chawan', format, tins: [], sessions: [], photos: [] });
+
+	it('refuses a file from a newer build', async () => {
+		await expect(restoreBackup(file(BACKUP_FORMAT + 1))).rejects.toThrow(/newer version/i);
+	});
+
+	it('accepts the current format', async () => {
+		await expect(restoreBackup(file(BACKUP_FORMAT))).resolves.toBeTruthy();
+	});
+
+	it('accepts older formats, and treats a missing format as v1', async () => {
+		await expect(restoreBackup(file(1))).resolves.toBeTruthy();
+		await expect(restoreBackup(file(2))).resolves.toBeTruthy();
+		await expect(restoreBackup(file(undefined))).resolves.toBeTruthy();
+	});
+
+	it('still refuses a file that is not a Chawan backup at all', async () => {
+		await expect(restoreBackup({ app: 'coffee', format: 1 })).rejects.toThrow(/not a chawan/i);
 	});
 });

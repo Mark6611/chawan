@@ -37,6 +37,8 @@ export interface Repository {
 	getTinRaw(id: string): Promise<Tin | undefined>;
 	getSessionRaw(id: string): Promise<Session | undefined>;
 	getTinPhotoRecord(tinId: string): Promise<TinPhoto | undefined>;
+	/** Tombstone a photo with an explicit timestamp (restore path). */
+	deleteTinPhotoAt(tinId: string, updatedAt: string): Promise<void>;
 	setTinPhotoAt(tinId: string, blob: Blob, updatedAt: string): Promise<void>;
 
 	// ─── Aggregate helpers (used by Home / Again? / form defaults) ─

@@ -68,6 +68,31 @@ export class ChawanDexie extends Dexie {
 			sessions: 'id, kind, tinId, brewedAt, createdAt',
 			tinPhotos: 'tinId'
 		});
+
+		// v4: tinPhotos gains `deletedAt` and its `blob` becomes optional, so a
+		// removed photo leaves a tombstone like tins and sessions always have.
+		// Without one, deleting a photo removed the row outright, and restoring
+		// any older backup found no existing record to lose to and put the photo
+		// straight back.
+		//
+		// Indexes are unchanged (still keyed by tinId) and every existing row is
+		// already valid under the new shape — a live photo simply has no
+		// deletedAt. The bump exists because the row SHAPE changed: this app's
+		// rule is that a field change ships with a version bump and an upgrade()
+		// in the same commit, so the migration is explicit rather than implied.
+		this.version(4)
+			.stores({
+				tins: 'id, archived, openedAt, createdAt',
+				sessions: 'id, kind, tinId, brewedAt, createdAt',
+				tinPhotos: 'tinId'
+			})
+			.upgrade(async (tx) => {
+				// Nothing to rewrite: pre-v4 rows all carry a blob and no
+				// deletedAt, which is exactly a live photo. Counted so the
+				// migration is visible in the console rather than silent.
+				const n = await tx.table('tinPhotos').count();
+				console.info(`[dexie] v3→v4: ${n} photo row(s) now tombstone-capable`);
+			});
 	}
 }
 

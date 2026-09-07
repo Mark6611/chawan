@@ -28,3 +28,5 @@ jobs:
         run: npm run build
       - name: CSS browser-floor gate
         run: node scripts/verify-bundle-css.mjs
+      - name: Privacy policy parity (docs/ is the URL App Review fetches)
+        run: node scripts/verify-privacy-parity.mjs
