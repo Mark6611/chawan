@@ -1,10 +1,9 @@
 // Dexie schema and singleton db instance.
 //
-// IMPORTANT: This module is ONLY imported by src/lib/db/repository.ts
-// and src/lib/sync.svelte.ts (for bulk push/pull). Components and pages
-// must go through the repository — never call `db.tins.toArray()`
-// directly. The boundary is what lets Phase 2 swap implementations
-// without touching the UI.
+// IMPORTANT: This module is ONLY imported by src/lib/db/repository.ts.
+// Components and pages must go through the repository — never call
+// `db.tins.toArray()` directly. The boundary is what keeps storage
+// swappable without touching the UI.
 
 import Dexie, { type Table } from 'dexie';
 import type { Tin, TinPhoto, Session } from './types';

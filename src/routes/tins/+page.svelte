@@ -2,7 +2,6 @@
 	// Inventory — active + archived tins.
 
 	import { repository } from '$lib/db/repository';
-	import { syncState } from '$lib/sync.svelte';
 	import { isPersonal, type PersonalSession, type Tin } from '$lib/db/types';
 
 	import Eyebrow from '$lib/components/Eyebrow.svelte';
@@ -35,7 +34,6 @@
 		}
 	}
 	$effect(() => {
-		void syncState.tick;
 		load();
 	});
 

@@ -8,7 +8,6 @@
 	// not directly to /sessions/new/personal.
 
 	import { repository } from '$lib/db/repository';
-	import { syncState } from '$lib/sync.svelte';
 	import { STYLE_LABELS, isPersonal, newId, nowIso, type Session, type Tin } from '$lib/db/types';
 	import { bowlsThisWeek, formatTimeAgo } from '$lib/sessions/compute';
 	import { detectUsual } from '$lib/sessions/again';
@@ -40,9 +39,8 @@
 		}
 	}
 
-	// Initial load + re-fetch after a sync pull (syncState.tick increments).
+	// Initial load.
 	$effect(() => {
-		void syncState.tick;
 		load();
 	});
 

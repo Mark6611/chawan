@@ -4,7 +4,6 @@
 	// you're inside.
 
 	import { repository } from '$lib/db/repository';
-	import { syncState } from '$lib/sync.svelte';
 	import { type Session, type Tin } from '$lib/db/types';
 
 	import Eyebrow from '$lib/components/Eyebrow.svelte';
@@ -37,7 +36,6 @@
 		}
 	}
 	$effect(() => {
-		void syncState.tick;
 		load();
 	});
 

@@ -6,7 +6,6 @@
 
 	import { page } from '$app/state';
 	import { repository } from '$lib/db/repository';
-	import { syncState } from '$lib/sync.svelte';
 	import {
 		GRADE_LABELS,
 		MILK_LABELS,
@@ -77,7 +76,6 @@
 	}
 	// Re-fetch on mount, on route-param change, and after a sync pull.
 	$effect(() => {
-		void syncState.tick;
 		if (id) load();
 	});
 

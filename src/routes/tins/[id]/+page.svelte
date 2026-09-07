@@ -8,7 +8,6 @@
 
 	import { page } from '$app/state';
 	import { repository } from '$lib/db/repository';
-	import { syncState } from '$lib/sync.svelte';
 	import {
 		GRADE_LABELS,
 		REGION_LABELS,
@@ -56,7 +55,6 @@
 		}
 	}
 	$effect(() => {
-		void syncState.tick;
 		if (id) load();
 	});
 

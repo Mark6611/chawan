@@ -6,7 +6,6 @@
 	// reads calm, not broken.
 
 	import { repository } from '$lib/db/repository';
-	import { syncState } from '$lib/sync.svelte';
 	import { STYLE_LABELS, WHISK_LABELS, type Session, type Tin } from '$lib/db/types';
 	import { MATCHA_CATALOG } from '$lib/catalog/matcha-catalog';
 	import { formatPrice } from '$lib/sessions/currency';
@@ -64,7 +63,6 @@
 		}
 	}
 	$effect(() => {
-		void syncState.tick;
 		load();
 	});
 

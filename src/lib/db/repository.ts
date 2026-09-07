@@ -1,16 +1,15 @@
-// Phase-2 repository: Dexie remains the local cache, the sync layer pushes
-// each write up to Supabase in the background. Reads stay local-first; only
-// fullSync() pulls.
+// Repository over Dexie. Chawan is local-only: there is no server, no
+// account, and no network path out of this module.
 //
-// Soft delete: `deletedAt` is the tombstone. Reads filter it out; writes
-// (including deleteSession) push the row with deletedAt set so other devices
-// converge on the deleted state.
+// Soft delete: `deletedAt` is the tombstone rather than a row removal. It is
+// kept even without sync because the JSON backup carries tombstones, so
+// restoring an older backup cannot resurrect something deleted since — the
+// reason `deletedAt` earns its keep now that nothing pushes.
 
 import { db } from './dexie';
 import { isPersonal, nowIso } from './types';
 import type { Repository } from './repository.types';
 import type { PersonalSession, Session, Tin, TinPhoto } from './types';
-import { pushSession, pushTin } from '../sync.svelte';
 
 const isLive = <T extends { deletedAt?: string }>(row: T) => !row.deletedAt;
 
@@ -33,7 +32,6 @@ class DexieRepository implements Repository {
 
 	async saveTin(tin: Tin): Promise<void> {
 		await db.tins.put(tin);
-		pushTin(tin);
 	}
 
 	async archiveTin(id: string): Promise<void> {
@@ -41,7 +39,6 @@ class DexieRepository implements Repository {
 		if (!t) return;
 		const updated: Tin = { ...t, archived: true, updatedAt: nowIso() };
 		await db.tins.put(updated);
-		pushTin(updated);
 	}
 
 	async unarchiveTin(id: string): Promise<void> {
@@ -49,7 +46,6 @@ class DexieRepository implements Repository {
 		if (!t) return;
 		const updated: Tin = { ...t, archived: false, updatedAt: nowIso() };
 		await db.tins.put(updated);
-		pushTin(updated);
 	}
 
 	// ─── Tin photos (device-local, never synced — see TinPhoto) ──
@@ -94,7 +90,6 @@ class DexieRepository implements Repository {
 
 	async saveSession(session: Session): Promise<void> {
 		await db.sessions.put(session);
-		pushSession(session);
 	}
 
 	async deleteSession(id: string): Promise<void> {
@@ -106,7 +101,6 @@ class DexieRepository implements Repository {
 		const now = nowIso();
 		const tombstoned = { ...existing, deletedAt: now, updatedAt: now } as Session;
 		await db.sessions.put(tombstoned);
-		pushSession(tombstoned);
 	}
 
 	// ─── Aggregate ──────────────────────────────────────────

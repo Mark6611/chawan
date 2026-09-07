@@ -12,7 +12,6 @@
 	import { hasTaste } from '$lib/catalog/types';
 	import { GRADE_LABELS, REGION_LABELS, type Tin } from '$lib/db/types';
 	import { repository } from '$lib/db/repository';
-	import { syncState } from '$lib/sync.svelte';
 
 	import Eyebrow from '$lib/components/Eyebrow.svelte';
 	import Display from '$lib/components/Display.svelte';
@@ -33,7 +32,6 @@
 		tins = await repository.listTins();
 	}
 	$effect(() => {
-		void syncState.tick;
 		loadTins();
 	});
 	const ownedCount = $derived(entry ? tins.filter((t) => t.catalogId === entry.id).length : 0);
