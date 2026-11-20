@@ -54,6 +54,10 @@ then commit, push and start the next.
 
 ### Phase 0 — Shippable again (1.2)
 
+**Status 2026-11-20: built and on TestFlight as 1.2 (build 9). Not yet
+submitted for review.** Still to do: an on-device pass, regenerated
+screenshots, and the submission.
+
 Get the ten weeks of unshipped fixes to the store. Nothing new is designed here.
 
 - Capacitor 8.4.1 → current, run its scene-lifecycle migrator, add
@@ -181,8 +185,12 @@ carries them.
 
 ## Carried risks
 
-- The scene-lifecycle crash is inferred from Buffy's experience and Chawan's
-  identical setup. It has not been reproduced on Chawan.
+- The scene-lifecycle crash is confirmed on Chawan. On an iOS 27.2 simulator
+  the pre-migration build trapped in
+  `UIApplicationEvaluateRuntimeIssueForNoSceneLifecycleAdoption`, and the
+  migrated build ran for 160 seconds and rendered Today. The trap fires when
+  the scene is created, not at a fixed six seconds: on a slow machine it came
+  at 35 seconds, so any future check needs a window of a minute or more.
 - No Chawan build has ever been confirmed on a physical device.
 - Brew Log deferred three items that Chawan will meet too: a sticky pane's
   height under the keyboard on an unfolded Duo, idle-versus-highlighted bars
