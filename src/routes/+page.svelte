@@ -9,7 +9,7 @@
 
 	import { repository } from '$lib/db/repository';
 	import { STYLE_LABELS, isPersonal, newId, nowIso, type Session, type Tin } from '$lib/db/types';
-	import { bowlsThisWeek, formatTimeAgo } from '$lib/sessions/compute';
+	import { bowlsThisWeek, formatTimeAgo, styleLabel } from '$lib/sessions/compute';
 	import { detectUsual } from '$lib/sessions/again';
 	import { tinFreshness, tinRemaining } from '$lib/tins/compute';
 
@@ -58,7 +58,7 @@
 	const weekBowls = $derived(bowlsThisWeek(sessions));
 	const usual = $derived(detectUsual(sessions));
 
-	const today = new Date().toLocaleDateString('en-US', {
+	const today = new Date().toLocaleDateString(undefined, {
 		weekday: 'short',
 		day: 'numeric',
 		month: 'short'
@@ -95,7 +95,7 @@
 	}
 </script>
 
-<main class="mx-auto max-w-md px-6 py-12 pb-28">
+<main class="mx-auto max-w-md px-6 pt-page pb-28">
 	<Eyebrow>{today}</Eyebrow>
 	<div class="mt-2">
 		<Display size="l">Today</Display>
@@ -145,9 +145,7 @@
 					<Display size="m" italic={false} as="h2">{lastSession.cafeName}</Display>
 					<div class="mt-1">
 						<Mono size="meta" tone="muted">
-							cafe · {STYLE_LABELS[lastSession.style]}{lastSession.maker
-								? ' · ' + lastSession.maker
-								: ''}
+							cafe · {styleLabel(lastSession)}{lastSession.maker ? ' · ' + lastSession.maker : ''}
 						</Mono>
 					</div>
 				{/if}

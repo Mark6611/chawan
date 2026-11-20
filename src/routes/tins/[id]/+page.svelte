@@ -135,7 +135,7 @@
 	}
 </script>
 
-<main class="mx-auto max-w-md px-6 py-12 pb-28">
+<main class="mx-auto max-w-md px-6 pt-page pb-28">
 	<a
 		href="/tins"
 		class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink"

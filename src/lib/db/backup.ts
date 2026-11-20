@@ -26,6 +26,7 @@
 import { repository } from './repository';
 import { SessionSchema, TinSchema, nowIso, type Session, type Tin } from './types';
 import { isQuota } from './quota';
+import { applyPrefs, readPrefs } from './backup-prefs';
 import { incomingWins, isImplausiblyFuture } from './backup-merge';
 
 export interface BackupPhoto {
@@ -52,6 +53,9 @@ export interface BackupPayload {
 	tins: Tin[]; // includes tombstones (deletedAt set)
 	sessions: Session[]; // includes tombstones
 	photos: BackupPhoto[];
+	/** Device preferences (defaults, currency, theme, glyph). Optional: older
+	 *  files have none, and older builds ignore the key. */
+	prefs?: Record<string, string>;
 }
 
 export interface RestoreResult {
@@ -71,6 +75,8 @@ export interface RestoreResult {
 	/** Photos with no live tin to attach to (a deleted or absent tin). Skipped
 	 *  so a stale/hand-edited file can't leave unreachable blobs eating quota. */
 	photosSkipped: number;
+	/** Preferences taken from the backup (never over a choice made here). */
+	prefsApplied: number;
 }
 
 export class QuotaError extends Error {
@@ -193,7 +199,8 @@ export async function buildBackup(version: string): Promise<BackupPayload> {
 		unrestorableCount: unrestorable.length,
 		tins,
 		sessions,
-		photos
+		photos,
+		prefs: readPrefs()
 	};
 }
 
@@ -257,7 +264,8 @@ export async function restoreBackup(data: unknown): Promise<RestoreResult> {
 		photosKept: 0,
 		photosFailed: 0,
 		photosDeleted: 0,
-		photosSkipped: 0
+		photosSkipped: 0,
+		prefsApplied: 0
 	};
 
 	// Tins that are LIVE after this restore. A photo is only written for one of
@@ -365,6 +373,8 @@ export async function restoreBackup(data: unknown): Promise<RestoreResult> {
 			res.photosFailed++;
 		}
 	}
+
+	res.prefsApplied = applyPrefs((d as { prefs?: unknown }).prefs);
 
 	return res;
 }

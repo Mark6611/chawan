@@ -251,6 +251,19 @@ html.theming *::after {
 	}
 }
 
+/* Top padding for a page: the design's 3rem, measured from the bottom of the
+   status bar rather than from the top of the screen.
+
+   The web view runs UNDER the status bar (viewport-fit=cover, and Capacitor
+   leaves contentInsetAdjustmentBehavior at .never), so a flat py-12 put every
+   screen's first line 48px from the top of the glass — inside the 59pt the
+   Dynamic Island occupies. The theme toggle and the update prompt already
+   added the inset; page content did not. In a browser the inset is 0 and this
+   is exactly the old 3rem. */
+@utility pt-page {
+	padding-top: calc(env(safe-area-inset-top, 0px) + 3rem);
+}
+
 @layer components {
 	/* Eyebrow pattern — used as the structural metadata label everywhere. */
 	.eyebrow {

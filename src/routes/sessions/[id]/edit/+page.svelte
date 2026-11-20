@@ -24,11 +24,11 @@
 </script>
 
 {#if session === undefined}
-	<main class="mx-auto max-w-md px-6 py-12 text-center">
+	<main class="mx-auto max-w-md px-6 pt-page pb-12 text-center">
 		<Mono size="meta" tone="muted">Loading…</Mono>
 	</main>
 {:else if session === null}
-	<main class="mx-auto max-w-md px-6 py-12 text-center">
+	<main class="mx-auto max-w-md px-6 pt-page pb-12 text-center">
 		<a
 			href="/sessions"
 			class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink"

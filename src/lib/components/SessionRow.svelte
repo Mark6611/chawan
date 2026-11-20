@@ -4,15 +4,9 @@
 	// italic; brew params on personal; region/milk/price on cafe). Whole
 	// row is a link to /sessions/[id].
 
-	import {
-		MILK_LABELS,
-		REGION_LABELS,
-		STYLE_LABELS,
-		isPersonal,
-		type Session,
-		type Tin
-	} from '$lib/db/types';
+	import { MILK_LABELS, REGION_LABELS, isPersonal, type Session, type Tin } from '$lib/db/types';
 	import { formatPrice } from '$lib/sessions/currency';
+	import { styleLabel } from '$lib/sessions/compute';
 	import Mono from './Mono.svelte';
 	import Rating from './Rating.svelte';
 
@@ -37,7 +31,7 @@
 >
 	<div class="flex items-baseline justify-between gap-3">
 		<Mono size="meta" tone="muted">
-			{STYLE_LABELS[session.style]} · {timeOfDay(session.brewedAt)}
+			{styleLabel(session)} · {timeOfDay(session.brewedAt)}
 		</Mono>
 		{#if session.rating}
 			<Rating value={session.rating} size={6} />

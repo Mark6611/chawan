@@ -34,6 +34,7 @@
 	import Hairline from './Hairline.svelte';
 	import Field from './Field.svelte';
 	import LoadError from './LoadError.svelte';
+	import { confirmSheet } from '$lib/confirm.svelte';
 	import Segmented from './Segmented.svelte';
 	import ChipGroup from './ChipGroup.svelte';
 	import Rating from './Rating.svelte';
@@ -145,7 +146,7 @@
 		if (sameDay && drift < 60_000) return `NOW · ${hm}`;
 		if (sameDay) return `TODAY · ${hm}`;
 		const day = d
-			.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' })
+			.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
 			.toUpperCase();
 		return `${day} · ${hm}`;
 	});
@@ -183,7 +184,12 @@
 
 	async function deleteSession() {
 		if (!isEdit || !initial || saving) return;
-		if (!confirm('Delete this session?')) return;
+		const ok = await confirmSheet({
+			title: 'Delete this session?',
+			body: 'You can put it back from Settings, under Recently deleted.',
+			verb: 'Delete session'
+		});
+		if (!ok) return;
 		saving = true;
 		error = null;
 		try {
@@ -198,7 +204,7 @@
 	const backHref = $derived(isEdit ? `/sessions/${initial?.id}` : '/sessions/new');
 </script>
 
-<main class="mx-auto max-w-md px-6 py-12 pb-28">
+<main class="mx-auto max-w-md px-6 pt-page pb-28">
 	<a
 		href={backHref}
 		class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink"

@@ -8,6 +8,8 @@
 	import { preferences } from '$lib/preferences.svelte';
 	import { buildBackup, restoreBackup, QuotaError } from '$lib/db/backup';
 	import { repository } from '$lib/db/repository';
+	import { confirmSheet } from '$lib/confirm.svelte';
+	import { styleLabel } from '$lib/sessions/compute';
 	import type { Session } from '$lib/db/types';
 	import { shareOrDownload } from '$lib/share/share-card';
 	import { STYLE_LABELS, WHISK_LABELS, type Style, type Whisk } from '$lib/db/types';
@@ -51,7 +53,7 @@
 			month: 'short',
 			day: 'numeric'
 		});
-		return `${STYLE_LABELS[s.style]} · ${when}`;
+		return `${styleLabel(s)} · ${when}`;
 	};
 
 	// Backup / restore state
@@ -115,11 +117,14 @@
 					: 'an unknown date';
 			const t = Number(header.tinsCount) || 0;
 			const s = Number(header.sessionsCount) || 0;
-			const proceed = confirm(
-				`Restore from the backup taken ${when}?\n\n` +
+			const proceed = await confirmSheet({
+				title: `Restore the backup from ${when}?`,
+				body:
 					`${t} tin${t === 1 ? '' : 's'} · ${s} session${s === 1 ? '' : 's'}. ` +
-					`Items merge by most-recent edit — newer copies already on this device are kept.`
-			);
+					`Items merge by most-recent edit — newer copies already on this device are kept.`,
+				verb: 'Restore',
+				destructive: false
+			});
 			if (!proceed) {
 				target.value = '';
 				return;
@@ -149,6 +154,16 @@
 			// showed the green "Restored 0 tins · 0 sessions. Skipped 40 invalid."
 			// Kept items are not loss: those are newer local copies, working as
 			// intended.
+			if (r.prefsApplied > 0) {
+				// Preferences came back too: show them in this form and in the theme
+				// without waiting for a reload.
+				text += ' Your settings came with it.';
+				preferences.init();
+				const d = readDefaults();
+				style = d.style;
+				waterTempC = d.waterTempC;
+				whisk = d.whisk;
+			}
 			const lost = skipped + r.photosFailed + r.photosSkipped;
 			importStatus = { text, ok: lost === 0 };
 		} catch (err) {
@@ -211,11 +226,11 @@
 			whisk: whisk as Whisk
 		});
 		const t = new Date();
-		lastSaved = `Saved · ${t.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+		lastSaved = `Saved · ${t.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`;
 	});
 </script>
 
-<main class="mx-auto max-w-md px-6 py-12 pb-28">
+<main class="mx-auto max-w-md px-6 pt-page pb-28">
 	<Eyebrow>App</Eyebrow>
 	<div class="mt-2">
 		<Display size="l">Settings</Display>

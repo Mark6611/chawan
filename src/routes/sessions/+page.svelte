@@ -89,7 +89,7 @@
 		yesterday.setDate(yesterday.getDate() - 1);
 		if (dDate.getTime() === yesterday.getTime()) return 'YESTERDAY';
 		return dDate
-			.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' })
+			.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })
 			.toUpperCase();
 	}
 
@@ -100,7 +100,7 @@
 	];
 </script>
 
-<main class="mx-auto max-w-md px-6 py-12 pb-28">
+<main class="mx-auto max-w-md px-6 pt-page pb-28">
 	<Eyebrow>Log</Eyebrow>
 	<div class="mt-2">
 		<Display size="l">Sessions</Display>

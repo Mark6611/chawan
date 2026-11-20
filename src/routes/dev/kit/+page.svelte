@@ -37,7 +37,7 @@
 	const fakeTicks = [0.04, 0.12, 0.18, 0.31, 0.36, 0.5, 0.61];
 </script>
 
-<main class="mx-auto max-w-md px-6 py-12 pb-24">
+<main class="mx-auto max-w-md px-6 pt-page pb-24">
 	<Eyebrow>Dev · component kit</Eyebrow>
 	<Display size="l">Atoms</Display>
 	<p class="mt-2 text-[13px] text-muted italic">

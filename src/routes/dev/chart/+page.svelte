@@ -29,7 +29,7 @@
 	let brandFilter = $state<BrandId | undefined>(undefined);
 </script>
 
-<main class="mx-auto max-w-2xl px-6 py-12 pb-28">
+<main class="mx-auto max-w-2xl px-6 pt-page pb-28">
 	<Eyebrow>DEV · flavor chart</Eyebrow>
 	<div class="mt-2">
 		<Display size="l">Chart exhibit</Display>

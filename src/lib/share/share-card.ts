@@ -19,6 +19,7 @@ import {
 	type PersonalSession,
 	type Tin
 } from '$lib/db/types';
+import { styleLabel } from '$lib/sessions/compute';
 import type { CatalogEntry } from '$lib/catalog/types';
 import { formatPrice } from '$lib/sessions/currency';
 
@@ -109,9 +110,7 @@ export function buildPersonalCard(
 }
 
 export function buildCafeCard(s: CafeSession, format: ShareFormat = 'square'): SessionCardData {
-	const metrics: ShareMetric[] = [
-		{ label: 'Style', value: s.style === 'latte' ? 'Latte' : 'Clear' }
-	];
+	const metrics: ShareMetric[] = [{ label: 'Style', value: styleLabel(s) }];
 	if (s.style === 'latte' && s.milk) metrics.push({ label: 'Milk', value: MILK_LABELS[s.milk] });
 	if (s.priceCents != null) {
 		metrics.push({

@@ -148,7 +148,7 @@
 	onMount(loadTins);
 </script>
 
-<main class="mx-auto max-w-md px-6 py-12 pb-28">
+<main class="mx-auto max-w-md px-6 pt-page pb-28">
 	{#if pickerMode}
 		<a
 			href={returnUrl}

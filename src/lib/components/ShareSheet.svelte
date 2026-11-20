@@ -8,6 +8,7 @@
 	// Image" → Photos). Download → a direct file download (Files on iOS,
 	// Downloads on desktop). The card is a file, not a network — no upload.
 
+	import { Capacitor } from '@capacitor/core';
 	import { fade, slide } from 'svelte/transition';
 	import { drawShareCard, renderShareCard, type CardTheme } from '$lib/share/render-canvas';
 	import { shareOrDownload, type ShareCardData, type ShareFormat } from '$lib/share/share-card';
@@ -16,6 +17,8 @@
 	import Display from './Display.svelte';
 	import Mono from './Mono.svelte';
 	import PrimaryButton from './PrimaryButton.svelte';
+
+	const isNative = Capacitor.isNativePlatform();
 
 	let {
 		open = $bindable(false),
@@ -242,7 +245,12 @@
 				<PrimaryButton onclick={doShare} disabled={busy}>
 					{busy ? 'Preparing…' : 'Share…'}
 				</PrimaryButton>
-				<PrimaryButton kind="line" onclick={doDownload} disabled={busy}>Download</PrimaryButton>
+				<!-- Web only. Inside the iOS shell a synthetic <a download> click does
+				     nothing at all, so this was a visible control with no effect —
+				     and Share… already reaches "Save Image" and Files there. -->
+				{#if !isNative}
+					<PrimaryButton kind="line" onclick={doDownload} disabled={busy}>Download</PrimaryButton>
+				{/if}
 			</div>
 		</div>
 	</div>

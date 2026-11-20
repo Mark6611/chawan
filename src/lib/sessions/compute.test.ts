@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { bowlsThisWeek, formatRatio, formatTimeAgo } from './compute';
+import { bowlsThisWeek, formatRatio, formatTimeAgo, styleLabel } from './compute';
 import type { PersonalSession, Session } from '$lib/db/types';
 
 function personal(over: Partial<PersonalSession>): PersonalSession {
@@ -90,5 +90,23 @@ describe('formatTimeAgo', () => {
 		expect(formatTimeAgo(new Date(now.getTime() - 65 * 24 * 60 * 60_000).toISOString(), now)).toBe(
 			'2mo ago'
 		);
+	});
+});
+
+// One cafe cup used to be "Clear" on the form, "Usucha" in the feed and on its
+// own detail page, and "Clear" again on the share card.
+describe('styleLabel', () => {
+	it('calls a straight cafe cup Clear, matching the cafe form', () => {
+		expect(styleLabel({ kind: 'cafe', style: 'usucha' })).toBe('Clear');
+	});
+
+	it('keeps the tea vocabulary for bowls you whisk yourself', () => {
+		expect(styleLabel({ kind: 'personal', style: 'usucha' })).toBe('Usucha');
+		expect(styleLabel({ kind: 'personal', style: 'koicha' })).toBe('Koicha');
+	});
+
+	it('says Latte for both kinds', () => {
+		expect(styleLabel({ kind: 'cafe', style: 'latte' })).toBe('Latte');
+		expect(styleLabel({ kind: 'personal', style: 'latte' })).toBe('Latte');
 	});
 });

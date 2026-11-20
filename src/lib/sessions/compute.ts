@@ -1,6 +1,20 @@
 // Derived helpers for sessions. Computed at read time, never stored.
 
-import type { PersonalSession, Session } from '$lib/db/types';
+import { STYLE_LABELS, type PersonalSession, type Session } from '$lib/db/types';
+
+/**
+ * The word shown for a session's style, on every surface.
+ *
+ * A cafe cup is stored as `usucha` but offered on the cafe form as "Clear" —
+ * you order straight matcha at a counter, you do not order usucha. Reading
+ * surfaces used STYLE_LABELS directly, so one cup was "Clear" on the form,
+ * "Usucha" in the feed and on its own detail page, and "Clear" again on the
+ * share card. This is the one place that decides.
+ */
+export function styleLabel(s: Pick<Session, 'kind' | 'style'>): string {
+	if (s.kind === 'cafe' && s.style === 'usucha') return 'Clear';
+	return STYLE_LABELS[s.style];
+}
 
 /**
  * Water-to-powder ratio for a personal session, formatted "1:30" or "1:15".

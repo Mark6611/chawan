@@ -33,6 +33,7 @@
 
 	import LinkRail from '$lib/components/LinkRail.svelte';
 	import PwaUpdatePrompt from '$lib/components/PwaUpdatePrompt.svelte';
+	import ConfirmSheet from '$lib/components/ConfirmSheet.svelte';
 	import { preferences } from '$lib/preferences.svelte';
 
 	import { onMount } from 'svelte';
@@ -160,6 +161,7 @@
 </button>
 
 <PwaUpdatePrompt />
+<ConfirmSheet />
 
 {@render children()}
 
