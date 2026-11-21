@@ -54,14 +54,14 @@ if [ -n "$(git status --porcelain -- . ":!$PBXPROJ" 2>/dev/null)" ]; then
 	echo "── note: uncommitted changes besides the version bump — commit feature work first if it should ship."
 fi
 
-echo "══ Gate 1/4: unit tests"
+echo "══ Gate 1/5: unit tests"
 npm test
-echo "══ Gate 2/4: type-check"
+echo "══ Gate 2/5: type-check"
 npm run check
-echo "══ Gate 3/4: lint + format"
+echo "══ Gate 3/5: lint + format"
 npm run lint
 
-echo "══ Gate 4/4: privacy policy parity"
+echo "══ Gate 4/5: privacy policy parity"
 node scripts/verify-privacy-parity.mjs
 
 echo "══ Version bump"
@@ -78,6 +78,11 @@ echo "   building ${MARKETING} (${BUILD_NUM})"
 
 echo "══ Web bundle + native sync"
 npm run native:build > /tmp/chawan-iossync.log 2>&1 || { tail -30 /tmp/chawan-iossync.log; exit 1; }
+
+# Needs the bundle the line above just built, so it runs here rather than with
+# the other gates: every route in every iPhone Duo pose, with the real insets.
+echo "══ Gate 5/5: iPhone Duo layout"
+node scripts/verify-duo-layout.mjs
 
 echo "══ Signed archive (manual distribution signing — 'Chawan App Store' profile)"
 rm -rf "$(dirname "$ARCHIVE")" "$EXPORT"

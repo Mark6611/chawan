@@ -36,6 +36,20 @@
 - Confirmations go through `confirmSheet()` from `$lib/confirm.svelte`, never `window.confirm`.
 - Ship with `node scripts/asc-preflight.mjs` first, then `scripts/ship.sh`, never piped. An approved version closes its TestFlight train, so the marketing version must be above the live one.
 
+## iPhone Duo
+
+- The Duo is told apart from an iPad by the native shell, not by CSS: `HingePlugin.swift` (registered in `ViewController.swift`) reports the hinge, `src/lib/hinge.ts` sets `data-foldable` on `<html>`, and it is never cleared. WebKit on 27.2 has no viewport-segments support.
+- Measured geometry (Buffy, on the simulator): folded 466×678pt; unfolded **951×669pt landscape, hinge down the middle**; the status column takes **84pt on the right** on both displays.
+- Unfolded, every page uses both halves, with the fold BETWEEN columns. Two layouts in `layout.css`:
+  - `.split` — the page (`.split-main`, the RIGHT half, the one you touch) beside a read-only pane (`.split-aside`, left). Today, Sessions, Tins, Catalog and the personal session form.
+  - `.duo-flow` — a long page flows into two balanced columns whose gap sits on the fold. Insights, Settings, the detail pages, the cafe and tin forms.
+- **The half you touch goes on the right** (the user's call, first made for Buffy). Apply it to any new two-pane layout.
+- Keyed on `data-foldable` + `min-width: 860px`. `SPLIT_MIN_WIDTH` in `src/lib/split.svelte.ts` and `SPLIT_MIN` in the gate must match the CSS.
+- A feature must never exist in one pose only. The tin history is the pane beside the form when unfolded and the History sheet everywhere else.
+- Side safe areas are separate: `body` pads left and right by their insets, and anything `position: fixed` adds its own (tab rail, theme toggle, update prompt, the sheets).
+- **Never put `env()` in an inline style.** The gate substitutes real insets into the built CSS only, so an inline one would be invisible to it.
+- Gate: `npm run build && npm run verify:duo` — 13 routes × 5 poses. It is mutation-tested; if you change it, prove it still fails on a swapped pane.
+
 ## Commits
 
 - Plain commit messages. **No `Co-Authored-By: Claude` trailers.**

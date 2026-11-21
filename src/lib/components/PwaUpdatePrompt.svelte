@@ -47,7 +47,7 @@
 {#if $needRefresh}
 	<div
 		transition:slide={{ duration: 180 }}
-		class="fixed inset-x-0 top-0 z-[70] flex justify-center px-6 pt-[calc(env(safe-area-inset-top)+10px)]"
+		class="fixed inset-x-0 top-0 z-[70] flex justify-center pt-[calc(env(safe-area-inset-top)+10px)] pr-[calc(env(safe-area-inset-right)+1.5rem)] pl-[calc(env(safe-area-inset-left)+1.5rem)]"
 		role="status"
 	>
 		<div

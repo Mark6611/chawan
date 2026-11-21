@@ -116,6 +116,15 @@ Brew Log's 1.7 port, minus what does not apply.
 
 ### Phase 3 — iPhone Duo (1.5)
 
+**Status 2026-11-21: built ahead of phases 1 and 2**, after the first on-device
+run of 1.2 on a Duo showed the single column stretched across the hinge. Hinge
+plugin, the folded fit, and a two-half layout on all 13 screens are on main,
+with a mutation-tested layout gate. The tin history pane (last bowls and the
+average of well-rated ones) came with it, since the session form needed
+something to show; the weighted sweet spot and "next move" remain in phase 4.
+Verified in a browser at the Duo's measured sizes only. Not yet seen on the
+device.
+
 - Hinge plugin and the `data-foldable` flag.
 - Folded: clear the 84pt status column on the outer display.
 - Unfolded (951×669pt landscape): the form on the right, the reference pane on

@@ -8,14 +8,26 @@
 	import Display from './Display.svelte';
 	import Mono from './Mono.svelte';
 	import ConsumptionRail from './ConsumptionRail.svelte';
+	import { duo } from '$lib/split.svelte';
 
 	let {
 		tin,
-		sessions = []
+		sessions = [],
+		onselect,
+		selected = false
 	}: {
 		tin: Tin;
 		sessions?: PersonalSession[];
+		/** See SessionRow: beside a preview pane a tap fills the pane. */
+		onselect?: (id: string) => void;
+		selected?: boolean;
 	} = $props();
+
+	function onclick(e: MouseEvent) {
+		if (!onselect || !duo.split) return;
+		e.preventDefault();
+		onselect(tin.id);
+	}
 
 	const tinSessions = $derived(sessions.filter((s) => s.tinId === tin.id));
 	const remaining = $derived(tinRemaining(tin, tinSessions));
@@ -25,7 +37,9 @@
 
 <a
 	href="/tins/{tin.id}"
-	class="-mx-6 block px-6 py-4 transition-colors hover:bg-surface"
+	{onclick}
+	aria-current={selected ? 'true' : undefined}
+	class="-mx-6 block px-6 py-4 transition-colors hover:bg-surface {selected ? 'bg-surface' : ''}"
 	aria-label="Open {tin.name}"
 >
 	<div class="flex items-baseline justify-between gap-3">

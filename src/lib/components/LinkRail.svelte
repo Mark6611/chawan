@@ -37,7 +37,7 @@
 </script>
 
 <nav
-	class="pointer-events-none fixed inset-x-0 bottom-0 z-40 pb-[calc(env(safe-area-inset-bottom)+0.5rem)]"
+	class="tab-rail pointer-events-none fixed inset-x-0 bottom-0 z-40 pr-[env(safe-area-inset-right)] pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pl-[env(safe-area-inset-left)]"
 	aria-label="Primary"
 >
 	<div class="pointer-events-auto mx-auto max-w-md px-4">

@@ -9,8 +9,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
         // The scene manifest names Main.storyboard (UISceneStoryboardFile), so UIKit
         // has ALREADY built the window by the time this runs, rooted at the
-        // storyboard's initial view controller (CAPBridgeViewController). That is
-        // the same instantiation path every build before the scene lifecycle used.
+        // storyboard's initial view controller, ViewController — the subclass that
+        // registers the app-local Hinge plugin. That is the same instantiation path
+        // every build before the scene lifecycle used.
         //
         // Capacitor's template builds a second window here instead, which throws
         // away the storyboard instance on every launch. The Buffy sibling measured
@@ -19,7 +20,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // The fallback only runs if the storyboard key is ever removed from Info.plist.
         if window == nil {
             let fallback = UIWindow(windowScene: windowScene)
-            fallback.rootViewController = CAPBridgeViewController()
+            fallback.rootViewController = ViewController()
             fallback.makeKeyAndVisible()
             window = fallback
         }

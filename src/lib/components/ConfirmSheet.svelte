@@ -63,8 +63,7 @@
 		aria-labelledby="confirm-title"
 		aria-describedby="confirm-body"
 		tabindex="-1"
-		class="fixed z-[81] mx-auto max-w-md rounded-[22px] border-[0.5px] border-rule bg-paper p-5 shadow-[0_18px_50px_rgba(0,0,0,0.28)] outline-none"
-		style="left: calc(12px + env(safe-area-inset-left, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); bottom: calc(12px + env(safe-area-inset-bottom, 0px))"
+		class="confirm-sheet fixed z-[81] mx-auto max-w-md rounded-[22px] border-[0.5px] border-rule bg-paper p-5 shadow-[0_18px_50px_rgba(0,0,0,0.28)] outline-none"
 		transition:fly={motion({ y: 24, duration: 200 })}
 	>
 		<h2 id="confirm-title" class="font-display text-[24px] leading-[1.2] text-ink italic">

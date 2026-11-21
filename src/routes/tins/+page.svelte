@@ -5,6 +5,8 @@
 	import { isPersonal, type PersonalSession, type Tin } from '$lib/db/types';
 
 	import Eyebrow from '$lib/components/Eyebrow.svelte';
+	import TinPreview from '$lib/components/TinPreview.svelte';
+	import { duo } from '$lib/split.svelte';
 	import Display from '$lib/components/Display.svelte';
 	import Mono from '$lib/components/Mono.svelte';
 	import Hairline from '$lib/components/Hairline.svelte';
@@ -39,71 +41,96 @@
 
 	const active = $derived(tins.filter((t) => !t.archived));
 	const archived = $derived(tins.filter((t) => t.archived));
+
+	// Preview pane (unfolded iPhone Duo): the tapped tin, or the first one.
+	let selectedId = $state<string | undefined>(undefined);
+	const previewed = $derived(tins.find((t) => t.id === selectedId) ?? active[0] ?? archived[0]);
 </script>
 
-<main class="mx-auto max-w-md px-6 pt-page pb-28">
-	<div class="flex items-baseline justify-between">
-		<div>
-			<Eyebrow>Inventory</Eyebrow>
-			<div class="mt-2">
-				<Display size="l">Tins</Display>
-			</div>
-		</div>
-		<a
-			href="/tins/new"
-			class="font-mono text-[11px] tracking-[0.10em] text-tea uppercase hover:text-ink"
-			aria-label="Add a new tin"
-		>
-			+ add
-		</a>
-	</div>
-
-	{#if loadError}
-		<LoadError onretry={load} message="Couldn't load your tins — local storage may be blocked." />
-	{:else if !loaded}
-		<div class="mt-16 text-center">
-			<Mono size="meta" tone="muted">Loading…</Mono>
-		</div>
-	{:else if tins.length === 0}
-		<Hairline class="my-7" />
-		<div class="flex flex-col items-center text-center">
-			<Chawan size={72} filled={false} />
-			<div class="mt-6">
-				<Display size="m">No tins yet.</Display>
-			</div>
-			<p class="mt-4 max-w-[26ch] text-[14px] text-muted italic">
-				Add your first tin to start logging personal sessions.
-			</p>
-			<div class="mt-8 w-full">
-				<PrimaryButton href="/tins/new">Add your first tin</PrimaryButton>
-			</div>
-		</div>
-	{:else}
-		<Hairline class="my-7" />
-
-		{#if active.length}
-			<section>
-				<Eyebrow>Active · {active.length}</Eyebrow>
-				<div class="mt-2 border-t border-hairline">
-					{#each active as t (t.id)}
-						<TinRow tin={t} {sessions} />
-						<Hairline />
-					{/each}
+<div class="split">
+	<main class="split-main mx-auto max-w-md px-6 pt-page pb-28">
+		<div class="flex items-baseline justify-between">
+			<div>
+				<Eyebrow>Inventory</Eyebrow>
+				<div class="mt-2">
+					<Display size="l">Tins</Display>
 				</div>
-			</section>
-		{/if}
+			</div>
+			<a
+				href="/tins/new"
+				class="font-mono text-[11px] tracking-[0.10em] text-tea uppercase hover:text-ink"
+				aria-label="Add a new tin"
+			>
+				+ add
+			</a>
+		</div>
 
-		{#if archived.length}
-			{#if active.length}<Hairline rule class="my-7" />{/if}
-			<section>
-				<Eyebrow>Archived · {archived.length}</Eyebrow>
-				<div class="mt-2 border-t border-hairline opacity-70">
-					{#each archived as t (t.id)}
-						<TinRow tin={t} {sessions} />
-						<Hairline />
-					{/each}
+		{#if loadError}
+			<LoadError onretry={load} message="Couldn't load your tins — local storage may be blocked." />
+		{:else if !loaded}
+			<div class="mt-16 text-center">
+				<Mono size="meta" tone="muted">Loading…</Mono>
+			</div>
+		{:else if tins.length === 0}
+			<Hairline class="my-7" />
+			<div class="flex flex-col items-center text-center">
+				<Chawan size={72} filled={false} />
+				<div class="mt-6">
+					<Display size="m">No tins yet.</Display>
 				</div>
-			</section>
+				<p class="mt-4 max-w-[26ch] text-[14px] text-muted italic">
+					Add your first tin to start logging personal sessions.
+				</p>
+				<div class="mt-8 w-full">
+					<PrimaryButton href="/tins/new">Add your first tin</PrimaryButton>
+				</div>
+			</div>
+		{:else}
+			<Hairline class="my-7" />
+
+			{#if active.length}
+				<section>
+					<Eyebrow>Active · {active.length}</Eyebrow>
+					<div class="mt-2 border-t border-hairline">
+						{#each active as t (t.id)}
+							<TinRow
+								tin={t}
+								{sessions}
+								onselect={(id) => (selectedId = id)}
+								selected={duo.split && previewed?.id === t.id}
+							/>
+							<Hairline />
+						{/each}
+					</div>
+				</section>
+			{/if}
+
+			{#if archived.length}
+				{#if active.length}<Hairline rule class="my-7" />{/if}
+				<section>
+					<Eyebrow>Archived · {archived.length}</Eyebrow>
+					<div class="mt-2 border-t border-hairline opacity-70">
+						{#each archived as t (t.id)}
+							<TinRow
+								tin={t}
+								{sessions}
+								onselect={(id) => (selectedId = id)}
+								selected={duo.split && previewed?.id === t.id}
+							/>
+							<Hairline />
+						{/each}
+					</div>
+				</section>
+			{/if}
 		{/if}
-	{/if}
-</main>
+	</main>
+	<!-- Unfolded iPhone Duo: tap a tin on the right, read it here. -->
+	<aside class="split-aside" aria-label="Selected tin">
+		{#if previewed}
+			<TinPreview tin={previewed} {sessions} />
+		{:else}
+			<Eyebrow>Tin</Eyebrow>
+			<p class="mt-3 text-[14px] text-muted italic">Your tins will open here.</p>
+		{/if}
+	</aside>
+</div>

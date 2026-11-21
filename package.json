@@ -17,7 +17,8 @@
 		"icons": "node scripts/icons.mjs",
 		"native:build": "vite build && cap sync ios",
 		"native:open": "cap open ios",
-		"native:assets": "capacitor-assets generate --ios --iconBackgroundColor '#161b16' --splashBackgroundColor '#161b16' --splashBackgroundColorDark '#161b16'"
+		"native:assets": "capacitor-assets generate --ios --iconBackgroundColor '#161b16' --splashBackgroundColor '#161b16' --splashBackgroundColorDark '#161b16'",
+		"verify:duo": "node scripts/verify-duo-layout.mjs"
 	},
 	"devDependencies": {
 		"@capacitor/assets": "^3.0.5",

@@ -37,8 +37,21 @@
 	import { preferences } from '$lib/preferences.svelte';
 
 	import { onMount } from 'svelte';
+	import { applyHingeState } from '$lib/hinge';
+	import { watchHinge } from '$lib/native';
+	import { duo } from '$lib/split.svelte';
 
 	onMount(() => {
+		// iPhone Duo: the native shell reports the hinge, and `data-foldable` on
+		// <html> lets the layout use both halves (layout.css). Sticky — a device
+		// does not lose its hinge. `duo` then follows the window width for the few
+		// behaviours that change when a pane is showing.
+		const stopDuo = duo.init();
+		void watchHinge((state) => {
+			applyHingeState(document.documentElement, state);
+			duo.refresh();
+		});
+
 		// The splash backstop is armed FIRST, before anything that can throw.
 		// It used to be created inside the async block below, after two dynamic
 		// imports — so any earlier failure (see preferences.init() next) aborted
@@ -95,6 +108,8 @@
 				// and a stranded splash is not.
 			}
 		})();
+
+		return stopDuo;
 	});
 
 	// Native status bar: track the in-app day/night theme so the clock/battery
@@ -122,7 +137,7 @@
 <button
 	type="button"
 	onclick={() => preferences.toggleTheme()}
-	class="fixed top-[calc(env(safe-area-inset-top)+0.75rem)] right-3 z-50 grid h-9 w-9 place-items-center rounded-full border border-rule bg-transparent text-ink transition-colors hover:bg-surface"
+	class="fixed top-[calc(env(safe-area-inset-top)+0.75rem)] right-[calc(env(safe-area-inset-right)+0.75rem)] z-50 grid h-9 w-9 place-items-center rounded-full border border-rule bg-transparent text-ink transition-colors hover:bg-surface"
 	aria-label="Toggle theme (current: {preferences.theme})"
 	title="Theme: {preferences.theme}"
 >

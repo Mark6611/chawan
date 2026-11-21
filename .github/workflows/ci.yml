@@ -30,3 +30,7 @@ jobs:
         run: node scripts/verify-bundle-css.mjs
       - name: Privacy policy parity (docs/ is the URL App Review fetches)
         run: node scripts/verify-privacy-parity.mjs
+      - name: Install the browser the layout gate drives
+        run: npx playwright install --with-deps chromium
+      - name: iPhone Duo layout (every route, every pose)
+        run: npm run verify:duo

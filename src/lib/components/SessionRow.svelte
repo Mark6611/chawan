@@ -7,16 +7,30 @@
 	import { MILK_LABELS, REGION_LABELS, isPersonal, type Session, type Tin } from '$lib/db/types';
 	import { formatPrice } from '$lib/sessions/currency';
 	import { styleLabel } from '$lib/sessions/compute';
+	import { duo } from '$lib/split.svelte';
 	import Mono from './Mono.svelte';
 	import Rating from './Rating.svelte';
 
 	let {
 		session,
-		tinsById = {}
+		tinsById = {},
+		onselect,
+		selected = false
 	}: {
 		session: Session;
 		tinsById?: Record<string, Tin>;
+		/** When a preview pane sits beside the list (unfolded iPhone Duo), a tap
+		 *  fills the pane instead of leaving the list. Everywhere else the row is
+		 *  the plain link it has always been. */
+		onselect?: (id: string) => void;
+		selected?: boolean;
 	} = $props();
+
+	function onclick(e: MouseEvent) {
+		if (!onselect || !duo.split) return;
+		e.preventDefault();
+		onselect(session.id);
+	}
 
 	function timeOfDay(iso: string): string {
 		const d = new Date(iso);
@@ -27,7 +41,11 @@
 
 <a
 	href="/sessions/{session.id}"
-	class="-mx-6 block border-b border-hairline px-6 py-3 transition-colors hover:bg-surface"
+	{onclick}
+	aria-current={selected ? 'true' : undefined}
+	class="-mx-6 block border-b border-hairline px-6 py-3 transition-colors hover:bg-surface {selected
+		? 'bg-surface'
+		: ''}"
 >
 	<div class="flex items-baseline justify-between gap-3">
 		<Mono size="meta" tone="muted">

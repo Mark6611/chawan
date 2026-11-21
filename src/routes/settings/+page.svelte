@@ -230,7 +230,7 @@
 	});
 </script>
 
-<main class="mx-auto max-w-md px-6 pt-page pb-28">
+<main class="duo-flow mx-auto max-w-md px-6 pt-page pb-28">
 	<Eyebrow>App</Eyebrow>
 	<div class="mt-2">
 		<Display size="l">Settings</Display>

@@ -204,7 +204,7 @@
 	const backHref = $derived(isEdit ? `/sessions/${initial?.id}` : '/sessions/new');
 </script>
 
-<main class="mx-auto max-w-md px-6 pt-page pb-28">
+<main class="duo-flow mx-auto max-w-md px-6 pt-page pb-28">
 	<a
 		href={backHref}
 		class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink"

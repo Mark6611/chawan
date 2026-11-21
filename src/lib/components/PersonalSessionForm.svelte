@@ -40,6 +40,9 @@
 	import Mono from './Mono.svelte';
 	import Hairline from './Hairline.svelte';
 	import Field from './Field.svelte';
+	import Sheet from './Sheet.svelte';
+	import TinHistory from './TinHistory.svelte';
+	import { duo } from '$lib/split.svelte';
 	import LoadError from './LoadError.svelte';
 	import { confirmSheet } from '$lib/confirm.svelte';
 	import Segmented from './Segmented.svelte';
@@ -311,193 +314,223 @@
 	}
 
 	const backHref = $derived(isEdit ? `/sessions/${initial?.id}` : '/sessions/new');
+
+	// This tin's past bowls: a sheet here, the pane beside the form on an unfolded
+	// iPhone Duo. If the device unfolds while the sheet is up, the pane now shows
+	// the same thing — close the sheet rather than show it twice.
+	let historyOpen = $state(false);
+	$effect(() => {
+		if (duo.split) historyOpen = false;
+	});
 </script>
 
-<main class="mx-auto max-w-md px-6 pt-page pb-28">
-	<a
-		href={backHref}
-		class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink"
-	>
-		← back
-	</a>
-
-	<div class="mt-8">
-		<Eyebrow>{isEdit ? 'Edit session' : 'New session'}</Eyebrow>
-		<div class="mt-2">
-			<Display size="l">{isEdit ? 'Edit' : 'Personal'}</Display>
-		</div>
-	</div>
-
-	<div class="mt-3">
-		{#if !editingTime}
+<div class="split">
+	<main class="split-main mx-auto max-w-md px-6 pt-page pb-28">
+		<div class="flex items-baseline justify-between">
+			<a
+				href={backHref}
+				class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink"
+			>
+				← back
+			</a>
+			<!-- Opens this tin's past bowls. Hidden on an unfolded iPhone Duo, where
+		     the same history is already showing in the pane beside the form. -->
 			<button
 				type="button"
-				onclick={() => (editingTime = true)}
-				class="font-mono text-[10.5px] font-medium tracking-[0.14em] text-tea uppercase hover:text-ink"
-				aria-label="Edit brew time"
+				onclick={() => (historyOpen = true)}
+				class="split-hide font-mono text-[11px] tracking-[0.10em] text-tea uppercase hover:text-ink"
 			>
-				{timeLabel} <span class="ml-1 text-muted">↗</span>
+				History
 			</button>
-		{:else}
-			<div class="field-wrapper flex items-center gap-3">
-				<input
-					type="datetime-local"
-					value={brewedAtLocal}
-					onchange={onTimeChange}
-					class="font-mono text-[14px] text-ink"
-				/>
-				<button
-					type="button"
-					onclick={() => (editingTime = false)}
-					class="font-mono text-[10.5px] tracking-[0.10em] text-tea uppercase hover:text-ink"
-				>
-					done
-				</button>
-			</div>
-		{/if}
-	</div>
-
-	<Hairline class="my-7" />
-
-	{#if loadError}
-		<LoadError
-			onretry={() => location.reload()}
-			message="Couldn't open your log — local storage may be blocked."
-		/>
-	{:else if !loaded}
-		<div class="mt-8 text-center">
-			<Mono size="meta" tone="muted">Loading…</Mono>
 		</div>
-	{:else if !isEdit && activeTins.length === 0}
-		<div class="flex flex-col items-center text-center">
-			<Display size="m">No tins yet.</Display>
-			<p class="mt-4 max-w-[26ch] text-[14px] text-muted italic">
-				Add a tin first — personal sessions deduct from your inventory.
-			</p>
-			<div class="mt-8 w-full">
-				<PrimaryButton href="/tins/new">Add a tin</PrimaryButton>
+
+		<div class="mt-8">
+			<Eyebrow>{isEdit ? 'Edit session' : 'New session'}</Eyebrow>
+			<div class="mt-2">
+				<Display size="l">{isEdit ? 'Edit' : 'Personal'}</Display>
 			</div>
 		</div>
-	{:else}
-		{#if showDefaultsBanner}
-			<div
-				class="mb-4 flex items-center justify-between rounded-full border-[0.5px] border-tea bg-tea-wash py-2 pr-2 pl-4"
-			>
-				<span class="font-mono text-[10.5px] font-medium tracking-[0.14em] text-tea uppercase">
-					Defaults applied · tap any field to change
-				</span>
+
+		<div class="mt-3">
+			{#if !editingTime}
 				<button
 					type="button"
-					onclick={() => (showDefaultsBanner = false)}
-					aria-label="Dismiss"
-					class="grid h-6 w-6 place-items-center font-mono text-[16px] leading-none text-muted hover:text-ink"
+					onclick={() => (editingTime = true)}
+					class="font-mono text-[10.5px] font-medium tracking-[0.14em] text-tea uppercase hover:text-ink"
+					aria-label="Edit brew time"
 				>
-					×
+					{timeLabel} <span class="ml-1 text-muted">↗</span>
 				</button>
-			</div>
-		{/if}
-
-		<!-- Tin picker (typeahead + Create new) -->
-		<Field label="Tin">
-			<div class="mt-2">
-				<TinPicker
-					bind:tinId={selectedTinId}
-					{tins}
-					{personalSessions}
-					excludeSessionId={isEdit ? initial?.id : undefined}
-					oncreatenew={handleCreateNewTin}
-					onbrowsecatalog={handleBrowseCatalog}
-				/>
-			</div>
-		</Field>
-
-		<Field label="Style">
-			<div class="mt-2">
-				<Segmented options={styleOpts} bind:value={style} />
-			</div>
-		</Field>
-
-		{#if style === 'latte'}
-			<div transition:slide={{ duration: 180 }}>
-				<Field label="Milk">
-					<div class="mt-2">
-						<ChipGroup options={milkOpts} bind:value={milk} />
-					</div>
-				</Field>
-			</div>
-		{/if}
-
-		<div class="field-wrapper border-b border-hairline py-[14px]">
-			<div class="grid grid-cols-2 gap-6">
-				<div class="flex flex-col gap-2">
-					<Eyebrow>Powder</Eyebrow>
-					<Stepper bind:value={powderGrams} min={0.5} max={10} step={0.1} digits={1} unit="g" />
-				</div>
-				<div class="flex flex-col gap-2">
-					<Eyebrow>Water</Eyebrow>
-					<Stepper bind:value={waterGrams} min={5} max={400} step={5} unit="g" />
-				</div>
-			</div>
-
-			{#if selectedTin}
-				<div class="mt-4">
-					<Mono size="meta" tone="muted">
-						After this bowl: {afterRem.toFixed(0)}g in {selectedTin.name}
-						{#if bowlsLeftAfter > 0}
-							· ~{bowlsLeftAfter} bowls left{/if}
-					</Mono>
+			{:else}
+				<div class="field-wrapper flex items-center gap-3">
+					<input
+						type="datetime-local"
+						value={brewedAtLocal}
+						onchange={onTimeChange}
+						class="font-mono text-[14px] text-ink"
+					/>
+					<button
+						type="button"
+						onclick={() => (editingTime = false)}
+						class="font-mono text-[10.5px] tracking-[0.10em] text-tea uppercase hover:text-ink"
+					>
+						done
+					</button>
 				</div>
 			{/if}
 		</div>
 
-		<Field label="Temperature">
-			<Stepper bind:value={waterTempC} min={50} max={100} step={1} unit="°C" />
-		</Field>
+		<Hairline class="my-7" />
 
-		<Field label="Whisk">
-			<div class="mt-2">
-				<ChipGroup options={whiskOpts} bind:value={whisk} />
+		{#if loadError}
+			<LoadError
+				onretry={() => location.reload()}
+				message="Couldn't open your log — local storage may be blocked."
+			/>
+		{:else if !loaded}
+			<div class="mt-8 text-center">
+				<Mono size="meta" tone="muted">Loading…</Mono>
 			</div>
-		</Field>
-
-		<Field label="Rating">
-			<div class="mt-2">
-				<Rating bind:value={rating} interactive size={12} />
+		{:else if !isEdit && activeTins.length === 0}
+			<div class="flex flex-col items-center text-center">
+				<Display size="m">No tins yet.</Display>
+				<p class="mt-4 max-w-[26ch] text-[14px] text-muted italic">
+					Add a tin first — personal sessions deduct from your inventory.
+				</p>
+				<div class="mt-8 w-full">
+					<PrimaryButton href="/tins/new">Add a tin</PrimaryButton>
+				</div>
 			</div>
-		</Field>
-
-		<Field label="Notes" hairline={false}>
-			<textarea
-				bind:value={notes}
-				rows="3"
-				placeholder="How was it?"
-				class="w-full font-body text-[15px] text-ink italic placeholder:text-muted"
-			></textarea>
-		</Field>
-
-		{#if error}
-			<div class="mt-6 rounded-[14px] border-[0.5px] border-danger bg-tea-wash px-4 py-3">
-				<Mono size="meta" tone="ink">{error}</Mono>
-			</div>
-		{/if}
-
-		<div class="mt-8">
-			<PrimaryButton onclick={save} disabled={!canSave || saving}>
-				{saving ? 'Saving…' : isEdit ? 'Save changes' : 'Save session'}
-			</PrimaryButton>
-		</div>
-
-		{#if isEdit}
-			<div class="mt-6 text-center">
-				<button
-					type="button"
-					onclick={deleteSession}
-					disabled={saving}
-					class="font-mono text-[11px] tracking-[0.10em] text-danger uppercase hover:opacity-80 disabled:opacity-40"
+		{:else}
+			{#if showDefaultsBanner}
+				<div
+					class="mb-4 flex items-center justify-between rounded-full border-[0.5px] border-tea bg-tea-wash py-2 pr-2 pl-4"
 				>
-					Delete session
-				</button>
+					<span class="font-mono text-[10.5px] font-medium tracking-[0.14em] text-tea uppercase">
+						Defaults applied · tap any field to change
+					</span>
+					<button
+						type="button"
+						onclick={() => (showDefaultsBanner = false)}
+						aria-label="Dismiss"
+						class="grid h-6 w-6 place-items-center font-mono text-[16px] leading-none text-muted hover:text-ink"
+					>
+						×
+					</button>
+				</div>
+			{/if}
+
+			<!-- Tin picker (typeahead + Create new) -->
+			<Field label="Tin">
+				<div class="mt-2">
+					<TinPicker
+						bind:tinId={selectedTinId}
+						{tins}
+						{personalSessions}
+						excludeSessionId={isEdit ? initial?.id : undefined}
+						oncreatenew={handleCreateNewTin}
+						onbrowsecatalog={handleBrowseCatalog}
+					/>
+				</div>
+			</Field>
+
+			<Field label="Style">
+				<div class="mt-2">
+					<Segmented options={styleOpts} bind:value={style} />
+				</div>
+			</Field>
+
+			{#if style === 'latte'}
+				<div transition:slide={{ duration: 180 }}>
+					<Field label="Milk">
+						<div class="mt-2">
+							<ChipGroup options={milkOpts} bind:value={milk} />
+						</div>
+					</Field>
+				</div>
+			{/if}
+
+			<div class="field-wrapper border-b border-hairline py-[14px]">
+				<div class="grid grid-cols-2 gap-6">
+					<div class="flex flex-col gap-2">
+						<Eyebrow>Powder</Eyebrow>
+						<Stepper bind:value={powderGrams} min={0.5} max={10} step={0.1} digits={1} unit="g" />
+					</div>
+					<div class="flex flex-col gap-2">
+						<Eyebrow>Water</Eyebrow>
+						<Stepper bind:value={waterGrams} min={5} max={400} step={5} unit="g" />
+					</div>
+				</div>
+
+				{#if selectedTin}
+					<div class="mt-4">
+						<Mono size="meta" tone="muted">
+							After this bowl: {afterRem.toFixed(0)}g in {selectedTin.name}
+							{#if bowlsLeftAfter > 0}
+								· ~{bowlsLeftAfter} bowls left{/if}
+						</Mono>
+					</div>
+				{/if}
 			</div>
+
+			<Field label="Temperature">
+				<Stepper bind:value={waterTempC} min={50} max={100} step={1} unit="°C" />
+			</Field>
+
+			<Field label="Whisk">
+				<div class="mt-2">
+					<ChipGroup options={whiskOpts} bind:value={whisk} />
+				</div>
+			</Field>
+
+			<Field label="Rating">
+				<div class="mt-2">
+					<Rating bind:value={rating} interactive size={12} />
+				</div>
+			</Field>
+
+			<Field label="Notes" hairline={false}>
+				<textarea
+					bind:value={notes}
+					rows="3"
+					placeholder="How was it?"
+					class="w-full font-body text-[15px] text-ink italic placeholder:text-muted"
+				></textarea>
+			</Field>
+
+			{#if error}
+				<div class="mt-6 rounded-[14px] border-[0.5px] border-danger bg-tea-wash px-4 py-3">
+					<Mono size="meta" tone="ink">{error}</Mono>
+				</div>
+			{/if}
+
+			<div class="mt-8">
+				<PrimaryButton onclick={save} disabled={!canSave || saving}>
+					{saving ? 'Saving…' : isEdit ? 'Save changes' : 'Save session'}
+				</PrimaryButton>
+			</div>
+
+			{#if isEdit}
+				<div class="mt-6 text-center">
+					<button
+						type="button"
+						onclick={deleteSession}
+						disabled={saving}
+						class="font-mono text-[11px] tracking-[0.10em] text-danger uppercase hover:opacity-80 disabled:opacity-40"
+					>
+						Delete session
+					</button>
+				</div>
+			{/if}
 		{/if}
-	{/if}
-</main>
+	</main>
+	<!-- Unfolded iPhone Duo: the form under the right thumb, this tin's past bowls
+     beside it. The same content is the History sheet in every other pose. -->
+	<aside class="split-aside" aria-label="This tin's history">
+		<TinHistory tin={selectedTin} sessions={personalSessions} style={style as Style} />
+	</aside>
+</div>
+
+<Sheet bind:open={historyOpen} label="This tin's history">
+	<TinHistory tin={selectedTin} sessions={personalSessions} style={style as Style} />
+</Sheet>

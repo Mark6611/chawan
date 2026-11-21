@@ -436,3 +436,137 @@ html.theming *::after {
 		}
 	}
 }
+
+/* ─── Side safe areas ─────────────────────────────────────────────────────────
+   Left and right are handled SEPARATELY, not as one symmetric gutter: on the
+   iPhone Duo the system's status column runs down ONE edge (84pt on the right,
+   on both displays). The paper background still paints the full canvas; content
+   just steps inside the occupied edge. Top and bottom stay with the components
+   that own them (pt-page, the tab rail). In a browser every inset is 0.
+
+   Anything `position: fixed` sits outside this padding and adds its own inset:
+   the tab rail, the theme toggle, the update prompt and the three sheets.
+   UNLAYERED: the reset in @layer base zeroes padding with higher precedence. */
+body {
+	padding-left: env(safe-area-inset-left, 0px);
+	padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* The confirm sheet floats 12px inside every edge it could touch. In the
+   stylesheet rather than an inline style so the Duo rule below can move it, and
+   so the layout gate (which substitutes real insets into the CSS) sees it. */
+.confirm-sheet {
+	left: calc(12px + env(safe-area-inset-left, 0px));
+	right: calc(12px + env(safe-area-inset-right, 0px));
+	bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+}
+
+/* ─── iPhone Duo ──────────────────────────────────────────────────────────────
+   html[data-foldable] is set only by the native HingePlugin ($lib/hinge explains
+   why CSS alone cannot tell the Duo from an iPad), so iPad, desktop and the web
+   keep the centred 448px column.
+
+   The column fills in every pose. It already fills the folded outer display
+   (466pt, less the status column); this makes the turned inner pose (669pt)
+   fill too instead of floating a phone-width column in the middle.
+   UNLAYERED on purpose: Tailwind's `max-w-md` lives in @layer utilities, which
+   beats any layered rule here regardless of specificity. */
+:root[data-foldable] main.max-w-md {
+	max-width: none;
+}
+
+/* Unfolded (951×669pt landscape, hinge down the middle). Apple's guidance for
+   the inner display is to use the width for columns and keep an EVEN number of
+   them, so the fold falls between two rather than through one. Before this the
+   448px column sat centred ACROSS the hinge.
+
+   Two layouts, chosen per page:
+
+   .split      a page and a reference pane. .split-main (the page's own <main>)
+               is the RIGHT half and .split-aside the left: the half you touch
+               sits under the right thumb and the pane you only read sits on
+               the left — the user's call, made for Buffy and the coffee app
+               first. Source order is unchanged (the page first, for VoiceOver
+               and the keyboard); only the grid placement swaps them. The pane
+               is STICKY with its own scroll, so it stays put while the page
+               scrolls past.
+
+   .duo-flow   a long page with nothing to put beside it (Insights, Settings,
+               the detail pages) flows into two balanced columns.
+
+   The boundary is 50% of the VIEWPORT — the fold — not the middle of the inset
+   area: the status column takes 84pt off the right half only. So .split's
+   first column ends at 50vw, and .duo-flow pads its left side by the same
+   84pt, which puts its column gap on the fold and makes both columns the
+   width of the page on the folded display.
+
+   Keyed on data-foldable + width, never on open/closed: hinge status and the
+   window resize land a beat apart while folding, and a plain width query
+   follows every frame. 860px is the floor the siblings measured: below it
+   (the turned pose, Split View, the outer display) everything stays one
+   column. SPLIT_MIN_WIDTH in $lib/split.svelte.ts must match.
+
+   Every pane keeps 12pt clear of the fold on top of its own 24px gutter:
+   controls do not belong in the curve when the device is part-folded. */
+.split-aside {
+	display: none;
+}
+@media (min-width: 860px) {
+	:root[data-foldable] .split {
+		display: grid;
+		grid-template-columns: calc(50vw - env(safe-area-inset-left, 0px)) minmax(0, 1fr);
+		align-items: start;
+	}
+	/* margin-inline: the page is also .mx-auto, and a grid item with auto side
+	   margins is sized to its content instead of stretched to its column. */
+	:root[data-foldable] .split-main {
+		grid-area: 1 / 2;
+		margin-inline: 0;
+		padding-left: 36px;
+	}
+	:root[data-foldable] .split-aside {
+		grid-area: 1 / 1;
+		display: block;
+		position: sticky;
+		top: 0;
+		max-height: 100dvh;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		padding: calc(env(safe-area-inset-top, 0px) + 3rem) 36px
+			calc(env(safe-area-inset-bottom, 0px) + 2rem) 24px;
+	}
+	/* What the pane already shows needs no control to reach it. */
+	:root[data-foldable] .split-hide {
+		display: none;
+	}
+
+	:root[data-foldable] main.duo-flow {
+		column-count: 2;
+		column-gap: 72px;
+		padding-left: calc(
+			24px + max(0px, env(safe-area-inset-right, 0px) - env(safe-area-inset-left, 0px))
+		);
+		padding-right: calc(
+			24px + max(0px, env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px))
+		);
+	}
+	/* A section is read as one thing; never let the fold cut it in two. */
+	:root[data-foldable] main.duo-flow > * {
+		break-inside: avoid;
+	}
+	/* A divider belongs to the section it closes. Left to itself the column
+	   break lands just before one, and the right column opens with a stray
+	   line and its top margin. */
+	:root[data-foldable] main.duo-flow > .hairline {
+		break-before: avoid;
+	}
+
+	/* The tab rail and the sheets belong to the half you touch. */
+	:root[data-foldable] .tab-rail,
+	:root[data-foldable] .sheet-host {
+		left: 50vw;
+	}
+	:root[data-foldable] .confirm-sheet {
+		left: calc(50vw + 12px);
+	}
+}

@@ -7,6 +7,8 @@
 	import { type Session, type Tin } from '$lib/db/types';
 
 	import Eyebrow from '$lib/components/Eyebrow.svelte';
+	import SessionPreview from '$lib/components/SessionPreview.svelte';
+	import { duo } from '$lib/split.svelte';
 	import Display from '$lib/components/Display.svelte';
 	import Mono from '$lib/components/Mono.svelte';
 	import Hairline from '$lib/components/Hairline.svelte';
@@ -98,69 +100,91 @@
 		{ value: 'personal', label: 'Personal' },
 		{ value: 'cafe', label: 'Cafe' }
 	];
+
+	// Preview pane (unfolded iPhone Duo): the tapped row, or the newest one.
+	let selectedId = $state<string | undefined>(undefined);
+	const previewed = $derived(filtered.find((s) => s.id === selectedId) ?? filtered[0]);
 </script>
 
-<main class="mx-auto max-w-md px-6 pt-page pb-28">
-	<Eyebrow>Log</Eyebrow>
-	<div class="mt-2">
-		<Display size="l">Sessions</Display>
-	</div>
-
-	{#if loadError}
-		<LoadError
-			onretry={load}
-			message="Couldn't load your sessions — local storage may be blocked."
-		/>
-	{:else if !loaded}
-		<div class="mt-16 text-center">
-			<Mono size="meta" tone="muted">Loading…</Mono>
+<div class="split">
+	<main class="split-main mx-auto max-w-md px-6 pt-page pb-28">
+		<Eyebrow>Log</Eyebrow>
+		<div class="mt-2">
+			<Display size="l">Sessions</Display>
 		</div>
-	{:else if sessions.length === 0}
-		<Hairline class="my-7" />
-		<div class="flex flex-col items-center text-center">
-			<Chawan size={72} filled={false} />
-			<div class="mt-6">
-				<Display size="m">No sessions yet.</Display>
-			</div>
-			<p class="mt-4 max-w-[26ch] text-[14px] text-muted italic">Log your first bowl from Home.</p>
-			<div class="mt-8 w-full">
-				<PrimaryButton href="/sessions/new">Begin a session</PrimaryButton>
-			</div>
-		</div>
-	{:else}
-		<!-- Filter rail -->
-		<nav
-			class="-mx-6 mt-7 flex gap-5 border-b border-hairline px-6 pb-3"
-			aria-label="Filter sessions"
-		>
-			{#each filters as f (f.value)}
-				<button
-					type="button"
-					onclick={() => (filter = f.value)}
-					class="font-mono text-[11px] tracking-[0.10em] uppercase {filter === f.value
-						? 'text-tea'
-						: 'text-muted hover:text-ink'}"
-				>
-					{f.label} <span class="text-muted">· {counts[f.value]}</span>
-				</button>
-			{/each}
-		</nav>
 
-		{#if filtered.length === 0}
-			<div class="mt-12 text-center">
-				<Mono size="meta" tone="muted">No {filter} sessions yet.</Mono>
+		{#if loadError}
+			<LoadError
+				onretry={load}
+				message="Couldn't load your sessions — local storage may be blocked."
+			/>
+		{:else if !loaded}
+			<div class="mt-16 text-center">
+				<Mono size="meta" tone="muted">Loading…</Mono>
+			</div>
+		{:else if sessions.length === 0}
+			<Hairline class="my-7" />
+			<div class="flex flex-col items-center text-center">
+				<Chawan size={72} filled={false} />
+				<div class="mt-6">
+					<Display size="m">No sessions yet.</Display>
+				</div>
+				<p class="mt-4 max-w-[26ch] text-[14px] text-muted italic">
+					Log your first bowl from Home.
+				</p>
+				<div class="mt-8 w-full">
+					<PrimaryButton href="/sessions/new">Begin a session</PrimaryButton>
+				</div>
 			</div>
 		{:else}
-			{#each groups as [day, daySessions] (day)}
-				<section class="mt-2">
-					<div class="sticky top-0 z-10 -mx-6 border-b border-hairline bg-paper px-6 py-3">
-						<Eyebrow>{formatDayHeader(day)}</Eyebrow>
-					</div>
-					{#each daySessions as s (s.id)}
-						<SessionRow session={s} {tinsById} />
-					{/each}
-				</section>
-			{/each}
+			<!-- Filter rail -->
+			<nav
+				class="-mx-6 mt-7 flex gap-5 border-b border-hairline px-6 pb-3"
+				aria-label="Filter sessions"
+			>
+				{#each filters as f (f.value)}
+					<button
+						type="button"
+						onclick={() => (filter = f.value)}
+						class="font-mono text-[11px] tracking-[0.10em] uppercase {filter === f.value
+							? 'text-tea'
+							: 'text-muted hover:text-ink'}"
+					>
+						{f.label} <span class="text-muted">· {counts[f.value]}</span>
+					</button>
+				{/each}
+			</nav>
+
+			{#if filtered.length === 0}
+				<div class="mt-12 text-center">
+					<Mono size="meta" tone="muted">No {filter} sessions yet.</Mono>
+				</div>
+			{:else}
+				{#each groups as [day, daySessions] (day)}
+					<section class="mt-2">
+						<div class="sticky top-0 z-10 -mx-6 border-b border-hairline bg-paper px-6 py-3">
+							<Eyebrow>{formatDayHeader(day)}</Eyebrow>
+						</div>
+						{#each daySessions as s (s.id)}
+							<SessionRow
+								session={s}
+								{tinsById}
+								onselect={(id) => (selectedId = id)}
+								selected={duo.split && previewed?.id === s.id}
+							/>
+						{/each}
+					</section>
+				{/each}
+			{/if}
 		{/if}
-	{/if}
-</main>
+	</main>
+	<!-- Unfolded iPhone Duo: tap a row on the right, read it here. -->
+	<aside class="split-aside" aria-label="Selected session">
+		{#if previewed}
+			<SessionPreview session={previewed} {tinsById} />
+		{:else}
+			<Eyebrow>Session</Eyebrow>
+			<p class="mt-3 text-[14px] text-muted italic">Your sessions will open here.</p>
+		{/if}
+	</aside>
+</div>

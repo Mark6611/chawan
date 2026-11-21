@@ -13,4 +13,4 @@
 	} = $props();
 </script>
 
-<div class="h-px w-full {rule ? 'bg-rule' : 'bg-hairline'} {cls}"></div>
+<div class="hairline h-px w-full {rule ? 'bg-rule' : 'bg-hairline'} {cls}"></div>

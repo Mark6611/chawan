@@ -160,14 +160,16 @@
 </script>
 
 {#if open && data}
-	<div class="fixed inset-0 z-[60] flex items-end justify-center">
+	<div
+		class="sheet-host fixed inset-0 z-[60] flex items-end justify-center pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]"
+	>
 		<!-- scrim -->
 		<button
 			type="button"
 			aria-label="Close"
 			onclick={close}
 			transition:fade={{ duration: 150 }}
-			class="absolute inset-0 bg-black/45"
+			class="fixed inset-0 bg-black/45"
 		></button>
 
 		<!-- sheet -->

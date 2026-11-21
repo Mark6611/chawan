@@ -18,6 +18,7 @@
 	import { repository } from '$lib/db/repository';
 
 	import Eyebrow from '$lib/components/Eyebrow.svelte';
+	import { duo } from '$lib/split.svelte';
 	import Display from '$lib/components/Display.svelte';
 	import Mono from '$lib/components/Mono.svelte';
 	import Hairline from '$lib/components/Hairline.svelte';
@@ -148,207 +149,224 @@
 	onMount(loadTins);
 </script>
 
-<main class="mx-auto max-w-md px-6 pt-page pb-28">
-	{#if pickerMode}
-		<a
-			href={returnUrl}
-			class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink"
-		>
-			← cancel
-		</a>
-		<div class="mt-8">
-			<Eyebrow>Browse catalog</Eyebrow>
-			<div class="mt-2">
-				<Display size="l">Pick a matcha</Display>
-			</div>
-			<p class="mt-3 max-w-[36ch] text-[14px] text-muted italic">
-				Tap to prefill the tin form — you'll fill in weight + opened date next.
-			</p>
-		</div>
-	{:else}
-		<Eyebrow>Reference</Eyebrow>
-		<div class="mt-2">
-			<Display size="l">Catalog</Display>
-		</div>
-		<p class="mt-3 max-w-[36ch] text-[14px] text-muted italic">
-			Known matcha SKUs from leading Japanese makers — the lineup before you pick a tin.
-		</p>
-	{/if}
-
-	<!-- ─── View toggle ──────────────────────────────────── -->
-	<div class="mt-6 flex gap-5">
-		<button
-			type="button"
-			onclick={() => setView('list')}
-			class="font-mono text-[11px] tracking-[0.10em] uppercase {view === 'list'
-				? 'text-tea'
-				: 'text-muted hover:text-ink'}"
-		>
-			List
-		</button>
-		<button
-			type="button"
-			onclick={() => setView('chart')}
-			class="font-mono text-[11px] tracking-[0.10em] uppercase {view === 'chart'
-				? 'text-tea'
-				: 'text-muted hover:text-ink'}"
-		>
-			Chart
-		</button>
+<!-- The chart, its selection card and legend. One definition, shown two ways:
+     as the Chart view on a phone, and as the pane beside the list on an
+     unfolded iPhone Duo — where chart and list are both on screen, so the
+     List / Chart toggle is hidden. -->
+{#snippet chartView()}
+	<!-- CHART view -->
+	<div class="flex justify-center">
+		<FlavorChart
+			products={filtered}
+			size="hero"
+			highlightId={pickerMode ? undefined : selectedId}
+			labelFor={pickerMode ? undefined : selectedId}
+			{brandFilter}
+			ownedIds={Array.from(ownedSet)}
+			onSelect={(p) => {
+				if (pickerMode) handlePick(p.id);
+				else selectedId = selectedId === p.id ? undefined : p.id;
+			}}
+		/>
 	</div>
 
-	<!-- ─── Filter rail (horizontally scrollable on mobile) ─ -->
-	<div class="-mx-6 mt-4 overflow-x-auto px-6">
-		<div class="flex gap-2 pb-1 whitespace-nowrap">
-			{#each brands as b (b.id)}
-				{@const sel = brandFilter === b.id}
-				<button
-					type="button"
-					onclick={() => toggleBrand(b.id)}
-					class="rounded-full border-[0.5px] px-2.5 py-1 font-mono text-[11px] transition-colors {sel
-						? 'border-tea bg-tea-wash text-tea'
-						: 'border-rule text-muted hover:text-ink'}"
-				>
-					{b.shortName} · {counts[b.id] ?? 0}
-				</button>
-			{/each}
-			{#each grades as g (g)}
-				{@const sel = gradeFilter === g}
-				<button
-					type="button"
-					onclick={() => toggleGrade(g)}
-					class="rounded-full border-[0.5px] px-2.5 py-1 font-mono text-[11px] transition-colors {sel
-						? 'border-tea bg-tea-wash text-tea'
-						: 'border-rule text-muted hover:text-ink'}"
-				>
-					{GRADE_LABELS[g]}
-				</button>
-			{/each}
+	<!-- In-place selection card (browse mode only) -->
+	{#if !pickerMode && selectedEntry}
+		{@const sel = selectedEntry}
+		{@const brand = BRANDS[sel.brand]}
+		<div class="relative mt-5 rounded-[14px] border-[0.5px] border-hairline px-4 py-4">
 			<button
 				type="button"
-				onclick={toggleOwned}
-				class="rounded-full border-[0.5px] px-2.5 py-1 font-mono text-[11px] transition-colors {ownedOnly
-					? 'border-tea bg-tea-wash text-tea'
-					: 'border-rule text-muted hover:text-ink'}"
+				onclick={() => (selectedId = undefined)}
+				class="absolute top-2 right-3 grid h-6 w-6 place-items-center font-mono text-[16px] leading-none text-muted hover:text-ink"
+				aria-label="Clear selection"
 			>
-				I've tried · {ownedSet.size}
+				×
 			</button>
-		</div>
-	</div>
 
-	<Hairline class="my-6" />
+			<div class="flex items-baseline gap-3">
+				<BrandGlyph brand={sel.brand} size={14} />
+				<div class="min-w-0 flex-1">
+					<div class="flex items-baseline gap-2">
+						<span class="truncate font-display text-[20px] text-ink italic">{sel.name}</span>
+						{#if sel.kanji}
+							<span class="shrink-0 font-display text-[14px] text-muted">{sel.kanji}</span>
+						{/if}
+						{#if ownedSet.has(sel.id)}
+							<span class="ml-1 shrink-0"><Chawan size={12} filled /></span>
+						{/if}
+					</div>
+					<div class="mt-0.5 font-mono text-[11px] text-muted">
+						{brand.shortName} · {GRADE_LABELS[sel.grade]} · {REGION_LABELS[sel.region]}
+						{#if sel.cultivars && sel.cultivars.length > 0}
+							· {sel.cultivars.join(' · ')}
+						{/if}
+					</div>
+				</div>
+			</div>
 
-	{#if filtered.length === 0}
-		<div class="mt-12 text-center">
-			<Mono size="meta" tone="muted">No catalog entries match these filters.</Mono>
-		</div>
-	{:else if view === 'list'}
-		<!-- LIST view — grouped by brand -->
-		{#each groupedForList as [brandId, entries] (brandId)}
-			{@const brand = brands.find((b) => b.id === brandId)!}
-			<section class="mb-7">
-				<Eyebrow>{brand.name} · {entries.length}</Eyebrow>
-				<div class="mt-2 border-t border-hairline">
-					{#each entries as e (e.id)}
-						<CatalogRow
-							entry={e}
-							tried={ownedSet.has(e.id)}
-							picker={pickerMode}
-							onpick={pickerMode ? (en) => handlePick(en.id) : undefined}
-						/>
+			{#if sel.tasteNotes && sel.tasteNotes.length > 0}
+				<div class="mt-3 flex flex-wrap gap-1.5">
+					{#each sel.tasteNotes as note (note)}
+						<span
+							class="rounded-full border-[0.5px] border-hairline px-2 py-0.5 font-mono text-[10px] tracking-[0.05em] text-muted"
+						>
+							{note}
+						</span>
 					{/each}
 				</div>
-			</section>
-		{/each}
-	{:else}
-		<!-- CHART view -->
-		<div class="flex justify-center">
-			<FlavorChart
-				products={filtered}
-				size="hero"
-				highlightId={pickerMode ? undefined : selectedId}
-				labelFor={pickerMode ? undefined : selectedId}
-				{brandFilter}
-				ownedIds={Array.from(ownedSet)}
-				onSelect={(p) => {
-					if (pickerMode) handlePick(p.id);
-					else selectedId = selectedId === p.id ? undefined : p.id;
-				}}
-			/>
+			{/if}
+
+			{#if sel.description}
+				<p class="mt-3 font-body text-[14px] leading-relaxed text-muted italic">
+					{sel.description}
+				</p>
+			{/if}
+
+			<div class="mt-3 flex items-center justify-end">
+				<a
+					href="/catalog/{sel.id}"
+					class="font-mono text-[11px] font-medium tracking-[0.10em] text-tea uppercase hover:text-ink"
+				>
+					Open detail →
+				</a>
+			</div>
+		</div>
+	{/if}
+
+	<div class="mt-5 flex justify-center">
+		<ChartLegend active={brandFilter} {counts} onSelect={(b) => setParam('brand', b ?? null)} />
+	</div>
+	<NotPlottedRail products={unplotted} />
+	{#if plotted.length === 0 && unplotted.length === 0}
+		<div class="mt-6 text-center">
+			<Mono size="meta" tone="muted">No products to chart with these filters.</Mono>
+		</div>
+	{/if}
+{/snippet}
+
+<div class="split">
+	<main class="split-main mx-auto max-w-md px-6 pt-page pb-28">
+		{#if pickerMode}
+			<a
+				href={returnUrl}
+				class="font-mono text-[11px] tracking-[0.10em] text-muted uppercase hover:text-ink"
+			>
+				← cancel
+			</a>
+			<div class="mt-8">
+				<Eyebrow>Browse catalog</Eyebrow>
+				<div class="mt-2">
+					<Display size="l">Pick a matcha</Display>
+				</div>
+				<p class="mt-3 max-w-[36ch] text-[14px] text-muted italic">
+					Tap to prefill the tin form — you'll fill in weight + opened date next.
+				</p>
+			</div>
+		{:else}
+			<Eyebrow>Reference</Eyebrow>
+			<div class="mt-2">
+				<Display size="l">Catalog</Display>
+			</div>
+			<p class="mt-3 max-w-[36ch] text-[14px] text-muted italic">
+				Known matcha SKUs from leading Japanese makers — the lineup before you pick a tin.
+			</p>
+		{/if}
+
+		<!-- ─── View toggle ──────────────────────────────────── -->
+		<div class="split-hide mt-6 flex gap-5">
+			<button
+				type="button"
+				onclick={() => setView('list')}
+				class="font-mono text-[11px] tracking-[0.10em] uppercase {view === 'list'
+					? 'text-tea'
+					: 'text-muted hover:text-ink'}"
+			>
+				List
+			</button>
+			<button
+				type="button"
+				onclick={() => setView('chart')}
+				class="font-mono text-[11px] tracking-[0.10em] uppercase {view === 'chart'
+					? 'text-tea'
+					: 'text-muted hover:text-ink'}"
+			>
+				Chart
+			</button>
 		</div>
 
-		<!-- In-place selection card (browse mode only) -->
-		{#if !pickerMode && selectedEntry}
-			{@const sel = selectedEntry}
-			{@const brand = BRANDS[sel.brand]}
-			<div class="relative mt-5 rounded-[14px] border-[0.5px] border-hairline px-4 py-4">
+		<!-- ─── Filter rail (horizontally scrollable on mobile) ─ -->
+		<div class="-mx-6 mt-4 overflow-x-auto px-6">
+			<div class="flex gap-2 pb-1 whitespace-nowrap">
+				{#each brands as b (b.id)}
+					{@const sel = brandFilter === b.id}
+					<button
+						type="button"
+						onclick={() => toggleBrand(b.id)}
+						class="rounded-full border-[0.5px] px-2.5 py-1 font-mono text-[11px] transition-colors {sel
+							? 'border-tea bg-tea-wash text-tea'
+							: 'border-rule text-muted hover:text-ink'}"
+					>
+						{b.shortName} · {counts[b.id] ?? 0}
+					</button>
+				{/each}
+				{#each grades as g (g)}
+					{@const sel = gradeFilter === g}
+					<button
+						type="button"
+						onclick={() => toggleGrade(g)}
+						class="rounded-full border-[0.5px] px-2.5 py-1 font-mono text-[11px] transition-colors {sel
+							? 'border-tea bg-tea-wash text-tea'
+							: 'border-rule text-muted hover:text-ink'}"
+					>
+						{GRADE_LABELS[g]}
+					</button>
+				{/each}
 				<button
 					type="button"
-					onclick={() => (selectedId = undefined)}
-					class="absolute top-2 right-3 grid h-6 w-6 place-items-center font-mono text-[16px] leading-none text-muted hover:text-ink"
-					aria-label="Clear selection"
+					onclick={toggleOwned}
+					class="rounded-full border-[0.5px] px-2.5 py-1 font-mono text-[11px] transition-colors {ownedOnly
+						? 'border-tea bg-tea-wash text-tea'
+						: 'border-rule text-muted hover:text-ink'}"
 				>
-					×
+					I've tried · {ownedSet.size}
 				</button>
+			</div>
+		</div>
 
-				<div class="flex items-baseline gap-3">
-					<BrandGlyph brand={sel.brand} size={14} />
-					<div class="min-w-0 flex-1">
-						<div class="flex items-baseline gap-2">
-							<span class="truncate font-display text-[20px] text-ink italic">{sel.name}</span>
-							{#if sel.kanji}
-								<span class="shrink-0 font-display text-[14px] text-muted">{sel.kanji}</span>
-							{/if}
-							{#if ownedSet.has(sel.id)}
-								<span class="ml-1 shrink-0"><Chawan size={12} filled /></span>
-							{/if}
-						</div>
-						<div class="mt-0.5 font-mono text-[11px] text-muted">
-							{brand.shortName} · {GRADE_LABELS[sel.grade]} · {REGION_LABELS[sel.region]}
-							{#if sel.cultivars && sel.cultivars.length > 0}
-								· {sel.cultivars.join(' · ')}
-							{/if}
-						</div>
-					</div>
-				</div>
+		<Hairline class="my-6" />
 
-				{#if sel.tasteNotes && sel.tasteNotes.length > 0}
-					<div class="mt-3 flex flex-wrap gap-1.5">
-						{#each sel.tasteNotes as note (note)}
-							<span
-								class="rounded-full border-[0.5px] border-hairline px-2 py-0.5 font-mono text-[10px] tracking-[0.05em] text-muted"
-							>
-								{note}
-							</span>
+		{#if filtered.length === 0}
+			<div class="mt-12 text-center">
+				<Mono size="meta" tone="muted">No catalog entries match these filters.</Mono>
+			</div>
+		{:else if view === 'list' || duo.split}
+			<!-- LIST view — grouped by brand -->
+			{#each groupedForList as [brandId, entries] (brandId)}
+				{@const brand = brands.find((b) => b.id === brandId)!}
+				<section class="mb-7">
+					<Eyebrow>{brand.name} · {entries.length}</Eyebrow>
+					<div class="mt-2 border-t border-hairline">
+						{#each entries as e (e.id)}
+							<CatalogRow
+								entry={e}
+								tried={ownedSet.has(e.id)}
+								picker={pickerMode}
+								onpick={pickerMode ? (en) => handlePick(en.id) : undefined}
+							/>
 						{/each}
 					</div>
-				{/if}
-
-				{#if sel.description}
-					<p class="mt-3 font-body text-[14px] leading-relaxed text-muted italic">
-						{sel.description}
-					</p>
-				{/if}
-
-				<div class="mt-3 flex items-center justify-end">
-					<a
-						href="/catalog/{sel.id}"
-						class="font-mono text-[11px] font-medium tracking-[0.10em] text-tea uppercase hover:text-ink"
-					>
-						Open detail →
-					</a>
-				</div>
-			</div>
+				</section>
+			{/each}
+		{:else}
+			{@render chartView()}
 		{/if}
-
-		<div class="mt-5 flex justify-center">
-			<ChartLegend active={brandFilter} {counts} onSelect={(b) => setParam('brand', b ?? null)} />
-		</div>
-		<NotPlottedRail products={unplotted} />
-		{#if plotted.length === 0 && unplotted.length === 0}
-			<div class="mt-6 text-center">
-				<Mono size="meta" tone="muted">No products to chart with these filters.</Mono>
-			</div>
+	</main>
+	<aside class="split-aside" aria-label="Flavour chart">
+		{#if filtered.length === 0}
+			<Mono size="meta" tone="muted">No catalog entries match these filters.</Mono>
+		{:else}
+			{@render chartView()}
 		{/if}
-	{/if}
-</main>
+	</aside>
+</div>
