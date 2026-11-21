@@ -54,9 +54,11 @@ then commit, push and start the next.
 
 ### Phase 0 — Shippable again (1.2)
 
-**Status 2026-11-20: built and on TestFlight as 1.2 (build 9). Not yet
-submitted for review.** Still to do: an on-device pass, regenerated
-screenshots, and the submission.
+**Status 2026-11-21: done. 1.2 (build 10) was submitted for App Review and is
+waiting for review; it releases automatically on approval.** Build 10 also
+carries the iPhone Duo layout from phase 3. The owner ran it from TestFlight on
+a real iPhone Duo first. Screenshots were regenerated and the three age-rating
+questions Apple added since 1.1 were answered (the preflight now checks them).
 
 Get the ten weeks of unshipped fixes to the store. Nothing new is designed here.
 
@@ -122,8 +124,8 @@ plugin, the folded fit, and a two-half layout on all 13 screens are on main,
 with a mutation-tested layout gate. The tin history pane (last bowls and the
 average of well-rated ones) came with it, since the session form needed
 something to show; the weighted sweet spot and "next move" remain in phase 4.
-Verified in a browser at the Duo's measured sizes only. Not yet seen on the
-device.
+Verified in a browser at the Duo's measured sizes, then run by the owner on a
+real iPhone Duo from TestFlight as 1.2 (build 10), and shipped in 1.2.
 
 - Hinge plugin and the `data-foldable` flag.
 - Folded: clear the 84pt status column on the outer display.

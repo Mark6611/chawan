@@ -15,6 +15,7 @@
 // Exit 0 = clear to ship. Exit 1 = at least one BLOCKER.
 
 import { asc } from './asc-api.mjs';
+import { unansweredAgeRating } from './age-rating.mjs';
 import { readFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
@@ -197,7 +198,45 @@ if (TARGET && !target) {
 	}
 }
 
-// ── 6. Things the API cannot see — must be stated, not silently assumed ───
+// ── 6. Age-rating questions Apple added since the last release ────────────
+// A new question arrives as null on an existing app and only surfaces as a 409
+// when the version is added to a review submission. Chawan met three at once on
+// 1.2 (datingAndRelationships, sharedLocation, socialMedia). Check the
+// declaration that will be SUBMITTED: the in-progress app info if a version is
+// being prepared (a blocker — this is the one Apple reviews), otherwise the live
+// one, which a new version copies (a warning — a TestFlight-only cut is
+// unaffected, but the next submission will 409 until it is answered).
+const ires = await asc('GET', `/v1/apps/${APP_ID}/appInfos?fields[appInfos]=state`);
+const infos = ires.json?.data ?? [];
+const SETTLED = new Set(['READY_FOR_DISTRIBUTION', 'REPLACED_WITH_NEW_INFO']);
+const pending = infos.find((i) => !SETTLED.has(i.attributes.state));
+const info = pending ?? infos.find((i) => i.attributes.state === 'READY_FOR_DISTRIBUTION');
+if (!info) {
+	warnings.push(`could not find an app info to check the age rating (HTTP ${ires.status})`);
+} else {
+	const which = pending
+		? `${info.attributes.state} app info`
+		: 'live app info (a new version copies it)';
+	// The direct GET /v1/ageRatingDeclarations/<id> 403s; the appInfo route reads it.
+	const ar = await asc('GET', `/v1/appInfos/${info.id}/ageRatingDeclaration`);
+	if (!ar.ok) {
+		warnings.push(`could not read the age rating on the ${which}: HTTP ${ar.status}`);
+	} else {
+		const missing = unansweredAgeRating(ar.json?.data?.attributes);
+		if (!missing.length) {
+			ok.push(`age rating: every question answered (${which})`);
+		} else {
+			const msg =
+				`age rating: unanswered question(s) ${missing.join(', ')} on the ${which} — ` +
+				`adding the version to a review submission 409s until they are answered. ` +
+				`PATCH /v1/ageRatingDeclarations/${ar.json.data.id} (read it via /v1/appInfos/${info.id}/ageRatingDeclaration). ` +
+				`If one is null by design, add it to OPTIONAL_AGE_FIELDS in scripts/age-rating.mjs.`;
+			(pending ? blockers : warnings).push(msg);
+		}
+	}
+}
+
+// ── 7. Things the API cannot see — must be stated, not silently assumed ───
 warnings.push(
 	'NOT API-CHECKABLE: App Privacy answers and Pricing. Both are web-UI only ' +
 		'(/v1/appDataUsages 404s) and both surface as a 409 at submit if unset. ' +
